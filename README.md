@@ -1,8 +1,10 @@
-# EHS Field Tools
+# EHS Field Tools (Beta)
 
-Bilingual (EN/ES) single-file EHS field tools by Jesus Diaz, EHS Coordinator.
+Bilingual (English/Spanish) safety field tools by Jesus Diaz: inspections, JSAs, LOTO, hazard and near-miss reports, heat illness, ergonomics, SDS, training certificates and more.
 
-Open the hub: **https://safetech1970.github.io/Project-1/ehs-tools/**
+**Open the app:** https://safetech1970.github.io/Project-1/ehs-tools/
 
-- Each tool runs entirely in the browser. Records are stored only on the device (browser storage); nothing is uploaded.
-- On this site the camera works; AI features and team cloud sync are available only in the Claude versions linked from the hub.
+- Installable on iPhone, iPad and Android (Add to Home Screen) and works offline after the first visit.
+- Records stay on the user's device; nothing is uploaded. See the [privacy policy](ehs-tools/privacy.html).
+- AI features are optional and use the user's own Anthropic API key.
+- These tools support, but do not replace, a qualified safety professional or the official regulations.

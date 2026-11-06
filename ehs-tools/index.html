@@ -1,7 +1,7 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>EHS Tools Hub</title>
+<!doctype html><html><head><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2942"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="EHS Tools"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>EHS Field Tools</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<style>/* Grimmway EHS field-tool chassis: sticky navy header, tab strip, single column of cards */
+<style>/* EHS Field Tools chassis: sticky navy header, tab strip, single column of cards */
 :root{
   --navy:#0f2942; --orange:#d9531e; --yellow:#f2b705;
   --bg:#eef2f6; --surface:#ffffff; --surface2:#f6f8fb; --ink:#14202e; --muted:#566476; --line:#d5dde6;
@@ -208,7 +208,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 <header class="top">
   <div class="top-in">
     <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
-    <div class="brand"><h1 data-i18n="appTitle">EHS Tools Hub</h1></div>
+    <div class="brand"><h1 data-i18n="appTitle">EHS Field Tools</h1></div>
     <div class="lang" role="group" aria-label="Language"><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
   </div>
   <nav class="tabs" role="tablist"><div class="tabs-in">
@@ -254,6 +254,15 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 </section>
 
 <section class="panel" id="tab-help" hidden>
+  <div class="card" id="coCard">
+    <h2 id="coH">Your company &amp; sites</h2>
+    <p class="hint" id="coHint"></p>
+    <label class="hint" id="coOrgL" style="display:block;font-weight:700;margin-top:8px"></label>
+    <input id="coOrg" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)">
+    <label class="hint" id="coSitesL" style="display:block;font-weight:700;margin-top:10px"></label>
+    <textarea id="coSites" rows="5" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)"></textarea>
+    <div class="row" style="margin-top:10px"><button class="btn" id="coSave"></button><span class="hint" id="coMsg"></span></div>
+  </div>
   <div class="card">
     <h2 data-i18n="hTitle">How to set up the offline folder</h2>
     <ol class="steps" style="margin:0;padding-left:22px;display:grid;gap:8px" id="hSteps"></ol>
@@ -268,19 +277,19 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 
 <script>
 window.TOOL = {id:'hub', ver:1, i18n:{
-en:{appTitle:'EHS Tools Hub',tabApps:'All Tools',tabManage:'Manage',tabHelp:'Setup',searchPh:'Search tools, e.g. LOTO, heat, JSA',
+en:{appTitle:'EHS Field Tools',tabApps:'All Tools',tabManage:'Manage',tabHelp:'Setup',searchPh:'Search tools, e.g. LOTO, heat, JSA',
 mTitle:'Tool locations',mHint:'Offline file is the exact name of the HTML file in the same folder as this hub. Online link is the published page. Leave a box empty if that version does not exist.',
 mSave:'Save changes',mReset:'Restore defaults',addTitle:'Add a tool',addName:'Name',addDesc:'Short description',addCat:'Category',addFile:'Offline file name',addUrl:'Online link',addBtn:'Add tool',
 bkTitle:'Back up this hub',bkHint:'Save your file names, favorites and added tools, then import them on another device.',bkOut:'Export settings',bkIn:'Import settings',
-hTitle:'How to set up the offline folder',h2Title:'Online vs. offline'},
-es:{appTitle:'Centro de Herramientas EHS',tabApps:'Herramientas',tabManage:'Administrar',tabHelp:'Configuración',searchPh:'Buscar herramientas, ej. LOTO, calor, JSA',
+hTitle:'Install on your phone or tablet',h2Title:'Offline, data and AI'},
+es:{appTitle:'EHS Field Tools',tabApps:'Herramientas',tabManage:'Administrar',tabHelp:'Configuración',searchPh:'Buscar herramientas, ej. LOTO, calor, JSA',
 mTitle:'Ubicación de herramientas',mHint:'Archivo sin conexión es el nombre exacto del archivo HTML en la misma carpeta que este centro. Enlace en línea es la página publicada. Deje vacío si esa versión no existe.',
 mSave:'Guardar cambios',mReset:'Restaurar valores',addTitle:'Agregar herramienta',addName:'Nombre',addDesc:'Descripción corta',addCat:'Categoría',addFile:'Nombre del archivo sin conexión',addUrl:'Enlace en línea',addBtn:'Agregar herramienta',
 bkTitle:'Respaldar este centro',bkHint:'Guarde los nombres de archivo, favoritos y herramientas agregadas, y luego impórtelos en otro dispositivo.',bkOut:'Exportar configuración',bkIn:'Importar configuración',
-hTitle:'Cómo preparar la carpeta sin conexión',h2Title:'En línea vs. sin conexión'}
+hTitle:'Instalar en su teléfono o tableta',h2Title:'Sin conexión, datos e IA'}
 }};
 </script>
-<script>/* Shared chassis for Grimmway EHS field tools: bilingual text, safe storage, tabs, export, signatures */
+<script>/* Shared chassis for EHS Field Tools: bilingual text, safe storage, tabs, export, signatures */
 var App = (function(){
   var cfg = window.TOOL || {id:'tool', ver:1, i18n:{en:{},es:{}}};
   var PREFIX = 'gei_' + cfg.id + '_v';
@@ -431,7 +440,7 @@ var App = (function(){
     if(bad.length){ toast(t('required')); bad[0].focus(); return false; }
     return true;
   }
-  var FACILITIES = ['San Miguel Produce','Tasteful Selections','Cal-O Lamont','Cal-O David Rd','Cal-O West Plant'];
+  var FACILITIES = (function(){try{var v=JSON.parse(localStorage.getItem('ehsSites')||'null');if(Array.isArray(v)&&v.length)return v;}catch(e){}return ['Main Plant','North Plant','South Plant','East Plant','West Plant'];})();
   function facilityOptions(sel, withAll){
     var h = withAll ? '<option value="">'+esc(t('allFacilities'))+'</option>' : '<option value="">—</option>';
     FACILITIES.forEach(function(f){ h += '<option>'+esc(f)+'</option>'; });
@@ -493,30 +502,29 @@ var CATS=[{k:'insp',en:'Inspections & hazards',es:'Inspecciones y peligros'},{k:
   {k:'health',en:'Heat & ergonomics',es:'Calor y ergonomía'},{k:'chem',en:'Chemicals',es:'Químicos'},{k:'train',en:'Training & behavior',es:'Capacitación y conducta'},{k:'report',en:'Reporting',es:'Reportes'}];
 // verify:true = offline file name not confirmed yet
 var DEFAULT=[
- {id:'inspect',cat:'insp',icon:'clip',en:'Safety Inspection Assistant',es:'Asistente de Inspección de Seguridad',den:'Walk-through inspections with findings and corrective actions.',des:'Inspecciones de recorrido con hallazgos y acciones correctivas.',url:'https://claude.ai/artifact/E6ZyVtp7BFdJZ2TgsUWtEY',file:'inspection-assistant.html'},
- {id:'t8',cat:'insp',icon:'clip',en:'Workplace Safety Inspection',es:'Inspección de Seguridad del Lugar de Trabajo',den:'Scheduled walkthroughs (§3203) and quarterly program audits with photos, corrective actions and PDF.',des:'Recorridos programados (§3203) y auditorías trimestrales con fotos, acciones correctivas y PDF.',url:'https://claude.ai/artifact/JZ62GnSKZq7aB3LAXpqrpp',file:'workplace-inspection.html'},
- {id:'hazard',cat:'insp',icon:'photo',en:'Hazard Report',es:'Reporte de Peligros',den:'AI reads your hazard photos and suggests severity, Title 8 references and fixes.',des:'La IA revisa sus fotos y sugiere severidad, referencias del Título 8 y soluciones.',url:'https://claude.ai/artifact/SwXyLgqAAFv2tMbeCknRZR',file:'hazard-report.html',ai:true,isNew:true},
- {id:'sixs',cat:'insp',icon:'six',en:'6S Workplace Audit',es:'Auditoría 6S',den:'Score Sort, Set in order, Shine, Standardize, Sustain and Safety, track actions and trends, and make before & after posters.',des:'Califique las 6S, dé seguimiento a acciones y tendencias, y haga pósters de antes y después.',url:'https://claude.ai/artifact/QvSnk3rjzEp7cLx7NUC8wt',file:'6s-audit.html',isNew:true},
- {id:'fallpro',cat:'insp',icon:'harness',en:'Fall Protection Inspection',es:'Inspección de Equipo Anticaídas',den:'Harnesses, lanyards, SRLs, anchors and ladders: what is due, service life, remove-from-service flags and signed monthly reports.',des:'Arneses, líneas, SRL, anclajes y escaleras: qué toca, vida útil, retiro de servicio y reporte mensual firmado.',url:'https://claude.ai/artifact/Svdn66gPzEjyGxy7K3eFr7',file:'fall-protection.html',isNew:true},
- {id:'emeq',cat:'insp',icon:'medkit',en:'Emergency Equipment Checks',es:'Revisión de Equipo de Emergencia',den:'Eyewash stations, fire extinguishers, first aid kits, AEDs and spill kits: what is due, what is expiring, signed checks and monthly reports.',des:'Lavaojos, extintores, botiquines, DEA y kits de derrame: qué toca, qué vence, revisiones firmadas y reporte mensual.',url:'https://claude.ai/artifact/NDS4FDd3tpbrwziEDojTRL',file:'emergency-equipment.html',isNew:true},
- {id:'fire',cat:'insp',icon:'fire',en:'Fire Drill Evaluation',es:'Evaluación de Simulacro de Incendio',den:'Time evacuation drills, take headcount, score effectiveness and track corrective actions (§3220).',des:'Cronometre simulacros, haga el conteo, califique la efectividad y dé seguimiento a acciones (§3220).',url:'https://claude.ai/artifact/B61ofGN5Z7GUcYAqZmb1Lw',file:'fire-drill.html',isNew:true},
- {id:'rca',cat:'insp',icon:'rca',en:'Root Cause Analysis',es:'Análisis de Causa Raíz',den:'Seven-step RCA: 5 Whys with evidence, fishbone (6M), Pareto, check sheet, flowchart and scatter diagram, then corrective actions ranked by the hierarchy of controls, standardized and monitored.',des:'RCA en siete pasos: 5 porqués con evidencia, espina de pescado (6M), Pareto, hoja de verificación, diagrama de flujo y dispersión, con acciones correctivas por jerarquía de controles, estandarizadas y monitoreadas.',url:'https://claude.ai/artifact/DomJqdiP4hRy6TTGRGduTA',file:'rca.html',isNew:true},
- {id:'nearmiss',cat:'insp',icon:'alert',en:'Near-Miss Reporter',es:'Reporte de Casi Accidentes',den:'Near misses and good catches with 5×5 risk, follow-up and RCA handoff.',des:'Casi accidentes y buenas detecciones con riesgo 5×5, seguimiento y RCA.',url:'https://claude.ai/artifact/5sDCciWfP3ZjFXrMiNDZ7F',file:'near-miss.html',isNew:true},
- {id:'jsab',cat:'jsa',icon:'list',en:'JSA Builder',es:'Generador de JSA',den:'Draft a JSA in English or Spanish and download the Excel template.',des:'Redacte un JSA en inglés o español y descargue la plantilla Excel.',url:'https://claude.ai/artifact/7fwVebjSY1abvGF3cKa1H4',file:'jsa-builder.html'},
- {id:'lotob',cat:'jsa',icon:'lock',en:'LOTO Procedure Builder',es:'Generador de Procedimientos LOTO',den:'Equipment-specific lockout procedures in the Grimmway workbook format.',des:'Procedimientos de bloqueo por equipo en formato Grimmway.',url:'https://claude.ai/artifact/Cu9acMGhEmA12rT2vnedoz',file:'loto-builder.html'},
- {id:'lotov',cat:'jsa',icon:'play',en:'LOTO Training Videos',es:'Videos de Capacitación LOTO',den:'Bilingual lock, tag and verify walkthrough on a 480 V disconnect, plus the six LOTO steps.',des:'Recorrido bilingüe de bloquear, etiquetar y verificar en un interruptor de 480 V, y los seis pasos de LOTO.',url:'https://claude.ai/artifact/7x7HpebZt1uFYfGvh2P2oq',file:'',isNew:true},
- {id:'moc',cat:'jsa',icon:'gear',en:'Equipment Change Review',es:'Revisión de Cambios de Equipo',den:'Management of change and pre-startup safety review for new equipment and major upgrades.',des:'Gestión del cambio y revisión de seguridad previa al arranque para equipo nuevo y mejoras mayores.',url:'https://claude.ai/artifact/ChDLkR7Kt5jgKoWMTpzuEh',file:'equipment-change.html',isNew:true},
- {id:'heat',cat:'health',icon:'thermo',en:'Heat Illness Tracker',es:'Control de Enfermedades por Calor',den:'§3395/§3396 heat log, heat index, acclimatization and emergency steps.',des:'Registro de calor §3395/§3396, índice de calor, aclimatación y emergencia.',url:'https://claude.ai/artifact/D1NkD3qGbuNhZqqLabu3th',file:'heat-illness.html',isNew:true},
- {id:'ergo',cat:'health',icon:'body',en:'Ergonomics Toolkit',es:'Herramientas de Ergonomía',den:'AI photo review of workstations and posture, NIOSH lifting and REBA scoring.',des:'Revisión con IA de estaciones y postura, levantamiento NIOSH y REBA.',url:'https://claude.ai/artifact/4hqMYXMBQYwFd937aYfYGx',file:'ergonomics.html',isNew:true,ai:true},
- {id:'hw',cat:'chem',icon:'drum',en:'Hazardous Waste Storage Inspection',es:'Inspección de Almacén de Residuos Peligrosos',den:'Weekly container inspections with time-limit tracking, required comments on "No" items and the monthly form.',des:'Inspecciones semanales de contenedores con control de tiempo límite, comentarios en cada "No" y formato mensual.',url:'https://claude.ai/artifact/AdRoh4TvMnW4cyQ8zTcZBq',file:'hazwaste-inspection.html',isNew:true},
- {id:'sds',cat:'chem',icon:'flask',en:'SDS Finder',es:'Buscador de SDS',den:'Find SDSs from a label photo, keep a chemical inventory by facility, read SDS PDFs, and print bilingual container labels with a QR code to the SDS.',des:'Busque HDS con foto de etiqueta, lleve un inventario de químicos por planta, lea PDF de HDS e imprima etiquetas bilingües con código QR a la HDS.',url:'https://claude.ai/artifact/Gam4UuCscPtxDAifDMZ63r',file:'sds-finder.html',ai:true,isNew:true},
- {id:'lms',cat:'train',icon:'book',en:'Bilingual Safety LMS',es:'Plataforma de Capacitación Bilingüe',den:'Courses, quizzes, signed PDF certificates and completion reports.',des:'Cursos, exámenes, certificados PDF firmados y reportes.',url:'https://claude.ai/artifact/De1m24HS3WhxvwS1xhCMNM',file:'safety-lms.html'},
- {id:'deck',cat:'train',icon:'slides',en:'Training Deck Builder',es:'Generador de Presentaciones',den:'Build toolbox talk and training slide decks.',des:'Arme presentaciones para pláticas y capacitación.',url:'https://claude.ai/artifact/2WynE7G2X4oxF7TN9B4uQj',file:'deck-builder.html'},
- {id:'bbs',cat:'train',icon:'eye',en:'BBS Observation Card',es:'Tarjeta de Observación BBS',den:'Safe vs. at-risk observations, coaching and trends.',des:'Observaciones seguras vs. de riesgo, coaching y tendencias.',url:'https://claude.ai/artifact/RuqXojnoa93aS6KRhkwVeB',file:'bbs-card.html',isNew:true},
- {id:'fork',cat:'train',icon:'truck',en:'Forklift Operator Evaluation',es:'Evaluación de Operador de Montacargas',den:'Weighted practical evaluation with must-pass items, policy acknowledgment, signatures and PDF.',des:'Evaluación práctica ponderada con puntos obligatorios, reconocimiento de políticas, firmas y PDF.',url:'https://claude.ai/artifact/AHd3TPyo51tj6U91zWdoc4',file:'forklift-eval.html',isNew:true},
- {id:'cert',cat:'train',icon:'book',en:'Training Certificates & ID Cards',es:'Certificados y Credenciales de Capacitación',den:'Certificates of completion and wallet ID cards with QR verification, expiration tracking and print sheets.',des:'Certificados de finalización y credenciales con verificación QR, control de vencimientos y hojas de impresión.',url:'https://claude.ai/artifact/SCsdwYUwLtNp8CCiH6HaKg',file:'certificates/',isNew:true},
- {id:'gas',cat:'chem',icon:'gas',en:'Compressed Gas Safety',es:'Seguridad de Gases Comprimidos',den:'Bilingual cylinder safety training with a picture game, storage scene and quiz.',des:'Capacitación bilingüe de cilindros con juego de imágenes, escena de almacenamiento y examen.',url:'https://claude.ai/artifact/GAwy3RHhUKLMxtn2AKCMm3',file:'compressed-gas.html'},
- {id:'diagram',cat:'report',icon:'chart',en:'EHS Diagram Generator',es:'Generador de Diagramas EHS',den:'Flowcharts and diagrams for procedures and incident reviews.',des:'Diagramas de flujo para procedimientos y revisiones de incidentes.',url:'https://claude.ai/artifact/2oyXiTvjRfWxMfvdN4Q7a2',file:'diagram-generator.html'}
+ {id:'inspect',cat:'insp',icon:'clip',en:'Safety Inspection Assistant',es:'Asistente de Inspección de Seguridad',den:'Walk-through inspections with findings and corrective actions.',des:'Inspecciones de recorrido con hallazgos y acciones correctivas.',url:'',file:'inspection-assistant.html'},
+ {id:'t8',cat:'insp',icon:'clip',en:'Workplace Safety Inspection',es:'Inspección de Seguridad del Lugar de Trabajo',den:'Scheduled walkthroughs (§3203) and quarterly program audits with photos, corrective actions and PDF.',des:'Recorridos programados (§3203) y auditorías trimestrales con fotos, acciones correctivas y PDF.',url:'',file:'workplace-inspection.html'},
+ {id:'hazard',cat:'insp',icon:'photo',en:'Hazard Report',es:'Reporte de Peligros',den:'AI reads your hazard photos and suggests severity, Title 8 references and fixes.',des:'La IA revisa sus fotos y sugiere severidad, referencias del Título 8 y soluciones.',url:'',file:'hazard-report.html',ai:true,isNew:true},
+ {id:'sixs',cat:'insp',icon:'six',en:'6S Workplace Audit',es:'Auditoría 6S',den:'Score Sort, Set in order, Shine, Standardize, Sustain and Safety, track actions and trends, and make before & after posters.',des:'Califique las 6S, dé seguimiento a acciones y tendencias, y haga pósters de antes y después.',url:'',file:'6s-audit.html',isNew:true},
+ {id:'fallpro',cat:'insp',icon:'harness',en:'Fall Protection Inspection',es:'Inspección de Equipo Anticaídas',den:'Harnesses, lanyards, SRLs, anchors and ladders: what is due, service life, remove-from-service flags and signed monthly reports.',des:'Arneses, líneas, SRL, anclajes y escaleras: qué toca, vida útil, retiro de servicio y reporte mensual firmado.',url:'',file:'fall-protection.html',isNew:true},
+ {id:'emeq',cat:'insp',icon:'medkit',en:'Emergency Equipment Checks',es:'Revisión de Equipo de Emergencia',den:'Eyewash stations, fire extinguishers, first aid kits, AEDs and spill kits: what is due, what is expiring, signed checks and monthly reports.',des:'Lavaojos, extintores, botiquines, DEA y kits de derrame: qué toca, qué vence, revisiones firmadas y reporte mensual.',url:'',file:'emergency-equipment.html',isNew:true},
+ {id:'fire',cat:'insp',icon:'fire',en:'Fire Drill Evaluation',es:'Evaluación de Simulacro de Incendio',den:'Time evacuation drills, take headcount, score effectiveness and track corrective actions (§3220).',des:'Cronometre simulacros, haga el conteo, califique la efectividad y dé seguimiento a acciones (§3220).',url:'',file:'fire-drill.html',isNew:true},
+ {id:'rca',cat:'insp',icon:'rca',en:'Root Cause Analysis',es:'Análisis de Causa Raíz',den:'Seven-step RCA: 5 Whys with evidence, fishbone (6M), Pareto, check sheet, flowchart and scatter diagram, then corrective actions ranked by the hierarchy of controls, standardized and monitored.',des:'RCA en siete pasos: 5 porqués con evidencia, espina de pescado (6M), Pareto, hoja de verificación, diagrama de flujo y dispersión, con acciones correctivas por jerarquía de controles, estandarizadas y monitoreadas.',url:'',file:'rca.html',isNew:true},
+ {id:'nearmiss',cat:'insp',icon:'alert',en:'Near-Miss Reporter',es:'Reporte de Casi Accidentes',den:'Near misses and good catches with 5×5 risk, follow-up and RCA handoff.',des:'Casi accidentes y buenas detecciones con riesgo 5×5, seguimiento y RCA.',url:'',file:'near-miss.html',isNew:true},
+ {id:'jsab',cat:'jsa',icon:'list',en:'JSA Builder',es:'Generador de JSA',den:'Draft a JSA in English or Spanish and download the Excel template.',des:'Redacte un JSA en inglés o español y descargue la plantilla Excel.',url:'',file:'jsa-builder.html'},
+ {id:'lotob',cat:'jsa',icon:'lock',en:'LOTO Procedure Builder',es:'Generador de Procedimientos LOTO',den:'Equipment-specific lockout procedures in a printable workbook format.',des:'Procedimientos de bloqueo por equipo en formato de libro de trabajo.',url:'',file:'loto-builder.html'},
+ {id:'moc',cat:'jsa',icon:'gear',en:'Equipment Change Review',es:'Revisión de Cambios de Equipo',den:'Management of change and pre-startup safety review for new equipment and major upgrades.',des:'Gestión del cambio y revisión de seguridad previa al arranque para equipo nuevo y mejoras mayores.',url:'',file:'equipment-change.html',isNew:true},
+ {id:'heat',cat:'health',icon:'thermo',en:'Heat Illness Tracker',es:'Control de Enfermedades por Calor',den:'§3395/§3396 heat log, heat index, acclimatization and emergency steps.',des:'Registro de calor §3395/§3396, índice de calor, aclimatación y emergencia.',url:'',file:'heat-illness.html',isNew:true},
+ {id:'ergo',cat:'health',icon:'body',en:'Ergonomics Toolkit',es:'Herramientas de Ergonomía',den:'AI photo review of workstations and posture, NIOSH lifting and REBA scoring.',des:'Revisión con IA de estaciones y postura, levantamiento NIOSH y REBA.',url:'',file:'ergonomics.html',isNew:true,ai:true},
+ {id:'hw',cat:'chem',icon:'drum',en:'Hazardous Waste Storage Inspection',es:'Inspección de Almacén de Residuos Peligrosos',den:'Weekly container inspections with time-limit tracking, required comments on "No" items and the monthly form.',des:'Inspecciones semanales de contenedores con control de tiempo límite, comentarios en cada "No" y formato mensual.',url:'',file:'hazwaste-inspection.html',isNew:true},
+ {id:'sds',cat:'chem',icon:'flask',en:'SDS Finder',es:'Buscador de SDS',den:'Find SDSs from a label photo, keep a chemical inventory by facility, read SDS PDFs, and print bilingual container labels with a QR code to the SDS.',des:'Busque HDS con foto de etiqueta, lleve un inventario de químicos por planta, lea PDF de HDS e imprima etiquetas bilingües con código QR a la HDS.',url:'',file:'sds-finder.html',ai:true,isNew:true},
+ {id:'lms',cat:'train',icon:'book',en:'Bilingual Safety LMS',es:'Plataforma de Capacitación Bilingüe',den:'Courses, quizzes, signed PDF certificates and completion reports.',des:'Cursos, exámenes, certificados PDF firmados y reportes.',url:'',file:'safety-lms.html'},
+ {id:'deck',cat:'train',icon:'slides',en:'Training Deck Builder',es:'Generador de Presentaciones',den:'Build toolbox talk and training slide decks.',des:'Arme presentaciones para pláticas y capacitación.',url:'',file:'deck-builder.html'},
+ {id:'bbs',cat:'train',icon:'eye',en:'BBS Observation Card',es:'Tarjeta de Observación BBS',den:'Safe vs. at-risk observations, coaching and trends.',des:'Observaciones seguras vs. de riesgo, coaching y tendencias.',url:'',file:'bbs-card.html',isNew:true},
+ {id:'fork',cat:'train',icon:'truck',en:'Forklift Operator Evaluation',es:'Evaluación de Operador de Montacargas',den:'Weighted practical evaluation with must-pass items, policy acknowledgment, signatures and PDF.',des:'Evaluación práctica ponderada con puntos obligatorios, reconocimiento de políticas, firmas y PDF.',url:'',file:'forklift-eval.html',isNew:true},
+ {id:'cert',cat:'train',icon:'book',en:'Training Certificates & ID Cards',es:'Certificados y Credenciales de Capacitación',den:'Certificates of completion and wallet ID cards with QR verification, expiration tracking and print sheets.',des:'Certificados de finalización y credenciales con verificación QR, control de vencimientos y hojas de impresión.',url:'',file:'certificates/',isNew:true},
+ {id:'gas',cat:'chem',icon:'gas',en:'Compressed Gas Safety',es:'Seguridad de Gases Comprimidos',den:'Bilingual cylinder safety training with a picture game, storage scene and quiz.',des:'Capacitación bilingüe de cilindros con juego de imágenes, escena de almacenamiento y examen.',url:'',file:'compressed-gas.html'},
+ {id:'diagram',cat:'report',icon:'chart',en:'EHS Diagram Generator',es:'Generador de Diagramas EHS',den:'Flowcharts and diagrams for procedures and incident reviews.',des:'Diagramas de flujo para procedimientos y revisiones de incidentes.',url:'',file:'diagram-generator.html'}
 
 ];
 // Latest updates, newest first. "id" links the entry to a tool card.
@@ -524,7 +532,7 @@ var UPDATES=[
 {d:'2026-10-22',id:'t8',kind:'upd',en:'Inspections: frequency and period',es:'Inspecciones: frecuencia y periodo',
   den:'One Frequency / period dropdown (for example Weekly · Week 43 or Quarterly · Q4). The year is added on the PDF from the inspection date.',
   des:'Una sola lista de Frecuencia / periodo (por ejemplo Weekly · Week 43 o Quarterly · Q4). El año se agrega en el PDF según la fecha de inspección.'},
-{d:'2026-10-22',id:'hazard',kind:'upd',en:'Grimmway logo on reports',es:'Logo de Grimmway en los reportes',
+{d:'2026-10-22',id:'hazard',kind:'upd',en:'Company logo on reports',es:'Logo de la empresa en los reportes',
   den:'Hazard, near-miss, ergonomics and inspection reports (PDF, Word and HTML) now carry the company logo in the header.',
   des:'Los reportes de peligros, casi accidentes, ergonomía e inspecciones (PDF, Word y HTML) ahora llevan el logo de la empresa.'},
 {d:'2026-10-22',id:'sds',kind:'upd',en:'Labels now link straight to the SDS',es:'Las etiquetas ahora enlazan directo a la HDS',
@@ -619,8 +627,8 @@ var LOOK={
  bbs:{ac:'#0d9488',ac2:'#115e59',pat:P.eyes,kind:{en:'Observe · coach',es:'Observar · guiar'}},
  fork:{ac:'#f2b705',ac2:'#e0a100',ink:'#14202e',pat:P.chevrons,patsz:'30px 76px',light:true,art:A.fork,kind:{en:'Operator evaluation',es:'Evaluación de operador'}},
  dash:{ac:'#8a6400',ac2:'#5c4300',pat:P.bars,patsz:'40px 76px',kind:{en:'KPIs',es:'Indicadores'}},
- recTS:{ac:'#7a2e5c',ac2:'#4f1d3c',pat:P.line,patsz:'80px 76px',kind:{en:'Tasteful Selections',es:'Tasteful Selections'}},
- recWP:{ac:'#3f6212',ac2:'#28400a',pat:P.line,patsz:'80px 76px',kind:{en:'Cal-O West Plant',es:'Cal-O West Plant'}}
+ recTS:{ac:'#7a2e5c',ac2:'#4f1d3c',pat:P.line,patsz:'80px 76px',kind:{en:'North Plant',es:'North Plant'}},
+ recWP:{ac:'#3f6212',ac2:'#28400a',pat:P.line,patsz:'80px 76px',kind:{en:'West Plant',es:'West Plant'}}
 };
 var CAT_LOOK={insp:'#1f5f99',jsa:'#d9531e',health:'#1d7446',chem:'#7a4ea3',train:'#0f2942',report:'#8a6400'};
 function lookOf(a){ return LOOK[a.id] || {ac:CAT_LOOK[a.cat]||'#475569',ac2:'#14202e',pat:P.dots,kind:{en:'Custom tool',es:'Herramienta propia'}}; }
@@ -690,7 +698,7 @@ function render(){
   } else {
     var s=section(cat?tx(CATS.find(function(c){return c.k===cat;})):tx({en:'Results',es:'Resultados'}), list.length+'', list); if(s) box.appendChild(s);
   }
-  document.getElementById('foot').textContent = all.length+' '+tx({en:'tools · Grimmway Produce Group EHS · built by Jesus Diaz, EHS Coordinator',es:'herramientas · EHS Grimmway Produce Group · creado por Jesus Diaz, Coordinador EHS'});
+  document.getElementById('foot').textContent = all.length+' '+tx({en:'tools · EHS Field Tools · built by Jesus Diaz',es:'herramientas · EHS Field Tools · creado por Jesus Diaz'});
 }
 var updOpen=false;
 function fmtD(iso){ var p=iso.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(App.L()==='es'?'es-MX':'en-US',{month:'short',day:'numeric'}); }
@@ -744,15 +752,13 @@ function bindManage(){
 }
 function renderHelp(){
   var steps=[
-   {en:'Put this hub file and every tool file in one folder (for example "EHS Tools").',es:'Ponga este archivo del centro y todos los archivos de herramientas en una carpeta (por ejemplo "EHS Tools").'},
-   {en:'In Manage, make each offline file name match the file in that folder exactly, including capital letters and ".html". Tools marked "Check file name" were never confirmed.',es:'En Administrar, haga que cada nombre coincida exactamente con el archivo en esa carpeta, con mayúsculas y ".html". Las marcadas "Revise nombre de archivo" no se han confirmado.'},
-   {en:'Open the hub in a browser (Chrome or Safari), not a preview app, so links between files work.',es:'Abra el centro en un navegador (Chrome o Safari), no en una app de vista previa, para que funcionen los enlaces entre archivos.'},
-   {en:'Star the tools you use most so they stay at the top.',es:'Marque con estrella las herramientas que más usa para que queden arriba.'},
-   {en:'Use Export settings to copy your setup to another iPad or phone.',es:'Use Exportar configuración para copiar su ajuste a otro iPad o teléfono.'}];
+   {en:'iPhone / iPad: open this page in Safari, tap Share, then "Add to Home Screen".',es:'iPhone / iPad: abra esta página en Safari, toque Compartir y luego "Agregar a inicio".'},
+   {en:'Android: open it in Chrome, tap the ⋮ menu, then "Install app" or "Add to Home screen".',es:'Android: ábrala en Chrome, toque el menú ⋮ y luego "Instalar app" o "Agregar a la pantalla principal".'},
+   {en:'Open each tool once while online so it is saved for offline use.',es:'Abra cada herramienta una vez con internet para que quede guardada para usar sin conexión.'},
+   {en:'Add your company name and sites above so every tool uses them.',es:'Agregue arriba el nombre de su empresa y sus plantas para que todas las herramientas los usen.'},
+   {en:'Star the tools you use most so they stay at the top.',es:'Marque con estrella las herramientas que más usa para que queden arriba.'}];
   document.getElementById('hSteps').innerHTML=steps.map(function(s){return '<li>'+esc(tx(s))+'</li>';}).join('');
-  document.getElementById('hMode').textContent = localOK
-    ? tx({en:'"Open · field + camera" runs the tool on this site: the camera works, records stay on this device, and AI and team sync are off. "Claude · AI + sync" opens the Claude version with AI and shared team records.',es:'"Abrir · campo y cámara" usa la herramienta en este sitio: la cámara funciona, los registros quedan en este dispositivo y la IA y la sincronización están apagadas. "Claude · IA y sincronización" abre la versión de Claude con IA y registros compartidos del equipo.'})
-    : tx({en:'You are using the online hub. It opens published tools only. Tools that exist only as files on your device open from the offline hub file.',es:'Está usando el centro en línea. Solo abre herramientas publicadas. Las que existen solo como archivos en su dispositivo se abren desde el centro sin conexión.'});
+  document.getElementById('hMode').textContent = tx({en:'After the first visit the tools work without internet. Your records stay on this device only; use each tool\'s backup or export to move them. AI features are optional and use your own Anthropic API key ("✨ Set up AI" inside the AI tools).',es:'Después de la primera visita las herramientas funcionan sin internet. Sus registros se quedan solo en este dispositivo; use el respaldo o la exportación de cada herramienta para moverlos. Las funciones de IA son opcionales y usan su propia clave de API de Anthropic ("✨ Activar IA" dentro de las herramientas con IA).'});
 }
 document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('q').addEventListener('input',render);
@@ -762,4 +768,53 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 })();
 </script>
+<script>
+(function(){
+  function es(){return (document.documentElement.lang||'').slice(0,2)==='es'}
+  function T(a,b){return es()?b:a}
+  function g(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
+  function labels(){
+    document.getElementById('coH').textContent=T('Your company & sites','Su empresa y plantas');
+    document.getElementById('coHint').textContent=T('Used by every tool on this device for facility lists. Reopen a tool after saving.','Lo usan todas las herramientas de este dispositivo para la lista de plantas. Vuelva a abrir la herramienta después de guardar.');
+    document.getElementById('coOrgL').textContent=T('Company name','Nombre de la empresa');
+    document.getElementById('coSitesL').textContent=T('Sites / facilities (one per line)','Plantas / instalaciones (una por línea)');
+    document.getElementById('coSave').textContent=T('Save','Guardar');
+  }
+  function load(){document.getElementById('coOrg').value=g('ehsOrg');var v=[];try{v=JSON.parse(g('ehsSites')||'[]')}catch(e){}document.getElementById('coSites').value=(v||[]).join('\n')}
+  document.addEventListener('DOMContentLoaded',function(){
+    labels();load();
+    new MutationObserver(labels).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    document.getElementById('coSave').onclick=function(){
+      var sites=document.getElementById('coSites').value.split('\n').map(function(x){return x.trim()}).filter(Boolean);
+      try{localStorage.setItem('ehsOrg',document.getElementById('coOrg').value.trim());if(sites.length)localStorage.setItem('ehsSites',JSON.stringify(sites));else localStorage.removeItem('ehsSites');
+        document.getElementById('coMsg').textContent=T('Saved.','Guardado.')}catch(e){document.getElementById('coMsg').textContent=T('Could not save on this device.','No se pudo guardar en este dispositivo.')}
+    };
+  });
+})();
+</script>
+<div id="ehsDisc" style="position:fixed;inset:0;background:rgba(15,41,66,.6);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px">
+ <div style="background:#fff;color:#1c2733;max-width:460px;width:100%;border-radius:14px;padding:18px;border-top:5px solid #d9531e;font:15px -apple-system,Segoe UI,Arial,sans-serif;line-height:1.5">
+  <h3 id="dH" style="margin:0 0 8px;color:#0f2942"></h3><p id="dP1" style="margin:6px 0"></p><p id="dP2" style="margin:6px 0;color:#5b6b7c;font-size:13px"></p>
+  <button id="dOk" style="margin-top:10px;background:#d9531e;color:#fff;border:0;border-radius:8px;padding:11px 16px;font-weight:700;font-size:15px"></button>
+ </div></div>
+<script>
+(function(){
+ function es(){return (document.documentElement.lang||'').slice(0,2)==='es'}
+ function T(a,b){return es()?b:a}
+ function L(){document.getElementById('dH').textContent=T('Before you use EHS Field Tools','Antes de usar EHS Field Tools');
+  document.getElementById('dP1').textContent=T('These tools support — they do not replace — a qualified safety professional, your written safety programs, or the official Cal/OSHA Title 8 and federal OSHA regulations. Always verify citations, limits and requirements against the current regulations before acting.','Estas herramientas apoyan, pero no sustituyen, a un profesional de seguridad calificado, a sus programas escritos ni a los reglamentos oficiales de Cal/OSHA Título 8 y OSHA federal. Verifique siempre las citas, límites y requisitos contra los reglamentos vigentes antes de actuar.');
+  document.getElementById('dP2').textContent=T('Beta version. Your records stay on this device. See the privacy policy at the bottom of the page.','Versión beta. Sus registros se quedan en este dispositivo. Vea la política de privacidad al final de la página.');
+  document.getElementById('dOk').textContent=T('I understand','Entendido');
+  var f=document.getElementById('ehsFootLinks'); if(f) f.innerHTML='<b>BETA</b> · <a href="privacy.html">'+T('Privacy policy','Política de privacidad')+'</a> · <a href="#" id="dShow">'+T('Disclaimer','Aviso')+'</a>';
+  var d=document.getElementById('dShow'); if(d) d.onclick=function(e){e.preventDefault();document.getElementById('ehsDisc').style.display='flex'};}
+ document.addEventListener('DOMContentLoaded',function(){
+  var foot=document.getElementById('foot'); var p=document.createElement('p'); p.id='ehsFootLinks'; p.className='foot'; foot.parentNode.insertBefore(p,foot.nextSibling);
+  L(); new MutationObserver(L).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  var ok=false; try{ok=localStorage.getItem('ehsDisclaimerOk')==='1'}catch(e){}
+  if(!ok) document.getElementById('ehsDisc').style.display='flex';
+  document.getElementById('dOk').onclick=function(){try{localStorage.setItem('ehsDisclaimerOk','1')}catch(e){} document.getElementById('ehsDisc').style.display='none'};
+ });
+})();
+</script>
 </body></html>
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script>

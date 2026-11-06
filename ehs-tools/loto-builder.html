@@ -83,7 +83,7 @@
   /* ---- AI key panel ---- */
   var panel,btn;
   function css(){var s=document.createElement('style');s.textContent=
-    '#ehsAiBtn{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147483000;background:#0f2942;color:#fff;border:2px solid #f2b705;border-radius:20px;padding:7px 12px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.25)}'+
+    '#ehsAiBtn{position:fixed;left:86px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147483000;background:#0f2942;color:#fff;border:2px solid #f2b705;border-radius:20px;padding:7px 12px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.25)}'+
     '#ehsAiBtn.off{background:#5b6b7c;border-color:#c9d2dc}'+
     '#ehsAiPanel{position:fixed;inset:0;background:rgba(15,41,66,.55);z-index:2147483001;display:none;align-items:center;justify-content:center;padding:16px;font:15px -apple-system,Segoe UI,Arial,sans-serif;color:#1c2733}'+
     '#ehsAiPanel.on{display:flex}#ehsAiPanel .bx{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:18px;border-top:5px solid #d9531e}'+
@@ -118,7 +118,7 @@
     new MutationObserver(function(){labels();refresh()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']})}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 })();
-</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2942"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="EHS Tools"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>LOTO Procedure Builder</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -349,7 +349,7 @@ body.has-ai .ai-off{display:none!important}
     <h2 data-i18n="hdrTitle">Procedure header</h2>
     <p class="sub" data-i18n="hdrSub">These fields fill the top block of the Title8_LOTO_Procedure sheet and repeat on every continuation page.</p>
     <div class="grid">
-      <label class="f c4"><span data-i18n="fId">ID #</span><input type="text" id="f_id" class="mono" data-bind="id" placeholder="e.g. LOTO-SMP-2510"></label>
+      <label class="f c4"><span data-i18n="fId">ID #</span><input type="text" id="f_id" class="mono" data-bind="id" placeholder="e.g. LOTO-MP-2510"></label>
       <div class="f c4 combo" id="cmb_facility"><span class="flabel" data-i18n="fFacility">Facility</span></div>
       <div class="f c4 combo" id="cmb_location"><span class="flabel" data-i18n="fLocation">Location</span></div>
       <label class="f c6"><span data-i18n="fDesc">Description (equipment)</span><input type="text" id="f_desc" data-bind="description" placeholder="e.g. 2510 Translicer"></label>
@@ -868,7 +868,7 @@ body.has-ai .ai-off{display:none!important}
 <script>
 "use strict";
 /* ===================== Reference lists ===================== */
-const FACILITIES=["San Miguel Produce","Tasteful Selections","Cal-O Lamont","Cal-O David RD","Cal-O West Plant"];
+const FACILITIES=["Main Plant","North Plant","South Plant","East Plant","West Plant"];
 const LOCATIONS=["Production","Packing","Processing","Sanitation","Maintenance Shop","Shipping / Receiving","Cold Storage","Utilities / Boiler Room","Refrigeration Engine Room","Wastewater","Warehouse"];
 const PREPARED=["EHS Department","Maintenance Department","EHS Coordinator","Engineering"];
 const APPROVED=["Maintenance Manager / Safety Manager","Maintenance Manager","EHS Manager","Plant Manager","Operations Manager"];
@@ -1018,7 +1018,7 @@ function blankState(){
 }
 function exampleState(){
   const s=blankState();
-  Object.assign(s,{id:"LOTO-SMP-2510",facility:"San Miguel Produce",location:"Production",description:"2510 Translicer",created:"2024-12-04",revised:"2026-07-06",revNo:"1",revNote:"Annual review – procedure text updated"});
+  Object.assign(s,{id:"LOTO-MP-2510",facility:"Main Plant",location:"Production",description:"2510 Translicer",created:"2024-12-04",revised:"2026-07-06",revNo:"1",revNote:"Annual review – procedure text updated"});
   s.energies.electrical={on:true,mag:"480V",point:"Main Electrical Disconnect"};
   s.energies.mechanical={on:true,mag:"Rotating blades",point:"Cutting Blade Assembly, Drive Motor, Gearbox and Conveyor Components"};
   s.energies.pneumatic={on:true,mag:"If equipped",point:"Main Air Supply Isolation Valve"};
@@ -3019,7 +3019,7 @@ let AI=null, AI_IMG=false, AI_IMGMAX=8;const AI_PHOTOS_MAX=30;
 const AI_ERR={not_granted:"AI wasn't allowed for this page. You can allow it from the page's Permissions menu.",sampling_disabled:"AI isn't available for this account.",rate_limited:"AI is busy or your usage limit was reached. Try again in a few minutes.",session_expired:"Your Claude session expired. Sign in again and retry.",image_rejected:"One of the photos couldn't be sent. Try a smaller JPG or PNG.",images_unavailable:"Photos can't be sent to AI in this view; the text was used instead.",refused:"AI declined this request. Try rewording the description.",empty_completion:"AI returned nothing. Try again with a shorter description.",invalid_json:"AI's answer couldn't be read. Try again.",prompt_too_large:"Too much text for one request. Shorten the description.",upstream_error:"AI connection problem. Try again."};
 const aiMsg=e=>(e&&AI_ERR[e.code])||(e&&e.message)||"AI request failed.";
 function dataToBlob(d){const i=d.indexOf(",");const m=(d.slice(5,i).split(";")[0])||"image/jpeg";const bin=atob(d.slice(i+1));const u=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);return new Blob([u],{type:m})}
-const AI_CTX=()=>`Context: LOTO energy control procedure for a produce processing facility (Grimmway-type fresh carrot/vegetable packing and processing).
+const AI_CTX=()=>`Context: LOTO energy control procedure for a produce processing facility (fresh produce/vegetable packing and processing).
 Must comply with Cal/OSHA Title 8 §3314 and OSHA 29 CFR 1910.147. Rules: never use E-stops, interlocks, selector switches or control circuits as energy isolation; every isolating device gets an individually assigned personal lock and danger tag (hasp or group lock box for multiple workers); stored and residual energy (air, hydraulic, springs, gravity, capacitors, heat, steam, fluids) must be released or restrained; zero-energy state must be verified (try-start with controls returned to OFF, test-before-touch for exposed conductors); on removal each employee removes only their own lock.
 Equipment: ${S.description||"(not named)"}. Facility: ${S.facility||""}. Location: ${S.location||""}.
 Preferred energy type labels: ${ENERGY_TYPES.join(" | ")}.
@@ -3823,3 +3823,4 @@ $("#fiCopy").onclick=()=>{if(FI.target&&FI.target.kind==="step"){const t=chatPro
 </script>
 
 </body></html>
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script><a id="ehsHome" href="./" aria-label="EHS Field Tools hub" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147482999;background:#0f2942;color:#fff;border:2px solid #d9531e;border-radius:20px;padding:6px 11px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">&#8962; Hub</a>

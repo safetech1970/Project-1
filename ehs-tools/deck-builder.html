@@ -83,7 +83,7 @@
   /* ---- AI key panel ---- */
   var panel,btn;
   function css(){var s=document.createElement('style');s.textContent=
-    '#ehsAiBtn{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147483000;background:#0f2942;color:#fff;border:2px solid #f2b705;border-radius:20px;padding:7px 12px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.25)}'+
+    '#ehsAiBtn{position:fixed;left:86px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147483000;background:#0f2942;color:#fff;border:2px solid #f2b705;border-radius:20px;padding:7px 12px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.25)}'+
     '#ehsAiBtn.off{background:#5b6b7c;border-color:#c9d2dc}'+
     '#ehsAiPanel{position:fixed;inset:0;background:rgba(15,41,66,.55);z-index:2147483001;display:none;align-items:center;justify-content:center;padding:16px;font:15px -apple-system,Segoe UI,Arial,sans-serif;color:#1c2733}'+
     '#ehsAiPanel.on{display:flex}#ehsAiPanel .bx{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:18px;border-top:5px solid #d9531e}'+
@@ -118,7 +118,7 @@
     new MutationObserver(function(){labels();refresh()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']})}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 })();
-</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2942"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="EHS Tools"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta charset="utf-8">
 <title>Training Deck Builder</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -535,7 +535,7 @@ dialog#ic-dlg::backdrop { background: rgba(10, 14, 16, .55); }
 const EXAMPLE = {
   title: { en: "Compressed Gas Safety", es: "Seguridad del Gas Comprimido" },
   subtitle: { en: "Safety Training", es: "Capacitación de Seguridad" },
-  presenter: "Jesus Diaz, EHS Coordinator",
+  presenter: "Safety Trainer",
   intro: { icon: "cylinder",
     text: { en: "Compressed gases are used in many industries, but the intense pressure inside the cylinder makes them a serious risk.", es: "Los gases comprimidos se utilizan en muchas industrias, pero la intensa presión dentro del cilindro los convierte en un riesgo grave." },
     key: { en: "Anyone who handles compressed gas at work must understand the hazards and follow every safe work practice.", es: "Todo empleado que maneje gas comprimido debe comprender los riesgos y seguir todas las prácticas de trabajo seguras." } },
@@ -2645,3 +2645,4 @@ renderLogo();
 </script>
 
 </body></html>
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script><a id="ehsHome" href="./" aria-label="EHS Field Tools hub" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147482999;background:#0f2942;color:#fff;border:2px solid #d9531e;border-radius:20px;padding:6px 11px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">&#8962; Hub</a>

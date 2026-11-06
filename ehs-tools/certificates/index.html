@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#0f2942"><link rel="apple-touch-icon" href="../icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="EHS Tools">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -350,7 +350,7 @@ hNumbers:'Certificate numbers',dFormat:'Number format',dSeq:'Next sequence #',dE
 hDates:'Dates & alerts',dDateFmt:'Date format',dfLong:'Long (November 5, 2026)',dWarn:'"Expiring soon" window (days)',resetDesign:'Reset design to defaults',livePrev:'Live preview',confirmReset:'Reset all design options to defaults?',
 k_showSeal:'Seal',k_showQR:'QR code',k_showWatermark:'Watermark',k_showDept:'Department line',k_showMeta:'Employee ID & agency',k_showCit:'Title 8 citation',k_showExp:'Expiration date',k_showHours:'Hours',k_showScore:'Score / result',k_showFac:'Facility',k_showTrainerSig:'Trainer signature',k_showApprover:'Approver signature',
 k_cardPhoto:'Photo',k_cardQR:'QR code (back)',k_cardAgency:'Agency',k_cardCit:'Citation',k_sheetBacks:'Include back pages',k_batchSuffix:'Add -01, -02… for batches',
-th_grimmway:'Navy / Orange (default)',th_harvest:'Harvest green',th_corporate:'Corporate blue',th_safety:'Safety red',th_royal:'Navy / Gold',th_ocean:'Ocean',th_custom:'Custom',
+th_standard:'Navy / Orange (default)',th_harvest:'Harvest green',th_corporate:'Corporate blue',th_safety:'Safety red',th_royal:'Navy / Gold',th_ocean:'Ocean',th_custom:'Custom',
 camTip:'Center the face in the outline. Plain, light background works best.',capture:'📸 Capture',flipCam:'🔄 Switch camera',camBlocked:'The Claude viewer blocks the camera. On iPhone/iPad, tap "Take Photo" in the menu, or use the offline app in Safari for the live camera.',camDenied:'Camera unavailable or permission denied — opening the photo picker instead.',appTitle:'Training Certificates & ID Cards',appSub:'EHS · Certificate of completion and wallet credential generator',
 tabIssue:'Issue',tabRegistry:'Registry',tabTrainees:'Trainees',tabTrainings:'Trainings',tabSettings:'Settings',
 secTraining:'Training details',training:'Training',dateCompleted:'Date completed',facility:'Facility',hours:'Hours',score:'Score / Result',scorePh:'e.g. 92% or Pass',
@@ -370,7 +370,7 @@ addTraining:'+ Training',nameEN:'Name (English)',nameES:'Name (Spanish)',citatio
 validityNote:'Use 0 for trainings with no fixed expiration.',months:'mo',none:'None',
 secOrg:'Organization & approver',orgName:'Organization name',deptLine:'Department line',approverName:'Approver name',approverTitle:'Approver title',approverSig:'Approver signature',
 facilities:'Facilities',facNote:'One per line: Facility name | CODE. The code starts each certificate number.',agencies:'Agencies (comma separated)',save:'Save',cancel:'Cancel',
-logoNote:'Upload logos (Grimmway, Tasteful Selections, etc.) and choose one per batch on the Issue tab. "Text wordmark" uses the organization name.',
+logoNote:'Upload your company logos and choose one per batch on the Issue tab. "Text wordmark" uses the organization name.',
 logoNamePh:'Logo name',uploadLogo:'Upload logo',wordmark:'Text wordmark',remove:'Remove',
 dataTitle:'Data on this device',clearAll:'Erase all data',storage:'Stored on this device: {kb} KB · {r} certificates · {t} trainees. Use Backup regularly.',
 traineeTitle:'Trainee',takePhoto:'Take photo',choosePhoto:'Choose photo',removePhoto:'Remove',photoNote:'Photo is optional and appears on the ID card.',
@@ -387,7 +387,7 @@ hNumbers:'Números de certificado',dFormat:'Formato del número',dSeq:'Siguiente
 hDates:'Fechas y alertas',dDateFmt:'Formato de fecha',dfLong:'Larga (5 de noviembre de 2026)',dWarn:'Ventana "por vencer" (días)',resetDesign:'Restablecer diseño',livePrev:'Vista previa en vivo',confirmReset:'¿Restablecer todas las opciones de diseño?',
 k_showSeal:'Sello',k_showQR:'Código QR',k_showWatermark:'Marca de agua',k_showDept:'Línea del departamento',k_showMeta:'No. de empleado y agencia',k_showCit:'Cita del Título 8',k_showExp:'Fecha de vencimiento',k_showHours:'Horas',k_showScore:'Calificación',k_showFac:'Planta',k_showTrainerSig:'Firma del instructor',k_showApprover:'Firma del aprobador',
 k_cardPhoto:'Foto',k_cardQR:'Código QR (reverso)',k_cardAgency:'Agencia',k_cardCit:'Cita',k_sheetBacks:'Incluir páginas de reverso',k_batchSuffix:'Agregar -01, -02… en lotes',
-th_grimmway:'Azul marino / Naranja (predeterminado)',th_harvest:'Verde cosecha',th_corporate:'Azul corporativo',th_safety:'Rojo seguridad',th_royal:'Azul marino / Oro',th_ocean:'Océano',th_custom:'Personalizado',
+th_standard:'Azul marino / Naranja (predeterminado)',th_harvest:'Verde cosecha',th_corporate:'Azul corporativo',th_safety:'Rojo seguridad',th_royal:'Azul marino / Oro',th_ocean:'Océano',th_custom:'Personalizado',
 camTip:'Centre la cara en el contorno. Un fondo claro y liso funciona mejor.',capture:'📸 Capturar',flipCam:'🔄 Cambiar cámara',camBlocked:'El visor de Claude bloquea la cámara. En iPhone/iPad toque "Tomar foto" en el menú, o use la app sin conexión en Safari para la cámara en vivo.',camDenied:'Cámara no disponible o permiso denegado — se abrirá el selector de fotos.',appTitle:'Certificados y Credenciales de Capacitación',appSub:'EHS · Generador de certificados de finalización y credenciales de bolsillo',
 tabIssue:'Emitir',tabRegistry:'Registro',tabTrainees:'Participantes',tabTrainings:'Capacitaciones',tabSettings:'Ajustes',
 secTraining:'Detalles de la capacitación',training:'Capacitación',dateCompleted:'Fecha de finalización',facility:'Planta',hours:'Horas',score:'Calificación / Resultado',scorePh:'ej. 92% o Aprobado',
@@ -407,7 +407,7 @@ addTraining:'+ Capacitación',nameEN:'Nombre (inglés)',nameES:'Nombre (español
 validityNote:'Use 0 para capacitaciones sin vencimiento fijo.',months:'meses',none:'Ninguna',
 secOrg:'Organización y aprobador',orgName:'Nombre de la organización',deptLine:'Línea del departamento',approverName:'Nombre del aprobador',approverTitle:'Puesto del aprobador',approverSig:'Firma del aprobador',
 facilities:'Plantas',facNote:'Una por línea: Nombre de planta | CÓDIGO. El código inicia cada número de certificado.',agencies:'Agencias (separadas por comas)',save:'Guardar',cancel:'Cancelar',
-logoNote:'Suba logotipos (Grimmway, Tasteful Selections, etc.) y elija uno por lote en la pestaña Emitir. "Logotipo de texto" usa el nombre de la organización.',
+logoNote:'Suba los logotipos de su empresa y elija uno por lote en la pestaña Emitir. "Logotipo de texto" usa el nombre de la organización.',
 logoNamePh:'Nombre del logotipo',uploadLogo:'Subir logotipo',wordmark:'Logotipo de texto',remove:'Quitar',
 dataTitle:'Datos en este dispositivo',clearAll:'Borrar todos los datos',storage:'Guardado en este dispositivo: {kb} KB · {r} certificados · {t} participantes. Haga respaldos con frecuencia.',
 traineeTitle:'Participante',takePhoto:'Tomar foto',choosePhoto:'Elegir foto',removePhoto:'Quitar',photoNote:'La foto es opcional y aparece en la credencial.',
@@ -450,9 +450,9 @@ var DEFAULT_TRAININGS=[
  ['ergo','Ergonomics & Safe Lifting','Ergonomía y Levantamiento Seguro','§5110',12,1],
  ['iipp','IIPP / New Hire Safety Orientation','Orientación de Seguridad para Nuevo Ingreso / IIPP','§3203',0,2]
 ].map(function(a){return{id:a[0],en:a[1],es:a[2],cit:a[3],months:a[4],hours:a[5]}});
-var DB={settings:{org:'Grimmway Produce Group',dept:'Environmental, Health & Safety',apName:'Jesus Diaz',apTitle:'EHS Coordinator',apSig:'',
-  facilities:[['San Miguel Produce','SMP'],['Tasteful Selections','TS'],['Cal-O Lamont','CL'],['Cal-O David RD','CD'],['Cal-O West Plant','CW']],
-  agencies:['H&R Labor','Esparza','Exact Staff'],logos:[],trainerSigs:{},lastTrainer:'',lastFac:'',lastLogo:'',lastLang:'bi',uiLang:'en'},
+var DB={settings:{org:'Your Company',dept:'Environmental, Health & Safety',apName:'',apTitle:'',apSig:'',
+  facilities:[['Main Plant','MP'],['North Plant','NP'],['South Plant','SP'],['East Plant','EP'],['West Plant','WP']],
+  agencies:[],logos:[],trainerSigs:{},lastTrainer:'',lastFac:'',lastLogo:'',lastLang:'bi',uiLang:'en'},
  trainings:DEFAULT_TRAININGS,trainees:[],records:[]};
 function load(){var s=store.get(KEY);if(!s)return;try{var d=JSON.parse(s);DB.settings=Object.assign(DB.settings,d.settings||{});DB.trainings=d.trainings||DB.trainings;DB.trainees=d.trainees||[];DB.records=d.records||[]}catch(e){}}
 function save(){store.set(KEY,JSON.stringify(DB))}
@@ -599,8 +599,8 @@ function drawPreview(i){var r=current[i];if(!r)return;
 function copyTo(dst,src){var s=Math.min(1,1400/src.width);dst.width=src.width*s;dst.height=src.height*s;dst.getContext('2d').drawImage(src,0,0,dst.width,dst.height)}
 
 /* ---------------- design settings ---------------- */
-var THEMES={grimmway:['#0f2942','#d9531e','#f2b705'],harvest:['#1e4d2b','#e07a1f','#f2c14e'],corporate:['#22313f','#2e86c1','#aab7b8'],safety:['#2b2b2b','#c0392b','#f1c40f'],royal:['#1b2a6b','#b8860b','#d4af37'],ocean:['#0b3c5d','#328cc1','#d9b310']};
-var DESIGN_DEF={theme:'grimmway',c1:'#0f2942',c2:'#d9531e',c3:'#f2b705',style:'classic',nameFont:'serif',
+var THEMES={standard:['#0f2942','#d9531e','#f2b705'],harvest:['#1e4d2b','#e07a1f','#f2c14e'],corporate:['#22313f','#2e86c1','#aab7b8'],safety:['#2b2b2b','#c0392b','#f1c40f'],royal:['#1b2a6b','#b8860b','#d4af37'],ocean:['#0b3c5d','#328cc1','#d9b310']};
+var DESIGN_DEF={theme:'standard',c1:'#0f2942',c2:'#d9531e',c3:'#f2b705',style:'classic',nameFont:'serif',
  titleEN:'CERTIFICATE OF COMPLETION',titleES:'CERTIFICADO DE FINALIZACIÓN',sealText:'EHS',
  showSeal:1,showQR:1,showWatermark:1,showMeta:1,showHours:1,showScore:1,showExp:1,showCit:1,showFac:1,showTrainerSig:1,showApprover:1,showDept:1,
  statementEN:'',statementES:'',
@@ -916,7 +916,7 @@ function loadDesign(){var d=D();
  $('dTheme').value=THEMES[d.theme]?d.theme:'custom';
  document.querySelectorAll('[data-d]').forEach(function(e){var k=e.dataset.d;if(e.type==='checkbox')e.checked=!!d[k];else e.value=d[k]==null?'':d[k]});
  updExample()}
-function updExample(){var d=D(),f=DB.settings.facilities[0]||['','TS'];$('dExample').value=certFromFormat(d.certFormat||DESIGN_DEF.certFormat,f[1],todayISO(),'10482',d.seq)}
+function updExample(){var d=D(),f=DB.settings.facilities[0]||['','NP'];$('dExample').value=certFromFormat(d.certFormat||DESIGN_DEF.certFormat,f[1],todayISO(),'10482',d.seq)}
 var prevT;function schedPrev(){clearTimeout(prevT);prevT=setTimeout(drawDesignPreview,220)}
 function sampleRec(){var r=DB.records[0],S=DB.settings,l=$('dPrevLang').value;
  if(r)return Object.assign({},r,{lang:l});var f=S.facilities[0]||['',''];
@@ -949,3 +949,4 @@ window.__EHS={DB:DB,renderCert:renderCert,renderCardFront:renderCardFront,render
 </script>
 </body>
 </html>
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("../sw.js").catch(function(){})});</script><a id="ehsHome" href="../" aria-label="EHS Field Tools hub" style="position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147482999;background:#0f2942;color:#fff;border:2px solid #d9531e;border-radius:20px;padding:6px 11px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)">&#8962; Hub</a>
