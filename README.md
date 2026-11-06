@@ -1,7 +1,8 @@
 # EHS Field Tools
 
-Offline-capable single-file EHS tools by Jesus Diaz, EHS Coordinator.
+Bilingual (EN/ES) single-file EHS field tools by Jesus Diaz, EHS Coordinator.
 
-- [Training Certificates & ID Cards](ehs-tools/certificates/)
+Open the hub: **https://safetech1970.github.io/Project-1/ehs-tools/**
 
-Records are stored only in each device's browser (localStorage); nothing is uploaded.
+- Each tool runs entirely in the browser. Records are stored only on the device (browser storage); nothing is uploaded.
+- On this site the camera works; AI features and team cloud sync are available only in the Claude versions linked from the hub.
