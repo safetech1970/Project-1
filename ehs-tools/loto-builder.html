@@ -1,4 +1,124 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script>/* EHS AI bridge: lets tools that use Claude's in-app AI run on a normal website
+   with the user's own Anthropic API key. Does nothing inside Claude. */
+(function(){
+  if (window.claude) return;
+  var KEY='ehsAiKey', TIER='ehsAiTier';
+  var MODELS={quick:'claude-haiku-5-5','default':'claude-sonnet-5-5',complex:'claude-opus-5-5'};
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||'';if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return ''}}
+  function es(){return (document.documentElement.lang||'').slice(0,2)==='es'}
+  function T(en,sp){return es()?sp:en}
+  function err(code,message,text){var e={code:code,message:message};if(text)e.text=text;return e}
+
+  function toB64(blob){return new Promise(function(res,rej){
+    var url=URL.createObjectURL(blob),img=new Image();
+    img.onload=function(){var m=1568,s=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement('canvas');
+      c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));
+      var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      res({type:'image',source:{type:'base64',media_type:'image/jpeg',data:c.toDataURL('image/jpeg',.85).split(',')[1]}})};
+    img.onerror=function(){URL.revokeObjectURL(url);rej(err('image_rejected','Could not read image'))};img.src=url})}
+
+  function normMsgs(input){
+    if(typeof input==='string'){if(!input.trim())throw err('invalid_request','Empty input');return [{role:'user',content:input}]}
+    if(!Array.isArray(input)||!input.length)throw err('invalid_request','Input must be a string or turns');
+    var out=[];input.forEach(function(m){var r=m.role==='assistant'?'assistant':'user';
+      if(out.length&&out[out.length-1].role===r)out[out.length-1].content+='\n\n'+m.content;else out.push({role:r,content:String(m.content)})});
+    if(out[0].role!=='user'||out[out.length-1].role!=='user')throw err('invalid_request','Turns must start and end with user');
+    return out}
+
+  async function post(body,signal){
+    var k=ls(KEY);
+    if(!k){openPanel(true);throw err('upstream_error',T('Add your Anthropic API key (AI button) to use AI on this site.','Agregue su clave de API de Anthropic (botón IA) para usar la IA en este sitio.'))}
+    var r;
+    try{r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:signal,headers:{'content-type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)})}
+    catch(e){if(signal&&signal.aborted)throw err('cancelled','Cancelled');throw err('upstream_error',T('No connection to the AI service.','Sin conexión con el servicio de IA.'))}
+    if(!r.ok){var msg='';try{msg=(await r.json()).error.message}catch(e){}
+      if(r.status===401||r.status===403){openPanel(true);throw err('upstream_error',T('The API key was not accepted. Check it in the AI button.','La clave de API no fue aceptada. Revísela en el botón IA.'))}
+      if(r.status===429)throw err('rate_limited',msg||'Rate limited');
+      if(r.status===400&&/credit|billing/i.test(msg))throw err('upstream_error',T('Your API account is out of credit.','Su cuenta de API no tiene crédito.'));
+      if(r.status===400)throw err('invalid_request',msg||'Bad request');
+      throw err('upstream_error',msg||('HTTP '+r.status))}
+    return r.json()}
+
+  async function sample(input,opts){
+    opts=opts||{};
+    if(opts.signal&&opts.signal.aborted)throw err('cancelled','Cancelled');
+    var msgs=normMsgs(input),tier=opts.modelTier&&MODELS[opts.modelTier]?opts.modelTier:(ls(TIER)||'default');
+    var model=(opts.model&&/^claude-/.test(opts.model))?opts.model:MODELS[tier]||MODELS['default'];
+    if(opts.images){var list=opts.images instanceof Blob?[opts.images]:Array.prototype.slice.call(opts.images);
+      if(list.length){var blocks=[];for(var i=0;i<list.length;i++)blocks.push(await toB64(list[i]));
+        var last=msgs[msgs.length-1];last.content=blocks.concat([{type:'text',text:last.content}])}}
+    var tools=(opts.tools||[]).map(function(t){return{name:t.name,description:t.description,input_schema:t.inputSchema||{type:'object',properties:{}}}});
+    var all='',truncated=false,rounds=0;
+    while(true){
+      var body={model:model,max_tokens:8192,messages:msgs};if(tools.length)body.tools=tools;
+      var j=await post(body,opts.signal);rounds++;
+      var txt=(j.content||[]).filter(function(b){return b.type==='text'}).map(function(b){return b.text}).join('');
+      if(txt.trim())all=all?all+'\n\n'+txt:txt;
+      truncated=j.stop_reason==='max_tokens';
+      var uses=(j.content||[]).filter(function(b){return b.type==='tool_use'});
+      if(j.stop_reason!=='tool_use'||!uses.length||rounds>=6)break;
+      msgs.push({role:'assistant',content:j.content});
+      var results=await Promise.all(uses.map(async function(u){var t=(opts.tools||[]).filter(function(x){return x.name===u.name})[0];
+        try{var v=await t.execute(u.input||{},{signal:opts.signal||new AbortController().signal});return{type:'tool_result',tool_use_id:u.id,content:typeof v==='string'?v:JSON.stringify(v==null?'':v)}}
+        catch(e){return{type:'tool_result',tool_use_id:u.id,content:'Error: '+(e&&e.message||e),is_error:true}}}));
+      msgs.push({role:'user',content:results})}
+    if(!all.trim())throw err('empty_completion','No text');
+    if(opts.onText){try{opts.onText({text:all,delta:all})}catch(e){}}
+    var out={text:all,truncated:truncated,modelTierApplied:tier};if(opts.model&&model===opts.model)out.modelApplied=model;return out}
+
+  function parseJSON(t){
+    try{return JSON.parse(t)}catch(e){}
+    var f=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(f){try{return JSON.parse(f[1])}catch(e){}}
+    var a=t.search(/[\[{]/),b=Math.max(t.lastIndexOf('}'),t.lastIndexOf(']'));
+    if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
+    throw err('invalid_json','Reply was not JSON',t)}
+  sample.json=async function(input,opts){
+    var add='\n\nYour reply will be machine-parsed: reply with only the JSON value, no other text.';
+    var inp=typeof input==='string'?input+add:input.map(function(m,i){return i===input.length-1?{role:m.role,content:m.content+add}:m});
+    var r=await sample(inp,opts);if(r.truncated)throw err('invalid_json','Reply was cut short',r.text);return parseJSON(r.text)};
+  sample.limits=async function(){return{maxPromptBytes:262144,images:{maxCount:20,maxInputBytes:20000000,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']},tools:{maxCount:20},modelTiers:['default','complex','quick']}};
+
+  window.claude={use:function(name){return Promise.resolve(name==='sample'?sample:null)}};
+
+  /* ---- AI key panel ---- */
+  var panel,btn;
+  function css(){var s=document.createElement('style');s.textContent=
+    '#ehsAiBtn{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147483000;background:#0f2942;color:#fff;border:2px solid #f2b705;border-radius:20px;padding:7px 12px;font:700 13px -apple-system,Segoe UI,Arial,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.25)}'+
+    '#ehsAiBtn.off{background:#5b6b7c;border-color:#c9d2dc}'+
+    '#ehsAiPanel{position:fixed;inset:0;background:rgba(15,41,66,.55);z-index:2147483001;display:none;align-items:center;justify-content:center;padding:16px;font:15px -apple-system,Segoe UI,Arial,sans-serif;color:#1c2733}'+
+    '#ehsAiPanel.on{display:flex}#ehsAiPanel .bx{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:18px;border-top:5px solid #d9531e}'+
+    '#ehsAiPanel h3{margin:0 0 8px;color:#0f2942;font-size:17px}#ehsAiPanel p{margin:6px 0;font-size:13px;color:#5b6b7c;line-height:1.45}'+
+    '#ehsAiPanel input,#ehsAiPanel select{width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid #d8dee6;border-radius:8px;margin:6px 0}'+
+    '#ehsAiPanel .r{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}#ehsAiPanel button{border:0;border-radius:8px;padding:10px 14px;font-weight:700;font-size:14px}'+
+    '#ehsAiPanel .p{background:#d9531e;color:#fff}#ehsAiPanel .g{background:#e9edf2;color:#0f2942}#ehsAiPanel .x{background:#fbe9e7;color:#c0392b}#ehsAiPanel .st{font-weight:700;font-size:13px;margin-top:8px}';
+    document.head.appendChild(s)}
+  function refresh(){if(!btn)return;var on=!!ls(KEY);btn.className=on?'':'off';btn.textContent=on?T('✨ AI on','✨ IA activa'):T('✨ Set up AI','✨ Activar IA')}
+  function openPanel(reason){if(!panel)return;panel.querySelector('#ehsAiKeyIn').value='';panel.querySelector('#ehsAiTierIn').value=ls(TIER)||'default';
+    panel.querySelector('.st').textContent=ls(KEY)?T('A key is saved on this device.','Hay una clave guardada en este dispositivo.'):(reason?T('AI needs an API key on this site.','La IA necesita una clave de API en este sitio.'):'');
+    panel.classList.add('on')}
+  function build(){css();
+    btn=document.createElement('button');btn.id='ehsAiBtn';btn.type='button';btn.onclick=function(){openPanel(false)};document.body.appendChild(btn);
+    panel=document.createElement('div');panel.id='ehsAiPanel';
+    panel.innerHTML='<div class="bx"><h3></h3><p class="d1"></p><p class="d2"></p><input id="ehsAiKeyIn" type="password" autocomplete="off" placeholder="sk-ant-…">'+
+      '<select id="ehsAiTierIn"><option value="default"></option><option value="quick"></option><option value="complex"></option></select>'+
+      '<div class="st"></div><div class="r"><button class="p" data-a="save"></button><button class="g" data-a="test"></button><button class="x" data-a="del"></button><button class="g" data-a="close"></button></div></div>';
+    document.body.appendChild(panel);
+    function labels(){panel.querySelector('h3').textContent=T('AI on this site','IA en este sitio');
+      panel.querySelector('.d1').textContent=T('Paste your Anthropic API key (console.anthropic.com → API Keys). It is saved only in this browser on this device and shared by all tools on this site. Usage is billed to your API account.','Pegue su clave de API de Anthropic (console.anthropic.com → API Keys). Se guarda solo en este navegador de este dispositivo y la comparten todas las herramientas del sitio. El uso se cobra a su cuenta de API.');
+      panel.querySelector('.d2').textContent=T('Do not save a key on shared team devices.','No guarde una clave en dispositivos compartidos del equipo.');
+      var o=panel.querySelectorAll('option');o[0].textContent=T('Standard (Sonnet) — recommended','Estándar (Sonnet) — recomendado');o[1].textContent=T('Fast & cheapest (Haiku)','Rápido y económico (Haiku)');o[2].textContent=T('Most capable (Opus)','Más capaz (Opus)');
+      var b=panel.querySelectorAll('button');b[0].textContent=T('Save','Guardar');b[1].textContent=T('Test','Probar');b[2].textContent=T('Remove key','Quitar clave');b[3].textContent=T('Close','Cerrar')}
+    labels();refresh();
+    panel.addEventListener('click',async function(e){var a=e.target.getAttribute&&e.target.getAttribute('data-a'),st=panel.querySelector('.st');
+      if(e.target===panel||a==='close'){panel.classList.remove('on');return}
+      if(a==='save'){var v=panel.querySelector('#ehsAiKeyIn').value.trim();if(v)ls(KEY,v);ls(TIER,panel.querySelector('#ehsAiTierIn').value);st.textContent=ls(KEY)?T('Saved.','Guardado.'):T('Paste a key first.','Pegue una clave primero.');refresh()}
+      if(a==='del'){ls(KEY,null);st.textContent=T('Key removed from this device.','Clave eliminada de este dispositivo.');refresh()}
+      if(a==='test'){var v2=panel.querySelector('#ehsAiKeyIn').value.trim();if(v2)ls(KEY,v2);refresh();st.textContent=T('Testing…','Probando…');
+        try{await sample('Reply with only the word OK.',{modelTier:'quick'});st.textContent=T('✓ Working. AI is ready.','✓ Funciona. La IA está lista.')}catch(x){st.textContent='✕ '+(x&&x.message||x)}}});
+    new MutationObserver(function(){labels();refresh()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']})}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
+})();
+</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>LOTO Procedure Builder</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
