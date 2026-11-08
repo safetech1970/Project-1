@@ -1,5 +1,5 @@
 /* EHS Field Tools service worker: works offline after the first visit. */
-const CACHE='ehs-tools-v3';
+const CACHE='ehs-tools-v4';
 const PRECACHE=["6s-audit.html", "bbs-card.html", "compressed-gas.html", "deck-builder.html", "diagram-generator.html", "emergency-equipment.html", "equipment-change.html", "ergonomics.html", "fall-protection.html", "fire-drill.html", "forklift-eval.html", "hazard-report.html", "hazwaste-inspection.html", "heat-illness.html", "index.html", "inspection-assistant.html", "jsa-builder.html", "loto-builder.html", "near-miss.html", "rca.html", "safety-lms.html", "sds-finder.html", "workplace-inspection.html", "certificates/", "certificates/index.html", "privacy.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/logo.png", "./"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(PRECACHE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

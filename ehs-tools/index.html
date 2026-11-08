@@ -499,7 +499,7 @@ var ICONS={
  star:'<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>'
 };
 var CATS=[{k:'insp',en:'Inspections & hazards',es:'Inspecciones y peligros'},{k:'jsa',en:'JSA & energy control',es:'JSA y control de energía'},
-  {k:'health',en:'Heat & ergonomics',es:'Calor y ergonomía'},{k:'chem',en:'Chemicals',es:'Químicos'},{k:'train',en:'Training & behavior',es:'Capacitación y conducta'},{k:'report',en:'Reporting',es:'Reportes'}];
+  {k:'health',en:'Heat & ergonomics',es:'Calor y ergonomía'},{k:'chem',en:'Chemicals',es:'Químicos'},{k:'train',en:'Training & behavior',es:'Capacitación y conducta'},{k:'report',en:'Reporting',es:'Reportes'},{k:'other',en:'Other',es:'Otros'}];
 // verify:true = offline file name not confirmed yet
 var DEFAULT=[
  {id:'inspect',cat:'insp',icon:'clip',en:'Safety Inspection Assistant',es:'Asistente de Inspección de Seguridad',den:'Walk-through inspections with findings and corrective actions.',des:'Inspecciones de recorrido con hallazgos y acciones correctivas.',url:'',file:'inspection-assistant.html'},
@@ -630,7 +630,7 @@ var LOOK={
  recTS:{ac:'#7a2e5c',ac2:'#4f1d3c',pat:P.line,patsz:'80px 76px',kind:{en:'North Plant',es:'North Plant'}},
  recWP:{ac:'#3f6212',ac2:'#28400a',pat:P.line,patsz:'80px 76px',kind:{en:'West Plant',es:'West Plant'}}
 };
-var CAT_LOOK={insp:'#1f5f99',jsa:'#d9531e',health:'#1d7446',chem:'#7a4ea3',train:'#0f2942',report:'#8a6400'};
+var CAT_LOOK={insp:'#1f5f99',jsa:'#d9531e',health:'#1d7446',chem:'#7a4ea3',train:'#0f2942',report:'#8a6400',other:'#475569'};
 function lookOf(a){ return LOOK[a.id] || {ac:CAT_LOOK[a.cat]||'#475569',ac2:'#14202e',pat:P.dots,kind:{en:'Custom tool',es:'Herramienta propia'}}; }
 
 var cfg=App.get('cfg',{over:{},custom:[],fav:[],hidden:[]});
@@ -818,3 +818,115 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 </body></html>
 <script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script>
+<script>/*GOTHER*/
+/* Other option for every dropdown: adds "Other..." to each <select>; choosing it opens a small box to type a value,
+   which is added to the list, selected, remembered on this device, and passed to the app like any other choice.
+   Skipped: selects that already have Other, filters (All...), language and numeric-score pickers, multi-selects,
+   and anything marked data-no-other. */
+(function(){
+  if(window.__GOther) return; window.__GOther=1;
+  /* lists whose values drive app logic (equipment types, templates, themes, energy rows) */
+  var PRE=/^(eType|o-design|tpl|fiStockSrc|fiEngine|ehsAiTierIn|ai_imgstyle|f_format|f_layout|f_photoRow|pmMode|camSel|lpBy|gen-style|gen-pal|gen-icon|logo-where|gm-src|gm-model|ai-n|ai-q|dTheme|pPick|nC|rSide|iTraining|xShow|oShow|hShow|f-status)$|^(tpl|hz|vf)_/;
+  var OV='__other__', KEY='g_other_vals_v1', BKEY='g_other_block_v1', store={}, blocked={};
+  try{ store=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ store={}; }
+  try{ blocked=JSON.parse(localStorage.getItem(BKEY)||'{}')||{}; }catch(e){ blocked={}; }
+  function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} }
+  function lang(){ var l=(document.documentElement.lang||'').toLowerCase().slice(0,2); return l==='es'?'es':l==='en'?'en':''; }
+  function label(){ var l=lang(); return l==='es'?'Otro…':l==='en'?'Other…':'Other / Otro…'; }
+  function skey(s){ return location.pathname.split('/').pop()+'#'+(s.id||s.name||s.getAttribute('data-d')||s.getAttribute('data-f')||s.getAttribute('data-k')||''); }
+  var vdesc=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value');
+  function getV(s){ return vdesc.get.call(s); }
+  function setV(s,v){ vdesc.set.call(s,v); }
+  function skip(s){
+    if(s.__goSkip!==undefined) return s.__goSkip;
+    var r=false;
+    if(s.multiple||s.hasAttribute('data-no-other')||(s.closest&&s.closest('[data-no-other]'))) r=true;
+    else {
+      var o=[].slice.call(s.options).filter(function(x){ return x.value!==OV && !x.hasAttribute('data-go'); });
+      var txt=o.map(function(x){ return (x.text||'').trim().toLowerCase(); });
+      var vals=o.map(function(x){ return String(x.value).trim(); }).filter(function(v){ return v!==''; });
+      if(txt.some(function(t){ return /^(other|otro|otra|otros|otras)\b/.test(t)||/[\/(·]\s*(other|otro|otra)\b/.test(t)||/\b(other|otro)\s*\)?$/.test(t); })) r=true;
+      else if(vals.length && vals.every(function(v){ return /^(en|es|bi|en-us|es-mx)$/i.test(v); })) r=true;
+      else if(vals.length && vals.every(function(v){ return /^-?\d+(\.\d+)?$/.test(v); })) r=true;
+      else if(vals.length && vals.every(function(v){ return /^\d{4}-\d{2}-\d{2}$/.test(v); })) r=true; // date shortcuts
+      else if(vals.indexOf('open')>=0 && (vals.indexOf('closed')>=0||vals.indexOf('done')>=0)) r=true; // status workflow
+      else if(s.hasAttribute('data-d')) r=true; // design settings
+      else if((txt[0]&&/^—?\s*(all|todas|todos|any|cualquier)\b/.test(txt[0])&&/^(|all|\*)$/i.test(String(o[0].value)))||txt.some(function(t){ return /^(all|todas|todos|any)$/.test(t); })) r=true;
+      else if(blocked[skey(s)]||PRE.test(s.id||'')) r=true;
+    }
+    // decide once the select has options; empty selects are re-checked later
+    if(s.options.length) s.__goSkip=r;
+    return r;
+  }
+  function ensure(s){
+    if(!s||s.tagName!=='SELECT'||!s.options.length||skip(s)) return;
+    var k=skey(s), list=store[k]||[], have={};
+    [].forEach.call(s.options,function(o){ have[o.value]=1; });
+    var oth=null; [].forEach.call(s.options,function(o){ if(o.value===OV) oth=o; });
+    list.forEach(function(v){ if(!have[v]){ var o=document.createElement('option'); o.value=v; o.textContent=v; o.setAttribute('data-go','1'); if(oth) s.insertBefore(o,oth); else s.appendChild(o); have[v]=1; } });
+    if(!oth){ oth=document.createElement('option'); oth.value=OV; oth.setAttribute('data-go','other'); s.appendChild(oth); }
+    else if(oth!==s.options[s.options.length-1]) s.appendChild(oth);
+    if(oth.textContent!==label()) oth.textContent=label();
+  }
+  function scan(root){ (root||document).querySelectorAll && (root||document).querySelectorAll('select').forEach(ensure); }
+  // A saved record may hold a typed value that is not in the list yet: add it so it shows instead of going blank
+  Object.defineProperty(HTMLSelectElement.prototype,'value',{configurable:true,enumerable:vdesc.enumerable,
+    get:function(){ var v=getV(this); return v===OV?(this.__goPrev!=null?this.__goPrev:''):v; },
+    set:function(v){ var s=this; v=v==null?'':String(v);
+      if(v!==''&&v!==OV&&s.options.length&&!skip(s)&&v.length<=160&&![].some.call(s.options,function(o){ return o.value===v; })){
+        var o=document.createElement('option'); o.value=v; o.textContent=v; o.setAttribute('data-go','1');
+        var oth=[].filter.call(s.options,function(x){ return x.value===OV; })[0]; if(oth) s.insertBefore(o,oth); else s.appendChild(o); }
+      setV(s,v); s.__goPrev=v; }});
+  function remember(s){ var v=getV(s); if(v!==OV) s.__goPrev=v; }
+  document.addEventListener('focusin',function(e){ if(e.target.tagName==='SELECT') remember(e.target); },true);
+  document.addEventListener('pointerdown',function(e){ if(e.target.tagName==='SELECT') remember(e.target); },true);
+  function css(){ if(document.getElementById('go-css')) return; var st=document.createElement('style'); st.id='go-css';
+    st.textContent='.go-box{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}.go-box input{flex:1;min-width:140px;font:inherit;font-size:16px;padding:9px 10px;border:2px solid #d9531e;border-radius:8px;background:#fff;color:#14202e;min-height:40px}.go-box button{font:700 14px system-ui,-apple-system,sans-serif;border-radius:8px;padding:9px 12px;min-height:40px;cursor:pointer;border:1px solid #0f2942}.go-box .go-ok{background:#0f2942;color:#fff}.go-box .go-x{background:#fff;color:#0f2942}';
+    (document.head||document.documentElement).appendChild(st); }
+  function note(s,m){ var n=document.createElement('div'); n.textContent=m; n.style.cssText='font:600 13px system-ui,-apple-system,sans-serif;color:#9a3412;margin-top:4px'; s.insertAdjacentElement('afterend',n); setTimeout(function(){ n.remove(); },3500); }
+  function openBox(s){
+    css(); var prev=s.__goPrev!=null?s.__goPrev:'';
+    var old=s.parentNode&&s.parentNode.querySelector(':scope > .go-box'); if(old) old.remove();
+    var es=lang()==='es', box=document.createElement('div'); box.className='go-box';
+    box.innerHTML='<input type="text" maxlength="160" autocomplete="off"><button type="button" class="go-ok">'+(es?'Agregar':'Add')+'</button><button type="button" class="go-x" aria-label="'+(es?'Cancelar':'Cancel')+'">✕</button>';
+    var inp=box.querySelector('input'); inp.placeholder=es?'Escriba la otra opción':'Type the other option';
+    s.insertAdjacentElement('afterend',box);
+    function done(ok){
+      var v=(inp.value||'').trim(); box.remove();
+      if(ok&&v){
+        var k=skey(s); store[k]=(store[k]||[]).filter(function(x){ return x!==v; }); store[k].push(v); if(store[k].length>40) store[k].shift(); persist();
+        // some lists drive the app's own logic (themes, templates, energy types); if the app cannot use a typed value, undo it
+        var bad=false; function onErr(){ bad=true; } window.addEventListener('error',onErr,true);
+        s.value=v; // setter adds the option
+        try{ s.dispatchEvent(new Event('input',{bubbles:true})); s.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){ bad=true; }
+        window.removeEventListener('error',onErr,true);
+        var now=s.isConnected?getV(s):v;
+        // a list that resets itself to blank after a pick (quick comments) used the value: that is fine
+        if(bad||(now!==v&&now!=='')){
+          [].slice.call(s.options).forEach(function(o){ if(o.hasAttribute('data-go')) o.remove(); });
+          store[k]=(store[k]||[]).filter(function(x){ return x!==v; }); blocked[k]=1; s.__goSkip=true; persist(); try{ localStorage.setItem(BKEY,JSON.stringify(blocked)); }catch(e){}
+          setV(s,prev); s.__goPrev=prev; s.dispatchEvent(new Event('change',{bubbles:true}));
+          note(s,lang()==='es'?'Esta lista no acepta otros valores.':'This list does not accept other values.');
+        }
+      } else { setV(s,prev); }
+    }
+    box.querySelector('.go-ok').addEventListener('click',function(){ done(true); });
+    box.querySelector('.go-x').addEventListener('click',function(){ done(false); });
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); done(true); } else if(e.key==='Escape'){ done(false); } });
+    setTimeout(function(){ try{ inp.focus(); }catch(e){} },30);
+  }
+  function onPick(e){ var s=e.target; if(!s||s.tagName!=='SELECT') return;
+    if(getV(s)===OV){ e.stopImmediatePropagation(); if(e.type==='change') openBox(s); }
+    else if(e.type==='change') s.__goPrev=getV(s); }
+  document.addEventListener('input',onPick,true); document.addEventListener('change',onPick,true);
+  var pend=false;
+  function later(){ if(pend) return; pend=true; (window.requestAnimationFrame||setTimeout)(function(){ pend=false; scan(); }); }
+  function start(){ scan();
+    new MutationObserver(function(ms){ for(var i=0;i<ms.length;i++){ var m=ms[i];
+      if(m.type==='attributes'){ later(); return; }
+      var t=m.target; if(t.tagName==='SELECT'||t.tagName==='OPTGROUP'){ t.__goSkip=undefined; later(); return; }
+      for(var j=0;j<m.addedNodes.length;j++){ var n=m.addedNodes[j]; if(n.nodeType===1&&(n.tagName==='SELECT'||(n.querySelector&&n.querySelector('select')))){ later(); return; } } } })
+      .observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['lang']}); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
+})();
+/*/GOTHER*/</script>
