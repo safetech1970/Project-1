@@ -234,12 +234,12 @@ table.guide tr.on td{background:var(--warn-bg);font-weight:700}
       <div class="stat"><div class="k" data-i18n="points">Points</div><div class="v" id="rPts">0 / 52</div></div>
       <div class="stat"><div class="k" data-i18n="grade">Final grade</div><div class="v" id="rGrade">—</div></div>
       <div class="stat"><div class="k" data-i18n="rating">Rating</div><div class="v" id="rRating">—</div></div>
-      <div class="stat"><div class="k" data-i18n="mustPass">Must-pass</div><div class="v" id="rMust">0 / 9</div></div>
+      <div class="stat"><div class="k" data-i18n="mustPass">Must-pass</div><div class="v" id="rMust">0 / 10</div></div>
     </div>
     <div class="verdict pending" id="verdict"></div>
     <div class="cert" id="cert" hidden></div>
     <table class="guide" id="guide"></table>
-    <p class="note" data-i18n="scoringNote">Scoring: add total scores and divide by 10 to obtain the final grade. Failing to pass A, C, D, E, J, K, P, S or W disqualifies the operator being evaluated.</p>
+    <p class="note" data-i18n="scoringNote">Scoring: add total scores and divide by 10 to obtain the final grade. Failing to pass A, C, D, E, J, K, M, P, S or W disqualifies the operator being evaluated.</p>
   </section>
 
   <section class="card" aria-labelledby="h-act">
@@ -487,26 +487,26 @@ LOGO=(window.GLogo&&GLogo.src(LOGO))||LOGO; document.getElementById("logoImg").s
 var SECTIONS=[
  {n:1,en:"Pre-operation",es:"Pre-operación",items:[
   ["A","Visual inspection","Inspección visual","M"],
-  ["B","Familiar with the equipment's capacity","Conoce la capacidad del equipo",3],
+  ["B","Familiar with the equipment's capacity","Conoce la capacidad del equipo",4],
   ["C","Demonstrates competency with equipment controls","Demuestra competencia con los controles del equipo","M"]]},
  {n:2,en:"Operational Safety",es:"Seguridad operacional",items:[
   ["D","Operational inspection","Inspección operacional","M"],
   ["E","Wears seat belt","Usa el cinturón de seguridad","M"],
   ["F","Keeps clear view of direction of travel","Mantiene vista clara en la dirección de viaje",5],
-  ["G","Slowed down at intersections","Redujo la velocidad en las intersecciones",3],
+  ["G","Slowed down at intersections","Redujo la velocidad en las intersecciones",4],
   ["H","Sounds horn when necessary","Suena el claxon cuando es necesario",5],
   ["I","Turned corners correctly","Dio vuelta en las esquinas correctamente",4],
   ["J","Drove under control and within proper speed","Manejó con control y a la velocidad adecuada","M"],
   ["K","Traveled with the forks low to the ground","Viajó con las horquillas cerca del piso","M"]]},
  {n:3,en:"Load Handling",es:"Manejo de carga",items:[
-  ["L","Approached the load properly","Se acercó a la carga correctamente",3],
-  ["M","Lifted the load properly","Levantó la carga correctamente",3],
-  ["N","Maneuvered the load properly","Maniobró la carga correctamente",5],
+  ["L","Approached the load properly","Se acercó a la carga correctamente",4],
+  ["M","Lifted the load properly","Levantó la carga correctamente","M"],
+  ["N","Maneuvered the load properly","Maniobró la carga correctamente",4],
   ["O","Traveled with load properly","Viajó con la carga correctamente",5],
   ["P","Remained aware of pedestrians","Se mantuvo atento a los peatones","M"]]},
  {n:4,en:"Braking & Stopping",es:"Frenado y paro",items:[
-  ["Q","Stops smoothly/slowly","Frena suave/lentamente",3],
-  ["R","Load balanced properly","Balanceó la carga correctamente",3],
+  ["Q","Stops smoothly/slowly","Frena suave/lentamente",4],
+  ["R","Load balanced properly","Balanceó la carga correctamente",5],
   ["S","Drove backwards when required","Manejó en reversa cuando se requería","M"]]},
  {n:5,en:"Stacking & Parking Procedures",es:"Procedimientos de apilado y estacionamiento",items:[
   ["T","Lowered the load smoothly/slowly","Bajó la carga suave/lentamente",5],
@@ -515,7 +515,7 @@ var SECTIONS=[
 ];
 var ITEMS=[];SECTIONS.forEach(function(s){s.items.forEach(function(i){ITEMS.push({id:i[0],en:i[1],es:i[2],w:i[3],sec:s});});});
 var MUST=ITEMS.filter(function(i){return i.w==="M";});
-var MAXPTS=ITEMS.reduce(function(a,i){return a+(i.w==="M"?0:i.w);},0); // 52
+var MAXPTS=ITEMS.reduce(function(a,i){return a+(i.w==="M"?0:i.w);},0); // 54
 var POLICIES=[
  ["p1","Use seatbelt at all times","Use el cinturón de seguridad en todo momento"],
  ["p2","Enter all doorways in reverse","Ingrese a todas las puertas de reversa"],
@@ -533,7 +533,7 @@ var I18N={
   polH:"Acknowledgment · Company Policies",polNote:"Operator initials each policy.",initials:"Initials",comH:"Evaluator Comments",comPh:"Coaching notes, observed behaviors, retraining needs…",
   sigH:"Signatures",signHere:"Sign here",sigEmp:"Employee's signature",sigEval:"Evaluator's signature",clear:"Clear",
   resH:"Final Score",points:"Points",grade:"Final grade",rating:"Rating",mustPass:"Must-pass",progress:"Scored",
-  scoringNote:"Scoring: add total scores and divide by 10 to obtain the final grade. Failing to pass A, C, D, E, J, K, P, S or W disqualifies the operator being evaluated.",
+  scoringNote:"Scoring: add total scores and divide by 10 to obtain the final grade. Failing to pass A, C, D, E, J, K, M, P, S or W disqualifies the operator being evaluated.",
   actH:"Download & Save",dlPdf:"Download PDF",dlXlsx:"Download Excel",saveLog:"Save to log",newEval:"New evaluation",confirmNew:"Tap again to clear the form",
   certNo:"Certificate No.",due:"Re-evaluation due",certPend:"A certificate number is issued when you download or save this passing evaluation.",needEq:"Equipment type (Sit-Down/Stand-Up and Propane/Electric) to issue the certificate number",seqLbl:"Next certificate number on this device for ",logH:"Saved Evaluations",exportLog:"Export log to Excel",logNote:"Saved on this device only.",logEmpty:"No saved evaluations yet. Complete the form and tap Save to log.",load:"Open",del:"Delete",confirmDel:"Confirm",
   must:"Must pass",weight:"Weight",score:"Score",section:"Section",subject:"Testing subject area",pass:"Pass",fail:"Fail",
@@ -547,7 +547,7 @@ var I18N={
   polH:"Reconocimiento · Políticas de la Compañía",polNote:"El operador pone sus iniciales en cada política.",initials:"Iniciales",comH:"Comentarios del Evaluador",comPh:"Notas de asesoría, conductas observadas, necesidades de reentrenamiento…",
   sigH:"Firmas",signHere:"Firme aquí",sigEmp:"Firma del empleado",sigEval:"Firma del evaluador",clear:"Borrar",
   resH:"Calificación Final",points:"Puntos",grade:"Calificación final",rating:"Nivel",mustPass:"Debe aprobar",progress:"Calificados",
-  scoringNote:"Calificación: sume los puntos y divida entre 10 para obtener la calificación final. No aprobar A, C, D, E, J, K, P, S o W descalifica al operador evaluado.",
+  scoringNote:"Calificación: sume los puntos y divida entre 10 para obtener la calificación final. No aprobar A, C, D, E, J, K, M, P, S o W descalifica al operador evaluado.",
   actH:"Descargar y Guardar",dlPdf:"Descargar PDF",dlXlsx:"Descargar Excel",saveLog:"Guardar en registro",newEval:"Nueva evaluación",confirmNew:"Toque otra vez para borrar el formulario",
   certNo:"Certificado No.",due:"Reevaluación vence",certPend:"El número de certificado se asigna al descargar o guardar esta evaluación aprobada.",needEq:"Tipo de equipo (Sentado/De pie y Propano/Eléctrico) para asignar el número de certificado",seqLbl:"Siguiente número de certificado en este dispositivo para ",logH:"Evaluaciones Guardadas",exportLog:"Exportar registro a Excel",logNote:"Guardado solo en este dispositivo.",logEmpty:"Aún no hay evaluaciones guardadas. Complete el formulario y toque Guardar en registro.",load:"Abrir",del:"Eliminar",confirmDel:"Confirmar",
   must:"Debe aprobar",weight:"Valor",score:"Puntos",section:"Sección",subject:"Área de evaluación",pass:"Aprobó",fail:"Reprobó",
@@ -591,9 +591,9 @@ function saveDraft(){LS.set(K_DRAFT,S);}
 function compute(st){
  var total=0,scored=0,mustOk=0,fails=[],unscored=[];
  ITEMS.forEach(function(i){var v=st.scores[i.id];
-  if(v===undefined||v===null||v===""){unscored.push(i.id);return;}
+  if(v===undefined||v===null||v===""||(i.w==="M"&&v!=="pass"&&v!=="fail")){unscored.push(i.id);return;}
   scored++;
-  if(i.w==="M"){if(v==="pass")mustOk++;else fails.push(i.id);}else total+=Number(v);});
+  if(i.w==="M"){if(v==="pass")mustOk++;else fails.push(i.id);}else total+=Math.min(Number(v),i.w);});
  var complete=unscored.length===0;
  var grade=total/10;
  var band=null;for(var g=0;g<GUIDE.length;g++){if(grade>=GUIDE[g].min){band=GUIDE[g];break;}}
