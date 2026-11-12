@@ -176,7 +176,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
     <h2 data-i18n="obsInfo">Observation details</h2>
     <div class="grid">
       <label class="f"><span class="req" data-i18n="date">Date</span><input type="date" id="oDate"></label>
-      <label class="f fullOnly"><span data-i18n="time">Time</span><input type="time" id="oTime"></label>
+      <label class="f"><span class="req" data-i18n="time">Time</span><input type="time" id="oTime"></label>
+      <label class="f"><span class="req" data-i18n="shift">Shift</span><select id="oShift"></select></label>
       <label class="f"><span class="req" data-i18n="observer">Observer</span><input id="oObs"></label>
       <label class="f"><span class="req" data-i18n="facility">Facility</span><select id="oFac"></select></label>
       <label class="f"><span class="req" data-i18n="dept">Department</span><select id="oDept"></select></label>
@@ -232,6 +233,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
     <div class="card"><h2 data-i18n="topRisk">Most frequent at-risk behaviors</h2><div id="dTop" class="list"></div></div>
     <div class="card"><h2 data-i18n="byBarrier">Barriers behind at-risk behavior</h2><div id="dBar" class="bars"></div></div>
     <div class="card"><h2 data-i18n="byFac">Percent safe by facility</h2><div id="dFacs" class="bars"></div></div>
+    <div class="card"><h2 data-i18n="byShift">Percent safe by shift</h2><div id="dShifts" class="bars"></div></div>
   </div>
   <p class="hint" id="dEx" hidden></p>
 </section>
@@ -267,7 +269,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 
 <script>
 window.TOOL = {id:'bbs', ver:1,noLogo:true,sync:{arrays:['cards'],kv:['checklist']}, i18n:{
-en:{teamPdf:'Team summary PDF',teamPdfHint:'For toolbox talks and safety meetings. No worker names.',equip:'Equipment / machine',tabSetup:'Checklist',cardType:'Card type',quick:'Quick card',full:'Full card',qHint:'Tap a category, then mark what you saw.',photo:'Photo (optional)',photoHint:"Photograph the condition or task, not the worker's face.",setupTitle:'Observation checklist',setupHint:'Turn categories and behaviors on or off, and add your own. Changes apply to new cards on every device; saved cards keep what was recorded.',addCat:'Add a category',nameEn:'Name in English',nameEs:'Nombre en español (optional)',add:'Add',appTitle:'BBS Observation Card',tabObserve:'Observe',tabDash:'Dashboard',tabRecords:'Records',noNameTitle:'No names, no blame',
+en:{shift:'Shift',byShift:'Percent safe by shift',teamPdf:'Team summary PDF',teamPdfHint:'For toolbox talks and safety meetings. No worker names.',equip:'Equipment / machine',tabSetup:'Checklist',cardType:'Card type',quick:'Quick card',full:'Full card',qHint:'Tap a category, then mark what you saw.',photo:'Photo (optional)',photoHint:"Photograph the condition or task, not the worker's face.",setupTitle:'Observation checklist',setupHint:'Turn categories and behaviors on or off, and add your own. Changes apply to new cards on every device; saved cards keep what was recorded.',addCat:'Add a category',nameEn:'Name in English',nameEs:'Nombre en español (optional)',add:'Add',appTitle:'BBS Observation Card',tabObserve:'Observe',tabDash:'Dashboard',tabRecords:'Records',noNameTitle:'No names, no blame',
 noNameBody:"Observe the task, not the person. Do not write the worker's name. Tell the worker what you saw, recognize safe work first, then talk about at-risk behavior and why it happens.",
 obsInfo:'Observation details',date:'Date',time:'Time',observer:'Observer',facility:'Facility',dept:'Department',task:'Task observed',taskPh:'e.g. Clearing a jam on the bagger',people:'Workers observed',
 behaviors:'Behaviors',behHint:'Mark only what you actually saw. Leave the rest blank.',coaching:'Coaching conversation',feedback:'Feedback given',
@@ -277,7 +279,7 @@ safe:'Safe',atrisk:'At-risk',reset:'Reset',save:'Save card',dashTitle:'Safe beha
 byBarrier:'Barriers behind at-risk behavior',byFac:'Percent safe by facility',saved:'Saved cards',exportCsv:'Export CSV',exportJson:'Export backup (JSON)',importJson:'Import backup',print:'Print',
 allFacilities:'All facilities',copyNote:'In this viewer, export copies the data to your clipboard. Open the offline file to download.',
 foot:'Behavior-based safety supports, and does not replace, hazard controls. Fix the barriers you find with the hierarchy of controls.'},
-es:{teamPdf:'PDF resumen para el equipo',teamPdfHint:'Para pláticas de seguridad y juntas. Sin nombres de trabajadores.',equip:'Equipo / máquina',tabSetup:'Lista',cardType:'Tipo de tarjeta',quick:'Tarjeta rápida',full:'Tarjeta completa',qHint:'Toque una categoría y marque lo que vio.',photo:'Foto (opcional)',photoHint:'Fotografíe la condición o la tarea, no la cara del trabajador.',setupTitle:'Lista de observación',setupHint:'Active o desactive categorías y comportamientos, y agregue los suyos. Los cambios aplican a tarjetas nuevas en todos los dispositivos; las tarjetas guardadas conservan lo registrado.',addCat:'Agregar categoría',nameEn:'Name in English',nameEs:'Nombre en español (opcional)',add:'Agregar',appTitle:'Tarjeta de Observación BBS',tabObserve:'Observar',tabDash:'Tablero',tabRecords:'Registros',noNameTitle:'Sin nombres, sin culpa',
+es:{shift:'Turno',byShift:'Porcentaje seguro por turno',teamPdf:'PDF resumen para el equipo',teamPdfHint:'Para pláticas de seguridad y juntas. Sin nombres de trabajadores.',equip:'Equipo / máquina',tabSetup:'Lista',cardType:'Tipo de tarjeta',quick:'Tarjeta rápida',full:'Tarjeta completa',qHint:'Toque una categoría y marque lo que vio.',photo:'Foto (opcional)',photoHint:'Fotografíe la condición o la tarea, no la cara del trabajador.',setupTitle:'Lista de observación',setupHint:'Active o desactive categorías y comportamientos, y agregue los suyos. Los cambios aplican a tarjetas nuevas en todos los dispositivos; las tarjetas guardadas conservan lo registrado.',addCat:'Agregar categoría',nameEn:'Name in English',nameEs:'Nombre en español (opcional)',add:'Agregar',appTitle:'Tarjeta de Observación BBS',tabObserve:'Observar',tabDash:'Tablero',tabRecords:'Registros',noNameTitle:'Sin nombres, sin culpa',
 noNameBody:'Observe la tarea, no a la persona. No escriba el nombre del trabajador. Dígale lo que vio, reconozca primero el trabajo seguro y luego hable del comportamiento de riesgo y por qué pasa.',
 obsInfo:'Datos de la observación',date:'Fecha',time:'Hora',observer:'Observador',facility:'Instalación',dept:'Departamento',task:'Tarea observada',taskPh:'ej. Destapando un atasco en la embolsadora',people:'Trabajadores observados',
 behaviors:'Comportamientos',behHint:'Marque solo lo que realmente vio. Deje lo demás en blanco.',coaching:'Conversación de coaching',feedback:'Retroalimentación dada',
@@ -1411,12 +1413,17 @@ function equipOptions(){ var sel=document.getElementById('oEquip'), keep=cur.equ
 function findTx(v,groups){ for(var i=0;i<groups.length;i++){ var o=groups[i].find(function(x){return x.en===v;}); if(o) return tx(o); } return v||''; }
 function taskTx(v){ return findTx(v,Object.keys(TASKS).map(function(k){return TASKS[k];})); }
 function equipTx(v){ return findTx(v,EQUIP_GRP.map(function(g){return g[1];})); }
+var SHIFTS=[{k:'1st shift',en:'1st shift (day)',es:'1er turno (día)'},{k:'2nd shift',en:'2nd shift (swing)',es:'2do turno (tarde)'},{k:'3rd shift',en:'3rd shift (night)',es:'3er turno (noche)'},
+  {k:'Sanitation shift',en:'Sanitation shift',es:'Turno de sanidad'},{k:'Weekend',en:'Weekend',es:'Fin de semana'}];
+function shiftTx(v){ var o=SHIFTS.find(function(x){return x.k===v;}); return o?tx(o):(v||''); }
+/* default shift from the time: 1st 5:00-13:59, 2nd 14:00-21:59, 3rd 22:00-4:59 */
+function shiftFor(t){ var m=/^(\d{1,2}):(\d{2})/.exec(t||''); if(!m) return ''; var h=+m[1]; return h>=5&&h<14?'1st shift':h>=14&&h<22?'2nd shift':'3rd shift'; }
 var FB=[{k:'recog',en:'Recognized safe work',es:'Reconoció trabajo seguro'},{k:'coach',en:'Coached at-risk behavior',es:'Orientó sobre comportamiento de riesgo'},{k:'none',en:'No conversation',es:'Sin conversación'}];
 var BAR=[{k:'equip',en:'Equipment or tool',es:'Equipo o herramienta'},{k:'ppefit',en:'PPE fit or comfort',es:'Ajuste o comodidad del EPP'},{k:'proc',en:'Procedure unclear',es:'Procedimiento no claro'},
   {k:'time',en:'Time or production pressure',es:'Presión de tiempo o producción'},{k:'train',en:'Training or knowledge',es:'Capacitación o conocimiento'},{k:'habit',en:'Habit / shortcut',es:'Costumbre / atajo'},
   {k:'layout',en:'Workstation layout',es:'Diseño de la estación'},{k:'staff',en:'Staffing',es:'Falta de personal'}];
 
-function blank(){ return {id:null,photos:[],equip:'',date:App.today(),time:App.nowTime(),observer:'',facility:'',dept:'',task:'',people:'1',marks:{},fb:[],bar:[],disc:'',agree:false,fix:'',owner:''}; }
+function blank(){ var tm=App.nowTime(); return {id:null,photos:[],equip:'',shift:shiftFor(tm),date:App.today(),time:tm,observer:'',facility:'',dept:'',task:'',people:'1',marks:{},fb:[],bar:[],disc:'',agree:false,fix:'',owner:''}; }
 var cur = App.get('draft', null) || blank();
 var cards = App.get('cards', null);
 if(!cards){
@@ -1483,25 +1490,27 @@ function chipSet(boxId, list, field){
       save(); chipSet(boxId,list,field); }); box.appendChild(b); });
 }
 function deptOptions(sel, all){ var keep=sel.value; sel.innerHTML=(all?'':'<option value="">—</option>')+DEPTS.map(function(d){return '<option value="'+d.k+'">'+esc(tx(d))+'</option>';}).join(''); sel.value=keep; }
-var MAP=[['oDate','date'],['oTime','time'],['oObs','observer'],['oFac','facility'],['oDept','dept'],['oTask','task'],['oEquip','equip'],['oPeople','people'],['oDisc','disc'],['oFix','fix'],['oOwner','owner']];
+var MAP=[['oDate','date'],['oTime','time'],['oShift','shift'],['oObs','observer'],['oFac','facility'],['oDept','dept'],['oTask','task'],['oEquip','equip'],['oPeople','people'],['oDisc','disc'],['oFix','fix'],['oOwner','owner']];
 function renderSig(){ GSig.panel(document.getElementById('sigCard'),{rec:function(){ return cur; },slots:function(){ return [tx({en:'Observer',es:'Observador'}),tx({en:'Supervisor (optional)',es:'Supervisor (opcional)'})]; },lang:App.L,save:save}); }
 function fill(){ renderSig(); taskOptions(); equipOptions(); MAP.forEach(function(p){ document.getElementById(p[0]).value=cur[p[1]]||''; }); document.getElementById('oAgree').checked=!!cur.agree;
   applyMode(); renderCats(); renderTally(); renderPhotos(); chipSet('fbChips',FB,'fb'); chipSet('barChips',BAR,'bar'); }
 function bind(){
   MAP.forEach(function(p){ var el=document.getElementById(p[0]); ['input','change'].forEach(function(ev){ el.addEventListener(ev, function(){ cur[p[1]]=el.value; save(); }); }); });
   document.getElementById('oDept').addEventListener('change', function(){ taskOptions(); });
+  document.getElementById('oShift').addEventListener('change', function(){ cur.shiftSet=true; save(); });
+  document.getElementById('oTime').addEventListener('change', function(e){ if(!cur.shiftSet){ cur.shift=shiftFor(e.target.value); document.getElementById('oShift').value=cur.shift; save(); } });
   document.getElementById('oAgree').addEventListener('change', function(e){ cur.agree=e.target.checked; save(); });
   document.querySelectorAll('#modeSeg button').forEach(function(b){ b.addEventListener('click',function(){ App.set('mode',b.dataset.m); applyMode(); renderCats(); }); });
   document.getElementById('oReset').addEventListener('click', function(e){ App.armDelete(e.target, function(){ var keep={observer:cur.observer,facility:cur.facility,dept:cur.dept}; cur=blank(); Object.assign(cur,keep); save(); fill(); e.target.textContent=t('reset'); e.target.classList.remove('arm'); e.target.dataset.armed=''; }); });
   document.getElementById('oSave').addEventListener('click', function(){
-    if(!App.validate(['oDate','oObs','oFac','oDept'])) return;
+    if(!App.validate(['oDate','oTime','oShift','oObs','oFac','oDept'])) return;
     var x=tally(cur); if(!(x.s+x.r)){ App.toast(tx({en:'Mark at least one behavior as Safe or At-risk.',es:'Marque al menos un comportamiento como Seguro o De riesgo.'})); return; }
     if(x.r && !cur.bar.length){ App.toast(tx({en:'Pick at least one barrier for the at-risk behavior.',es:'Elija al menos una barrera para el comportamiento de riesgo.'})); document.getElementById('barChips').scrollIntoView({block:'center'}); return; }
     if(mode()==='quick'){ if(!cur.time) cur.time=App.nowTime(); cur.mode='quick'; }
     cur.saved=new Date().toISOString();
     if(!cur.id){ cur.id=App.uid(); cards.unshift(JSON.parse(JSON.stringify(cur))); } else { var i=cards.findIndex(function(c){return c.id===cur.id;}); if(i>=0) cards[i]=JSON.parse(JSON.stringify(cur)); else cards.unshift(JSON.parse(JSON.stringify(cur))); }
     App.set('cards',cards); App.toast(t('saved'));
-    var keep={observer:cur.observer,facility:cur.facility,dept:cur.dept}; cur=blank(); Object.assign(cur,keep); qCat=null; save(); fill(); renderDash(); renderRecords(); window.scrollTo(0,0);
+    var keep={observer:cur.observer,facility:cur.facility,dept:cur.dept}; if(cur.shiftSet) keep.shift=cur.shift; keep.shiftSet=cur.shiftSet; cur=blank(); Object.assign(cur,keep); qCat=null; save(); fill(); renderDash(); renderRecords(); window.scrollTo(0,0);
   });
 }
 function behLabel(key){ var p=key.split('.'); var c=allCats().find(function(x){return x.k===p[0];}); if(!c) return key; var b=c.b.find(function(x){return x.k===p[1];}); return tx(c)+' · '+(b?tx(b):p[1]); }
@@ -1519,11 +1528,12 @@ function filtered(){
   return cards.filter(function(c){ if(f && c.facility!==f) return false; if(rg!=='all' && App.daysBetween(c.date, App.today())>+rg) return false; return true; });
 }
 function renderDash(){
-  var list=filtered(); var S=0,R=0,coached=0,ppl=0; var byCat={}, byBeh={}, byBar={}, byFac={};
+  var list=filtered(); var S=0,R=0,coached=0,ppl=0; var byCat={}, byBeh={}, byBar={}, byFac={}, bySh={};
   list.forEach(function(c){ var x=tally(c); S+=x.s; R+=x.r; ppl+=(+c.people||0); if(c.fb.indexOf('coach')>=0||c.fb.indexOf('recog')>=0) coached++;
     Object.keys(c.marks).forEach(function(k){ var ck=k.split('.')[0]; byCat[ck]=byCat[ck]||{s:0,r:0}; byCat[ck][c.marks[k]]++; if(c.marks[k]==='r'){ byBeh[k]=(byBeh[k]||0)+1; } });
     c.bar.forEach(function(b){ byBar[b]=(byBar[b]||0)+1; });
-    byFac[c.facility]=byFac[c.facility]||{s:0,r:0}; byFac[c.facility].s+=x.s; byFac[c.facility].r+=x.r; });
+    byFac[c.facility]=byFac[c.facility]||{s:0,r:0}; byFac[c.facility].s+=x.s; byFac[c.facility].r+=x.r;
+    var shk=c.shift||shiftFor(c.time); if(shk){ bySh[shk]=bySh[shk]||{s:0,r:0}; bySh[shk].s+=x.s; bySh[shk].r+=x.r; } });
   var pct=(S+R)?Math.round(S/(S+R)*100):null;
   document.getElementById('dStats').innerHTML=
     '<div class="stat"><span class="n">'+list.length+'</span><span class="l">'+esc(tx({en:'Observation cards',es:'Tarjetas de observación'}))+'</span></div>'+
@@ -1531,6 +1541,7 @@ function renderDash(){
     '<div class="stat"><span class="n" style="color:'+(pct===null?'inherit':pct>=90?'var(--good)':pct>=75?'var(--warn)':'var(--bad)')+'">'+(pct===null?'—':pct+'%')+'</span><span class="l">'+esc(tx({en:'Behaviors safe',es:'Comportamientos seguros'}))+' ('+S+'/'+(S+R)+')</span></div>'+
     '<div class="stat"><span class="n">'+coached+'</span><span class="l">'+esc(tx({en:'Coaching conversations',es:'Conversaciones de coaching'}))+'</span></div>';
   bars('dCats', allCats().filter(function(c){return byCat[c.k];}).map(function(c){ return {label:tx(c), s:byCat[c.k].s, r:byCat[c.k].r}; }).sort(function(a,b){ return a.s/(a.s+a.r)-b.s/(b.s+b.r); }), 'pct');
+  bars('dShifts', SHIFTS.map(function(o){return o.k;}).concat(Object.keys(bySh).filter(function(k){return !SHIFTS.some(function(o){return o.k===k;});})).filter(function(k){return bySh[k];}).map(function(k){ return {label:shiftTx(k), s:bySh[k].s, r:bySh[k].r}; }), 'pct');
   bars('dFacs', Object.keys(byFac).map(function(f){ return {label:f, s:byFac[f].s, r:byFac[f].r}; }), 'pct');
   bars('dBar', Object.keys(byBar).map(function(k){ var o=BAR.find(function(b){return b.k===k;}); return {label:o?tx(o):k, n:byBar[k]}; }).sort(function(a,b){return b.n-a.n;}), 'n');
   var top=Object.keys(byBeh).map(function(k){return {k:k,n:byBeh[k]};}).sort(function(a,b){return b.n-a.n;}).slice(0,5);
@@ -1546,7 +1557,7 @@ function renderRecords(){
   list.forEach(function(c){ var x=tally(c); var d=DEPTS.find(function(z){return z.k===c.dept;});
     var risks=Object.keys(c.marks).filter(function(k){return c.marks[k]==='r';});
     var el=document.createElement('div'); el.className='item '+(x.r?(x.pct<75?'bad':'warn'):'good');
-    el.innerHTML='<div class="head"><div><b>'+esc(c.date)+' · '+esc(c.facility)+'</b>'+(c.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+(c.mode==='quick'?' <span class="pill info">'+esc(tx({en:'Quick',es:'Rápida'}))+'</span>':'')+'<div class="meta">'+esc(d?tx(d):'')+(c.task?' · '+esc(taskTx(c.task)):'')+(c.equip?' · '+esc(equipTx(c.equip)):'')+' · '+esc(c.observer)+'</div></div>'+
+    el.innerHTML='<div class="head"><div><b>'+esc(c.date)+' · '+esc(c.facility)+'</b>'+(c.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+(c.mode==='quick'?' <span class="pill info">'+esc(tx({en:'Quick',es:'Rápida'}))+'</span>':'')+'<div class="meta">'+(c.time?esc(c.time)+' · ':'')+(c.shift?esc(shiftTx(c.shift))+' · ':'')+esc(d?tx(d):'')+(c.task?' · '+esc(taskTx(c.task)):'')+(c.equip?' · '+esc(equipTx(c.equip)):'')+' · '+esc(c.observer)+'</div></div>'+
       '<span class="pill '+(x.r?'warn':'good')+'">'+x.s+' ✓ · '+x.r+' !</span></div>'+
       (risks.length?'<div class="meta">'+risks.map(function(k){return esc(behLabel(k));}).join('<br>')+'</div>':'')+
       ((c.sigs||[]).some(Boolean)?'<div class="row" style="gap:12px">'+c.sigs.filter(Boolean).map(function(q){ return '<span style="display:grid;gap:2px"><img alt="" src="'+q.img+'" style="height:40px;width:auto;background:#fff;border-radius:4px"><span class="meta">'+esc(q.name)+' · '+esc(q.at)+'</span></span>'; }).join('')+'</div>':'')+
@@ -1564,10 +1575,10 @@ function bindRecords(){
   ['dFac','dRange'].forEach(function(id){ document.getElementById(id).addEventListener('change', renderDash); });
   document.getElementById('dPdf').addEventListener('click', function(e){ if(!filtered().length){ App.toast(L('No cards for this filter.','No hay tarjetas para este filtro.')); return; } busy(e.target, RK.pdf(summaryModel()).then(function(b){ saveFile('BBS-Team-Summary-'+App.today()+'.pdf', b); })); });
   document.getElementById('rCsv').addEventListener('click', function(){
-    var rows=[['Date','Time','Facility','Department','Task','Equipment / machine','Observer','Workers','Category','Behavior','Result','Feedback','Barriers','Agreed','Follow-up','Owner','Signed by']];
+    var rows=[['Date','Time','Shift','Facility','Department','Task','Equipment / machine','Observer','Workers','Category','Behavior','Result','Feedback','Barriers','Agreed','Follow-up','Owner','Signed by']];
     cards.forEach(function(c){ var d=DEPTS.find(function(z){return z.k===c.dept;});
       Object.keys(c.marks).forEach(function(k){ var p=k.split('.'); var cat=allCats().find(function(x){return x.k===p[0];}); var b=cat?cat.b.find(function(x){return x.k===p[1];}):null;
-        rows.push([c.date,c.time,c.facility,d?d.en:c.dept,c.task,c.equip||'',c.observer,c.people,cat?cat.en:p[0],b?b.en:p[1],c.marks[k]==='s'?'Safe':'At-risk',c.fb.join(' '),c.bar.join(' '),c.agree?'Yes':'No',c.fix,c.owner,(c.sigs||[]).filter(Boolean).map(function(q){return q.name+' '+q.at;}).join('; ')]); }); });
+        rows.push([c.date,c.time,c.shift||shiftFor(c.time),c.facility,d?d.en:c.dept,c.task,c.equip||'',c.observer,c.people,cat?cat.en:p[0],b?b.en:p[1],c.marks[k]==='s'?'Safe':'At-risk',c.fb.join(' '),c.bar.join(' '),c.agree?'Yes':'No',c.fix,c.owner,(c.sigs||[]).filter(Boolean).map(function(q){return q.name+' '+q.at;}).join('; ')]); }); });
     App.exportFile('bbs-observations-'+App.today()+'.csv', App.csv(rows), 'text/csv'); });
   document.getElementById('rJson').addEventListener('click', function(){ App.exportJSON(cards); });
   document.getElementById('rImport').addEventListener('change', function(e){ var f=e.target.files[0]; if(!f) return;
@@ -1605,7 +1616,7 @@ function shareModel(c){
     :L('A good example of safe work. Recognize it at your next huddle.','Un buen ejemplo de trabajo seguro. Reconózcalo en la próxima junta.');
   return {lang:App.L(), kicker:L('EHS · SAFETY SHARE','EHS · COMPARTIR SEGURIDAD'), title:L('Behavior Observation','Observación de Comportamiento'), id:c.date,
     badge:{text:x.s+L(' safe · ',' seguros · ')+x.r+L(' at-risk',' de riesgo'),hex:x.r?'B54708':'1D7446'},
-    info:[[L('Facility','Instalación'),c.facility],[L('Department','Departamento'),deptTx(c.dept)],[L('Date','Fecha'),c.date+(c.time?' · '+c.time:'')],
+    info:[[L('Facility','Instalación'),c.facility],[L('Department','Departamento'),deptTx(c.dept)],[L('Date and time','Fecha y hora'),c.date+(c.time?' · '+c.time:'')],[L('Shift','Turno'),shiftTx(c.shift||shiftFor(c.time))],
       [L('Task observed','Tarea observada'),taskTx(c.task)],[L('Equipment / machine','Equipo / máquina'),equipTx(c.equip)],[L('Percent safe','Porcentaje seguro'),x.pct===null?'':x.pct+'%']],
     tables:[{label:L('What we saw','Lo que vimos'),cols:[[L('Category','Categoría'),.28],[L('Behavior','Comportamiento'),.54],[L('Result','Resultado'),.18]],rows:rows}],
     photos:c.photos||[], photoLabel:L('Photos','Fotos'),
@@ -1617,11 +1628,12 @@ function shareModel(c){
 }
 function summaryModel(){
   var list=filtered(), f=document.getElementById('dFac').value, rg=document.getElementById('dRange');
-  var S=0,R=0,ppl=0,coached=0,byCat={},byBeh={},byBar={},byTask={};
+  var S=0,R=0,ppl=0,coached=0,byCat={},byBeh={},byBar={},byTask={},bySh={};
   list.forEach(function(c){ var x=tally(c); S+=x.s; R+=x.r; ppl+=(+c.people||0); if(c.fb.indexOf('coach')>=0||c.fb.indexOf('recog')>=0) coached++;
     Object.keys(c.marks).forEach(function(k){ var ck=k.split('.')[0]; byCat[ck]=byCat[ck]||{s:0,r:0}; byCat[ck][c.marks[k]]++; if(c.marks[k]==='r') byBeh[k]=(byBeh[k]||0)+1; });
     (c.bar||[]).forEach(function(b){ byBar[b]=(byBar[b]||0)+1; });
-    if(c.task){ byTask[c.task]=byTask[c.task]||{s:0,r:0}; byTask[c.task].s+=x.s; byTask[c.task].r+=x.r; } });
+    if(c.task){ byTask[c.task]=byTask[c.task]||{s:0,r:0}; byTask[c.task].s+=x.s; byTask[c.task].r+=x.r; }
+    var shk=c.shift||shiftFor(c.time); if(shk){ bySh[shk]=bySh[shk]||{s:0,r:0}; bySh[shk].s+=x.s; bySh[shk].r+=x.r; } });
   var pct=(S+R)?Math.round(S/(S+R)*100):null;
   function pc(o){ return o.s+o.r?Math.round(o.s/(o.s+o.r)*100):0; }
   var catRows=allCats().filter(function(c){return byCat[c.k];}).map(function(c){ var o=byCat[c.k], p=pc(o); return [tx(c),o.s,o.r,{t:p+'%',b:true,hex:p>=90?'1D7446':p>=75?'B54708':'B42318'}]; }).sort(function(a,b){ return parseInt(a[3].t)-parseInt(b[3].t); });
@@ -1635,6 +1647,7 @@ function summaryModel(){
     info:[[L('Facility','Instalación'),f||L('All facilities','Todas las instalaciones')],[L('Period','Periodo'),period],[L('Observation cards','Tarjetas de observación'),list.length],
       [L('Workers observed','Trabajadores observados'),ppl],[L('Behaviors safe','Comportamientos seguros'),S+' / '+(S+R)],[L('Coaching conversations','Conversaciones de coaching'),coached]],
     tables:[{label:L('Percent safe by category (lowest first)','Porcentaje seguro por categoría (menor primero)'),cols:[[L('Category','Categoría'),.52],[L('Safe','Seguro'),.15],[L('At-risk','De riesgo'),.15],[L('% safe','% seguro'),.18]],rows:catRows},
+      {label:L('Percent safe by shift','Porcentaje seguro por turno'),cols:[[L('Shift','Turno'),.52],[L('Safe','Seguro'),.15],[L('At-risk','De riesgo'),.15],[L('% safe','% seguro'),.18]],rows:Object.keys(bySh).map(function(k){ var o=bySh[k], p=pc(o); return [shiftTx(k),o.s,o.r,{t:p+'%',b:true,hex:p>=90?'1D7446':p>=75?'B54708':'B42318'}]; })},
       {label:L('Most frequent at-risk behaviors','Comportamientos de riesgo más frecuentes'),cols:[[L('Category','Categoría'),.26],[L('Behavior','Comportamiento'),.6],[L('Times','Veces'),.14]],rows:topRows},
       {label:L('Tasks with at-risk behavior','Tareas con comportamiento de riesgo'),cols:[[L('Task','Tarea'),.62],[L('At-risk','De riesgo'),.19],[L('% safe','% seguro'),.19]],rows:taskRows},
       {label:L('Why it happens (barriers)','Por qué pasa (barreras)'),cols:[[L('Barrier','Barrera'),.8],[L('Times','Veces'),.2]],rows:barRows}],
@@ -1654,6 +1667,7 @@ function fillSelects(){
   App.facilityOptions(document.getElementById('oFac'), false);
   ['dFac','rFac'].forEach(function(id){ App.facilityOptions(document.getElementById(id), true); });
   deptOptions(document.getElementById('oDept'), false);
+  var sh=document.getElementById('oShift'), shk=sh.value; sh.innerHTML='<option value="">—</option>'+SHIFTS.map(function(o){return '<option value="'+esc(o.k)+'">'+esc(tx(o))+'</option>';}).join(''); sh.value=shk;
   var r=document.getElementById('dRange'), keep=r.value||'90';
   r.innerHTML=[['30',{en:'Last 30 days',es:'Últimos 30 días'}],['90',{en:'Last 90 days',es:'Últimos 90 días'}],['365',{en:'Last 12 months',es:'Últimos 12 meses'}],['all',{en:'All time',es:'Todo'}]].map(function(o){return '<option value="'+o[0]+'">'+esc(tx(o[1]))+'</option>';}).join('');
   r.value=keep;
