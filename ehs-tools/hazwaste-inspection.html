@@ -148,7 +148,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 .ph{position:relative}
 .ph button{position:absolute;top:-8px;right:-8px;width:26px;height:26px;border-radius:50%;border:0;background:var(--bad);color:#fff;font-weight:800;cursor:pointer}
 </style>
-<style>.chem .hwOnly{display:none!important}body:not(.chem) .chemOnly{display:none!important}</style>
+<style>.nohw .hwOnly{display:none!important}body:not(.kchem) .chemOnly{display:none!important}body:not(.ktank) .tankOnly{display:none!important}</style>
 <header class="top"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2942"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="EHS Tools">
   <div class="top-in">
     <div class="mark hw" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v3H6z"/><path d="M7 7v13h10V7"/><path d="M7 11h10M7 15h10"/></svg></div>
@@ -186,6 +186,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
       <label class="f hwOnly"><span data-i18n="oldest">Oldest accumulation start date</span><input type="date" id="iOld"></label>
     </div>
     <div class="age hwOnly" id="age"></div>
+    <p class="hint tankOnly" data-i18n="tankNote">Aboveground fuel tanks (diesel, gasoline, generator day tanks), propane tanks and natural gas meters and regulators. Inspect at least monthly; SPCC and APSA sites keep the signed record.</p>
     <p class="hint chemOnly" data-i18n="chemNote">Chemical storage areas hold product chemicals (cleaners, sanitizers, lubricants, CIP chemicals, fuels). Waste containers are inspected with the Hazardous waste type.</p>
   </div>
   <div class="card sec-card" id="checklist"></div>
@@ -277,13 +278,13 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 
 <script>
 window.TOOL = {id:'hazwaste', ver:1,sync:{arrays:['recs'],maps:['months']}, i18n:{
-en:{kind:'Inspection type',chemNote:'Chemical storage areas hold product chemicals (cleaners, sanitizers, lubricants, CIP chemicals, fuels). Waste containers are inspected with the Hazardous waste type.',kicker:'Weekly container inspection · 22 CCR',appTitle:'Hazardous Waste Storage Inspection',tabInsp:'Inspect',tabMonth:'Monthly form',tabLog:'Log',where:'Area and inspector',facility:'Facility',area:'Storage area',date:'Inspection date',
+en:{tankNote:'Aboveground fuel tanks (diesel, gasoline, generator day tanks), propane tanks and natural gas meters and regulators. Inspect at least monthly; SPCC and APSA sites keep the signed record.',kind:'Inspection type',chemNote:'Chemical storage areas hold product chemicals (cleaners, sanitizers, lubricants, CIP chemicals, fuels). Waste containers are inspected with the Hazardous waste type.',kicker:'Weekly container inspection · 22 CCR',appTitle:'Hazardous Waste Storage Inspection',tabInsp:'Inspect',tabMonth:'Monthly form',tabLog:'Log',where:'Area and inspector',facility:'Facility',area:'Storage area',date:'Inspection date',
 inspector:'Inspector',initials:'Inspector initials',sup:'Report "No" items to',containers:'Containers in the unit',count:'Number of containers',ctype:'Main container type',gen:'Generator status (time limit)',oldest:'Oldest accumulation start date',
 overall:'Overall comments',photos:'Photos (optional, up to 4)',save:'Save inspection',clearForm:'Clear form',shareTitle:'Download or share this inspection',dlPdf:'Download PDF',dlWord:'Download Word',copyText:'Copy report text',edit:'Edit this inspection',next:'Start next week\'s inspection',
 monthTitle:'Monthly inspection form',monthHint:'The same layout as the paper checklist: one column per weekly inspection, comments on every "No", and the review sign-off.',revBy:'Reviewed by',revDate:'Review date',mOverall:'Overall comments for the month',
 dueTitle:'Weekly inspections due',last:'Last inspection',oldestC:'Oldest container',status:'Status',exportCsv:'Export CSV',exportJson:'Export backup (JSON)',importJson:'Import backup',allFacilities:'All facilities',clrTitle:'Clear this month',clrHint:'Download the PDF first if you need a record. Clearing applies only to the facility, storage area and month selected above.',clrRev:'Clear review and signatures',clrAll:'Clear all inspections for this month',sigTitle:'Signatures',sigHint:'Sign with your finger or mouse. The signature, name and time are added to the PDF and Word reports.',
 foot:'Containers in a hazardous waste storage area must be inspected at least weekly for leaks and deterioration (22 CCR §66265.174). Comment on every "No" and report it to the supervisor.'},
-es:{kind:'Tipo de inspección',chemNote:'Las áreas de almacenamiento de químicos guardan productos químicos (limpiadores, sanitizantes, lubricantes, químicos CIP, combustibles). Los contenedores de residuos se inspeccionan con el tipo Residuos peligrosos.',kicker:'Inspección semanal de contenedores · 22 CCR',appTitle:'Inspección de Almacén de Residuos Peligrosos',tabInsp:'Inspeccionar',tabMonth:'Formato mensual',tabLog:'Registro',where:'Área e inspector',facility:'Instalación',area:'Área de almacenamiento',date:'Fecha de inspección',
+es:{tankNote:'Tanques de combustible sobre el suelo (diésel, gasolina, tanques de generador), tanques de propano y medidores y reguladores de gas natural. Inspeccione al menos cada mes; los sitios con SPCC y APSA conservan el registro firmado.',kind:'Tipo de inspección',chemNote:'Las áreas de almacenamiento de químicos guardan productos químicos (limpiadores, sanitizantes, lubricantes, químicos CIP, combustibles). Los contenedores de residuos se inspeccionan con el tipo Residuos peligrosos.',kicker:'Inspección semanal de contenedores · 22 CCR',appTitle:'Inspección de Almacén de Residuos Peligrosos',tabInsp:'Inspeccionar',tabMonth:'Formato mensual',tabLog:'Registro',where:'Área e inspector',facility:'Instalación',area:'Área de almacenamiento',date:'Fecha de inspección',
 inspector:'Inspector',initials:'Iniciales del inspector',sup:'Reportar los "No" a',containers:'Contenedores en la unidad',count:'Número de contenedores',ctype:'Tipo principal de contenedor',gen:'Tipo de generador (tiempo límite)',oldest:'Fecha de inicio de acumulación más antigua',
 overall:'Comentarios generales',photos:'Fotos (opcional, hasta 4)',save:'Guardar inspección',clearForm:'Borrar formulario',shareTitle:'Descargar o compartir esta inspección',dlPdf:'Descargar PDF',dlWord:'Descargar Word',copyText:'Copiar texto del reporte',edit:'Editar esta inspección',next:'Iniciar la inspección de la próxima semana',
 monthTitle:'Formato mensual de inspección',monthHint:'El mismo formato que la lista en papel: una columna por inspección semanal, comentarios en cada "No" y la firma de revisión.',revBy:'Revisado por',revDate:'Fecha de revisión',mOverall:'Comentarios generales del mes',
@@ -1238,7 +1239,7 @@ var ROLES=[O('EHS Coordinator','Coordinador de EHS'),O('EHS Technician','Técnic
 var CTYPES=[O('55-gal steel drums','Tambos de acero de 55 gal'),O('55-gal poly drums','Tambos de plástico de 55 gal'),O('30-gal drums','Tambos de 30 gal'),O('5-gal pails','Cubetas de 5 gal'),O('Totes (IBC)','Totes (IBC)'),
   O('Used oil tank','Tanque de aceite usado'),O('Battery / lamp boxes','Cajas de baterías / lámparas'),O('Mixed','Mixto')];
 var GEN=[{k:90,en:'Large quantity generator · 90 days',es:'Gran generador · 90 días'},{k:180,en:'Small quantity generator · 180 days',es:'Pequeño generador · 180 días'},{k:270,en:'Small quantity generator, 200+ miles to TSDF · 270 days',es:'Pequeño generador, 200+ millas a la planta · 270 días'}];
-var KINDS=[{k:'hw',en:'Hazardous waste storage (weekly · 22 CCR)',es:'Almacén de residuos peligrosos (semanal · 22 CCR)'},{k:'chem',en:'Chemical storage area (products · Title 8)',es:'Área de almacenamiento de químicos (productos · Título 8)'}];
+var KINDS=[{k:'hw',en:'Hazardous waste storage (weekly · 22 CCR)',es:'Almacén de residuos peligrosos (semanal · 22 CCR)'},{k:'chem',en:'Chemical storage area (products · Title 8)',es:'Área de almacenamiento de químicos (productos · Título 8)'},{k:'tank',en:'Storage tanks (diesel, propane, natural gas)',es:'Tanques de almacenamiento (diésel, propano, gas natural)'}];
 var CAREAS=[O('Chemical storage room','Cuarto de almacenamiento de químicos'),O('Sanitation chemical room','Cuarto de químicos de sanitización'),O('CIP / chemical dosing area','Área de CIP / dosificación de químicos'),
   O('Maintenance chemical cabinet','Gabinete de químicos de mantenimiento'),O('Flammable storage cabinet','Gabinete de inflamables'),O('Corrosives cabinet (acids / caustics)','Gabinete de corrosivos (ácidos / cáusticos)'),
   O('Lubricant / oil room','Cuarto de lubricantes / aceites'),O('Propane cylinder cage','Jaula de cilindros de propano'),O('Lab / QA chemical storage','Químicos de laboratorio / calidad'),O('Pesticide / fertilizer storage','Almacén de pesticidas / fertilizantes')];
@@ -1256,6 +1257,24 @@ var CITEMS=[
  {id:'c_eye',en:'Eyewash / safety shower accessible where corrosives are stored',es:'Lavaojos / regadera accesible donde hay corrosivos',ref:'8 CCR §5162'},
  {id:'c_spill',en:'Spill kit stocked; required PPE available',es:'Kit de derrames completo; EPP requerido disponible',ref:'8 CCR §3380'},
  {id:'c_aisle',en:'Aisles, exits and fire extinguisher clear and accessible',es:'Pasillos, salidas y extintor despejados y accesibles',ref:'8 CCR §6151'}];
+var TAREAS=[O('Diesel fueling station (AST)','Estación de diésel (tanque sobre el suelo)'),O('Emergency generator diesel tank','Tanque de diésel del generador de emergencia'),O('Generator day tank','Tanque diario del generador'),
+  O('Gasoline AST','Tanque de gasolina sobre el suelo'),O('Propane tank (bulk)','Tanque de propano (granel)'),O('Forklift propane cylinder cage','Jaula de cilindros de propano de montacargas'),
+  O('Natural gas meter and regulator','Medidor y regulador de gas natural'),O('Natural gas piping / boiler room','Tubería de gas natural / cuarto de calderas'),O('Hydraulic / lube oil tank','Tanque de aceite hidráulico / lubricante'),O('DEF tote / tank','Tote / tanque de DEF')];
+// Storage tank checklist (fuel ASTs, propane, natural gas). References are starting points; confirm against the SPCC plan and site permits.
+var TITEMS=[
+ {id:'t_cond',en:'Tank shell, supports and foundation in good condition',es:'Cuerpo del tanque, soportes y base en buen estado',ref:'40 CFR 112.8(c)(6)',sub:{en:'No rust, dents, bulging, cracks or settling',es:'Sin óxido, abolladuras, abultamientos, grietas ni hundimientos'}},
+ {id:'t_leak',en:'No leaks or stains at the tank, valves, fittings, hoses or ground',es:'Sin fugas ni manchas en tanque, válvulas, conexiones, mangueras o piso',ref:'40 CFR 112.8(c)(10)'},
+ {id:'t_cont',en:'Secondary containment intact and free of water or fuel',es:'Contención secundaria íntegra y sin agua ni combustible',ref:'40 CFR 112.8(c)(2)'},
+ {id:'t_drain',en:'Containment drain valve closed and locked',es:'Válvula de drenaje de la contención cerrada y con candado',ref:'40 CFR 112.8(c)(3)'},
+ {id:'t_gauge',en:'Level gauge, overfill alarm and vents working and clear',es:'Indicador de nivel, alarma de sobrellenado y ventilas funcionando y despejadas',ref:'40 CFR 112.8(c)(8)'},
+ {id:'t_fill',en:'Fill / dispensing area: spill kit, drip pan, hose and nozzle in good condition',es:'Área de llenado / despacho: kit de derrames, charola, manguera y boquilla en buen estado',ref:'40 CFR 112.7(c)'},
+ {id:'t_valve',en:'Valves and dispenser secured or locked when not in use',es:'Válvulas y despachador asegurados o con candado cuando no se usan',ref:'40 CFR 112.7(g)'},
+ {id:'t_sign',en:'Tank labeled with contents and capacity; NFPA 704 and "No Smoking" signs posted',es:'Tanque rotulado con contenido y capacidad; letreros NFPA 704 y "No fumar"',ref:'Cal. Fire Code Ch. 57'},
+ {id:'t_impact',en:'Vehicle impact protection (bollards / barriers) in place',es:'Protección contra impacto de vehículos (bolardos / barreras)',ref:'Cal. Fire Code §312'},
+ {id:'t_ign',en:'No ignition sources; area clear of combustibles and weeds',es:'Sin fuentes de ignición; área libre de combustibles y maleza',ref:'Cal. Fire Code Ch. 57 / Ch. 61'},
+ {id:'t_gas',en:'Propane / natural gas: no gas odor; regulator, piping and shutoff valve protected, labeled and accessible',es:'Propano / gas natural: sin olor a gas; regulador, tubería y válvula de cierre protegidos, rotulados y accesibles',ref:'Cal. Fire Code Ch. 61'},
+ {id:'t_ext',en:'Fire extinguisher present, charged and inspected',es:'Extintor presente, cargado e inspeccionado',ref:'8 CCR §6151'},
+ {id:'t_plan',en:'SPCC / spill plan and emergency contacts available',es:'Plan SPCC / de derrames y contactos de emergencia disponibles',ref:'40 CFR 112 · H&SC Ch. 6.67 (APSA)'}];
 // Items from the facility checklist
 var ITEMS=[
  {id:'lab',en:'Containers marked / labeled properly',es:'Contenedores marcados / etiquetados correctamente',ref:'22 CCR §66262.34(f)',sub:{en:'"Hazardous Waste", contents, hazards, generator name and address',es:'"Residuo peligroso", contenido, riesgos, nombre y dirección del generador'}},
@@ -1289,21 +1308,46 @@ FIND.c_shelf=[O('Heavy containers on high shelves','Contenedores pesados en esta
 FIND.c_eye=[O('Eyewash blocked','Lavaojos bloqueado'),O('Eyewash not working / not flushed','Lavaojos sin funcionar / sin purgar'),O('No eyewash near corrosives','Sin lavaojos cerca de corrosivos')];
 FIND.c_spill=[O('Spill kit missing','Falta el kit de derrames'),O('Spill kit incomplete','Kit de derrames incompleto'),O('Gloves / goggles not available','Sin guantes / goggles')];
 FIND.c_aisle=[O('Aisle blocked','Pasillo bloqueado'),O('Exit blocked','Salida bloqueada'),O('Extinguisher blocked or missing','Extintor bloqueado o faltante')];
+FIND.t_cond=[O('Rust or corrosion','Óxido o corrosión'),O('Dent / bulge / crack','Abolladura / abultamiento / grieta'),O('Support or foundation damaged','Soporte o base dañados')];
+FIND.t_leak=[O('Active leak','Fuga activa'),O('Stain at valve or fitting','Mancha en válvula o conexión'),O('Stain on ground','Mancha en el piso'),O('Hose cracked or weeping','Manguera agrietada o goteando')];
+FIND.t_cont=[O('Water in containment','Agua en la contención'),O('Fuel in containment','Combustible en la contención'),O('Containment cracked or damaged','Contención agrietada o dañada'),O('Debris in containment','Basura en la contención')];
+FIND.t_drain=[O('Drain valve open','Válvula de drenaje abierta'),O('Drain valve not locked','Válvula de drenaje sin candado')];
+FIND.t_gauge=[O('Level gauge not working','Indicador de nivel sin funcionar'),O('Overfill alarm not working','Alarma de sobrellenado sin funcionar'),O('Vent blocked or cap missing','Ventila bloqueada o sin tapa')];
+FIND.t_fill=[O('Spill kit missing or incomplete','Kit de derrames faltante o incompleto'),O('No drip pan','Sin charola de goteo'),O('Nozzle or hose damaged','Boquilla o manguera dañada')];
+FIND.t_valve=[O('Valve not locked','Válvula sin candado'),O('Dispenser not secured','Despachador sin asegurar')];
+FIND.t_sign=[O('Contents label missing','Falta rótulo de contenido'),O('NFPA 704 missing or faded','Falta NFPA 704 o está borroso'),O('"No Smoking" sign missing','Falta letrero de "No fumar"')];
+FIND.t_impact=[O('Bollard missing or damaged','Bolardo faltante o dañado'),O('No impact protection','Sin protección contra impacto')];
+FIND.t_ign=[O('Ignition source nearby','Fuente de ignición cercana'),O('Combustibles stored near tank','Combustibles cerca del tanque'),O('Weeds / vegetation','Maleza / vegetación')];
+FIND.t_gas=[O('Gas odor','Olor a gas'),O('Regulator or piping unprotected','Regulador o tubería sin protección'),O('Shutoff valve blocked or not labeled','Válvula de cierre bloqueada o sin rótulo'),O('Corroded piping','Tubería corroída')];
+FIND.t_ext=[O('Extinguisher missing','Falta el extintor'),O('Extinguisher not charged','Extintor sin carga'),O('Monthly tag not current','Etiqueta mensual vencida')];
+FIND.t_plan=[O('SPCC plan not available','Plan SPCC no disponible'),O('Emergency contacts out of date','Contactos de emergencia desactualizados')];
 var ACTIONS=[O('Relabel container','Volver a etiquetar el contenedor'),O('Add accumulation start date','Agregar fecha de inicio'),O('Schedule waste pickup','Programar recolección de residuos'),
   O('Overpack or transfer contents','Sobre-empacar o transferir el contenido'),O('Clean up spill / stain','Limpiar derrame / mancha'),O('Close lid / remove funnel','Cerrar tapa / quitar embudo'),
   O('Replace damaged container','Cambiar contenedor dañado'),O('Rearrange to restore aisle space','Reacomodar para liberar pasillos'),O('Move onto containment pallet','Mover a tarima de contención'),
   O('Pump out and dispose of liquid','Vaciar y disponer el líquido'),O('Repair or replace containment','Reparar o cambiar la contención'),O('Retrain staff','Recapacitar al personal'),
   O('Label container / print GHS label','Etiquetar / imprimir etiqueta SGA'),O('Add or update SDS','Agregar o actualizar HDS'),O('Update chemical inventory','Actualizar inventario de químicos'),O('Separate incompatible chemicals','Separar químicos incompatibles'),
   O('Move flammables into cabinet','Mover inflamables al gabinete'),O('Remove ignition source / post sign','Quitar fuente de ignición / poner letrero'),O('Move heavy items to lower shelf','Bajar artículos pesados'),
-  O('Clear access / flush eyewash','Despejar acceso / purgar lavaojos'),O('Restock spill kit / PPE','Reabastecer kit de derrames / EPP'),O('Clear aisle / exit / extinguisher','Despejar pasillo / salida / extintor'),O('Dispose of expired product','Desechar producto vencido')];
-var SUG={c_lab:'Label container / print GHS label',c_sds:'Add or update SDS',c_inv:'Update chemical inventory',c_seg:'Separate incompatible chemicals',c_closed:'Close lid / remove funnel',c_cont:'Move onto containment pallet',c_flam:'Move flammables into cabinet',c_ign:'Remove ignition source / post sign',c_shelf:'Move heavy items to lower shelf',c_eye:'Clear access / flush eyewash',c_spill:'Restock spill kit / PPE',c_aisle:'Clear aisle / exit / extinguisher',lab:'Relabel container',date:'Add accumulation start date',time:'Schedule waste pickup',leak:'Overpack or transfer contents',closed:'Close lid / remove funnel',dent:'Replace damaged container',aisle:'Rearrange to restore aisle space',cont:'Move onto containment pallet',water:'Pump out and dispose of liquid'};
+  O('Clear access / flush eyewash','Despejar acceso / purgar lavaojos'),O('Restock spill kit / PPE','Reabastecer kit de derrames / EPP'),O('Clear aisle / exit / extinguisher','Despejar pasillo / salida / extintor'),O('Dispose of expired product','Desechar producto vencido'),
+  O('Repair or recoat tank','Reparar o repintar el tanque'),O('Stop leak and clean up','Detener la fuga y limpiar'),O('Pump out containment (check for sheen)','Vaciar la contención (revisar brillo de aceite)'),
+  O('Close and lock drain valve','Cerrar y poner candado a la válvula de drenaje'),O('Repair gauge / alarm / vent','Reparar indicador / alarma / ventila'),O('Lock valve / secure dispenser','Poner candado / asegurar despachador'),
+  O('Replace signs / labels','Cambiar letreros / rótulos'),O('Install or repair bollards','Instalar o reparar bolardos'),O('Call gas utility / shut off gas','Llamar a la compañía de gas / cerrar el gas'),
+  O('Replace or service extinguisher','Cambiar o dar servicio al extintor'),O('Update SPCC plan / contacts','Actualizar plan SPCC / contactos')];
+var SUG={t_cond:'Repair or recoat tank',t_leak:'Stop leak and clean up',t_cont:'Pump out containment (check for sheen)',t_drain:'Close and lock drain valve',t_gauge:'Repair gauge / alarm / vent',t_fill:'Restock spill kit / PPE',t_valve:'Lock valve / secure dispenser',t_sign:'Replace signs / labels',t_impact:'Install or repair bollards',t_ign:'Remove ignition source / post sign',t_gas:'Call gas utility / shut off gas',t_ext:'Replace or service extinguisher',t_plan:'Update SPCC plan / contacts',c_lab:'Label container / print GHS label',c_sds:'Add or update SDS',c_inv:'Update chemical inventory',c_seg:'Separate incompatible chemicals',c_closed:'Close lid / remove funnel',c_cont:'Move onto containment pallet',c_flam:'Move flammables into cabinet',c_ign:'Remove ignition source / post sign',c_shelf:'Move heavy items to lower shelf',c_eye:'Clear access / flush eyewash',c_spill:'Restock spill kit / PPE',c_aisle:'Clear aisle / exit / extinguisher',lab:'Relabel container',date:'Add accumulation start date',time:'Schedule waste pickup',leak:'Overpack or transfer contents',closed:'Close lid / remove funnel',dent:'Replace damaged container',aisle:'Rearrange to restore aisle space',cont:'Move onto containment pallet',water:'Pump out and dispose of liquid'};
 var OVER=[O('All items meet facility rules.','Todos los puntos cumplen las reglas.'),O('No-marked items reported to supervisor.','Los puntos "No" se reportaron al supervisor.'),
   O('Waste pickup scheduled.','Recolección programada.'),O('Area clean and organized.','Área limpia y ordenada.'),O('Spill kit stocked.','Kit de derrames completo.')];
 
 function isChem(d){ return d&&d.kind==='chem'; }
-function itemsFor(d){ return isChem(d)?CITEMS:ITEMS; }
-function areasFor(d){ return isChem(d)?CAREAS:AREAS; }
-function allAreas(){ return AREAS.concat(CAREAS); }
+function isTank(d){ return d&&d.kind==='tank'; }
+function notHw(d){ return isChem(d)||isTank(d); }
+function itemsFor(d){ return isChem(d)?CITEMS:isTank(d)?TITEMS:ITEMS; }
+function areasFor(d){ return isChem(d)?CAREAS:isTank(d)?TAREAS:AREAS; }
+function allAreas(){ return AREAS.concat(CAREAS,TAREAS); }
+var KTXT={hw:{kick:['EHS · HAZARDOUS WASTE','EHS · RESIDUOS PELIGROSOS'],title:['Hazardous Waste Storage Inspection','Inspección de Residuos Peligrosos'],mtitle:['Container Storage Area Inspection','Inspección del Almacén de Contenedores'],file:'HW-Inspection-',short:['','']},
+  chem:{kick:['EHS · CHEMICAL STORAGE','EHS · ALMACÉN DE QUÍMICOS'],title:['Chemical Storage Area Inspection','Inspección del Área de Almacenamiento de Químicos'],mtitle:['Chemical Storage Area Inspection','Inspección del Área de Almacenamiento de Químicos'],file:'Chem-Storage-Inspection-',short:['Chemical','Químicos'],
+    refs:'8 CCR §5194 (Hazard Communication: labels, SDS, inventory), §5164 (storage of hazardous substances), §5162 (emergency eyewash and shower), §3380 (PPE), §6151 (portable fire extinguishers); California Fire Code Ch. 57 (flammable and combustible liquids).',foot:'8 CCR §5194 · §5164 · '},
+  tank:{kick:['EHS · STORAGE TANKS','EHS · TANQUES DE ALMACENAMIENTO'],title:['Storage Tank Inspection','Inspección de Tanques de Almacenamiento'],mtitle:['Storage Tank Inspection','Inspección de Tanques de Almacenamiento'],file:'Tank-Inspection-',short:['Tank','Tanque'],
+    refs:'40 CFR 112 (SPCC: 112.7(c) containment, 112.7(g) security, 112.8(c) bulk storage containers and inspections); California Health & Safety Code Ch. 6.67 (Aboveground Petroleum Storage Act); California Fire Code §312 (vehicle impact protection), Ch. 57 (flammable and combustible liquids), Ch. 61 (LP-gas); 8 CCR §6151 (portable fire extinguishers).',foot:'40 CFR 112 · APSA · '}};
+function KT(d){ return KTXT[(d&&d.kind)||'hw']||KTXT.hw; }
 function disp(list,v){ if(!v) return ''; var o=list.find(function(x){return x.en===v||x.es===v;}); return o?tx(o):v; }
 function combo(box,list,val,onSet,opt){
   opt=opt||{}; box.innerHTML='';
@@ -1377,8 +1421,8 @@ function examples(){
 }
 
 /* ---------- age / time limit ---------- */
-function age(d){ if(isChem(d)||!d.oldest) return null; var days=App.daysBetween(d.oldest,d.date||App.today()), lim=+d.gen||180; return {days:days,lim:lim,left:lim-days,ship:App.addDays(d.oldest,lim)}; }
-function autoTime(){ if(isChem(cur)) return; var a=age(cur); if(!a) return; cur.ans.time=a.left<0?'no':'yes'; if(a.left<0){ cur.notes.time=cur.notes.time||'Over the time limit'; cur.acts.time=cur.acts.time||'Schedule waste pickup'; } else if(a.left<=14){ cur.notes.time='Within 14 days of the limit'; } else if(cur.notes.time==='Within 14 days of the limit'||cur.notes.time==='Over the time limit') cur.notes.time=''; }
+function age(d){ if(notHw(d)||!d.oldest) return null; var days=App.daysBetween(d.oldest,d.date||App.today()), lim=+d.gen||180; return {days:days,lim:lim,left:lim-days,ship:App.addDays(d.oldest,lim)}; }
+function autoTime(){ if(notHw(cur)) return; var a=age(cur); if(!a) return; cur.ans.time=a.left<0?'no':'yes'; if(a.left<0){ cur.notes.time=cur.notes.time||'Over the time limit'; cur.acts.time=cur.acts.time||'Schedule waste pickup'; } else if(a.left<=14){ cur.notes.time='Within 14 days of the limit'; } else if(cur.notes.time==='Within 14 days of the limit'||cur.notes.time==='Over the time limit') cur.notes.time=''; }
 function renderAge(){ var a=age(cur), box=document.getElementById('age');
   if(!a){ box.innerHTML='<p class="hint">'+esc(L('Enter the oldest start date to check the time limit automatically.','Ingrese la fecha más antigua para revisar el límite automáticamente.'))+'</p>'; return; }
   var cls=a.left<0?'bad':a.left<=14?'warn':'good';
@@ -1394,11 +1438,11 @@ function fillSelects(){
   var ty=document.getElementById('iType'); ty.innerHTML='<option value="">—</option>'+CTYPES.map(function(o){return '<option value="'+esc(o.en)+'">'+esc(tx(o))+'</option>';}).join('');
   var g=document.getElementById('iGen'); g.innerHTML=GEN.map(function(o){return '<option value="'+o.k+'">'+esc(tx(o))+'</option>';}).join('');
   var op=document.getElementById('oPick'); op.innerHTML='<option value="">'+esc(L('+ Add a common comment…','+ Agregar comentario común…'))+'</option>'+OVER.map(function(o){return '<option value="'+esc(o.en)+'">'+esc(tx(o))+'</option>';}).join('');
-  var ma=document.getElementById('mArea'), k=ma.value; ma.innerHTML='<option value="">'+esc(L('All storage areas','Todas las áreas'))+'</option>'+(document.getElementById('mKind').value==='chem'?CAREAS:AREAS).map(function(o){return '<option value="'+esc(o.en)+'">'+esc(tx(o))+'</option>';}).join(''); ma.value=k;
+  var ma=document.getElementById('mArea'), k=ma.value; ma.innerHTML='<option value="">'+esc(L('All storage areas','Todas las áreas'))+'</option>'+areasFor({kind:document.getElementById('mKind').value}).map(function(o){return '<option value="'+esc(o.en)+'">'+esc(tx(o))+'</option>';}).join(''); ma.value=k;
   var lo=document.getElementById('lOnly'), k2=lo.value; lo.innerHTML='<option value="">'+esc(L('All inspections','Todas las inspecciones'))+'</option><option value="no">'+esc(L('With "No" items','Con puntos "No"'))+'</option>'; lo.value=k2;
 }
 function fill(){
-  if(!cur.kind) cur.kind='hw'; document.getElementById('iKind').value=cur.kind; document.body.classList.toggle('chem',isChem(cur));
+  if(!cur.kind) cur.kind='hw'; document.getElementById('iKind').value=cur.kind; document.body.classList.toggle('nohw',notHw(cur)); document.body.classList.toggle('kchem',isChem(cur)); document.body.classList.toggle('ktank',isTank(cur));
   document.getElementById('iFac').value=cur.facility; document.getElementById('iDate').value=cur.date; document.getElementById('iInit').value=cur.init;
   document.getElementById('iCount').value=cur.count; document.getElementById('iType').value=cur.ctype; document.getElementById('iGen').value=String(cur.gen||180); document.getElementById('iOld').value=cur.oldest;
   document.getElementById('iOverall').value=cur.overall||'';
@@ -1460,17 +1504,17 @@ function nos(d){ return itemsFor(d).filter(function(i){return d.ans[i.id]==='no'
 function ansTxt(a){ return a==='yes'?L('Yes','Sí'):a==='no'?'No':a==='na'?'N/A':'—'; }
 function model(d){
   var a=age(d), n=nos(d);
-  var ch=isChem(d), IT=itemsFor(d);
-  return {lang:App.L(), kicker:ch?L('EHS · CHEMICAL STORAGE','EHS · ALMACÉN DE QUÍMICOS'):L('EHS · HAZARDOUS WASTE','EHS · RESIDUOS PELIGROSOS'), title:ch?L('Chemical Storage Area Inspection','Inspección del Área de Almacenamiento de Químicos'):L('Hazardous Waste Storage Inspection','Inspección de Residuos Peligrosos'), id:d.date,
+  var ch=notHw(d), IT=itemsFor(d), K=KT(d);
+  return {lang:App.L(), kicker:L(K.kick[0],K.kick[1]), title:L(K.title[0],K.title[1]), id:d.date,
     badge:n.length?{text:n.length+L(' "No" items',' puntos "No"'),hex:'B42318'}:{text:L('All items OK','Todo correcto'),hex:'1D7446'},
     info:[[L('Facility','Instalación'),d.facility],[L('Storage area','Área'),disp(allAreas(),d.area)],[L('Inspection date','Fecha'),d.date],
       [L('Inspector','Inspector'),disp(ROLES,d.insp)+(d.init?' ('+d.init+')':'')],[L('Containers','Contenedores'),d.count+(d.ctype?' · '+disp(CTYPES,d.ctype):'')],
-      ch?[L('Inspection type','Tipo de inspección'),L('Chemical storage area','Área de almacenamiento de químicos')]:[L('Time limit','Tiempo límite'),a?a.days+' / '+a.lim+L(' days · ship by ',' días · enviar antes del ')+a.ship:(GEN.find(function(g){return g.k===+d.gen;})||GEN[1]).k+L(' days',' días')]],
+      ch?[L('Inspection type','Tipo de inspección'),tx(KINDS.find(function(k){return k.k===d.kind;}))]:[L('Time limit','Tiempo límite'),a?a.days+' / '+a.lim+L(' days · ship by ',' días · enviar antes del ')+a.ship:(GEN.find(function(g){return g.k===+d.gen;})||GEN[1]).k+L(' days',' días')]],
     tables:[{label:L('Inspection items','Puntos de inspección'),cols:[[L('Item','Punto'),.42],[L('Result','Resultado'),.1],[L('Comment','Comentario'),.26],[L('Corrective action','Acción'),.22]],
       rows:IT.map(function(i){ var v=d.ans[i.id]; return [tx(i), {t:ansTxt(v),b:v==='no',hex:v==='no'?'B42318':v==='yes'?'1D7446':null}, disp(FIND[i.id]||[],d.notes[i.id]), v==='no'?disp(ACTIONS,d.acts[i.id]):'']; })}],
     photos:d.photos||[], photoLabel:L('Photos','Fotos'),
     sections:[[L('"No" items reported to','Puntos "No" reportados a'),n.length?disp(ROLES,d.sup)||L('Not recorded','No registrado'):''],[L('Overall comments','Comentarios generales'),d.overall],
-      [L('References','Referencias'),ch?'8 CCR §5194 (Hazard Communication: labels, SDS, inventory), §5164 (storage of hazardous substances), §5162 (emergency eyewash and shower), §3380 (PPE), §6151 (portable fire extinguishers); California Fire Code Ch. 57 (flammable and combustible liquids).':'22 CCR §66265.174 (weekly inspection), §66262.34 (accumulation time, labeling), §66265.171-173 (container condition, closed containers), §66265.35 (aisle space), §66264.175 (containment).']],
+      [L('References','Referencias'),ch?K.refs:'22 CCR §66265.174 (weekly inspection), §66262.34 (accumulation time, labeling), §66265.171-173 (container condition, closed containers), §66265.35 (aisle space), §66264.175 (containment).']],
     signoff:{label:L('Signatures','Firmas'),slots:[L('Inspector - initials and signature','Inspector - iniciales y firma'),L('Reviewed by - name and signature','Revisado por - nombre y firma')],dateLabel:L('Date','Fecha'),signed:(d.sigs||[]).map(function(q,i){ return q&&!q.name&&i===0?{img:q.img,at:q.at,name:disp(ROLES,d.insp)}:q; }),signedWord:L('Signed electronically','Firmado electrónicamente')},
     footer:L('Generated ','Generado ')+new Date().toLocaleString(App.L()==='es'?'es-MX':'en-US',{dateStyle:'medium',timeStyle:'short'})};
 }
@@ -1482,7 +1526,7 @@ function showForm(){ viewing=null; document.getElementById('formView').hidden=fa
 
 /* ---------- monthly form ---------- */
 function mKind(){ return document.getElementById('mKind').value||'hw'; }
-function monthKey(){ return [document.getElementById('mFac').value,document.getElementById('mArea').value,document.getElementById('mMonth').value].join('|')+(mKind()==='chem'?'|chem':''); }
+function monthKey(){ return [document.getElementById('mFac').value,document.getElementById('mArea').value,document.getElementById('mMonth').value].join('|')+(mKind()!=='hw'?'|'+mKind():''); }
 function monthRecs(){ var f=document.getElementById('mFac').value, a=document.getElementById('mArea').value, m=document.getElementById('mMonth').value;
   return recs.filter(function(r){ return r.date.slice(0,7)===m && (r.kind||'hw')===mKind() && (!f||r.facility===f) && (!a||r.area===a); }).sort(function(x,y){return x.date<y.date?-1:1;}); }
 function cellTxt(r,i){ var v=r.ans[i.id]; return v==='yes'?L('Yes','Sí'):v==='no'?'No':v==='na'?'N/A':''; }
@@ -1514,15 +1558,15 @@ function monthModel(){
   rows.push([{t:L('Inspector initials','Iniciales del inspector'),b:true}].concat(rs.map(function(r){return {t:r.init,b:true};})).concat(['']));
   rows.push([{t:L('Inspector name','Nombre del inspector'),b:true}].concat(rs.map(function(r){return disp(ROLES,r.insp);})).concat(['']));
   var mon=m?new Date(m+'-15').toLocaleDateString(App.L()==='es'?'es-MX':'en-US',{month:'long',year:'numeric'}):'';
-  var ch=mKind()==='chem';
-  return {lang:App.L(), kicker:ch?L('EHS · CHEMICAL STORAGE','EHS · ALMACÉN DE QUÍMICOS'):L('EHS · HAZARDOUS WASTE','EHS · RESIDUOS PELIGROSOS'), title:ch?L('Chemical Storage Area Inspection','Inspección del Área de Almacenamiento de Químicos'):L('Container Storage Area Inspection','Inspección del Almacén de Contenedores'), id:mon,
+  var ch=mKind()!=='hw', K=KT({kind:mKind()});
+  return {lang:App.L(), kicker:L(K.kick[0],K.kick[1]), title:L(K.mtitle[0],K.mtitle[1]), id:mon,
     badge:{text:rs.length+L(' inspections · ',' inspecciones · ')+nNo+' "No"',hex:nNo?'B42318':'1D7446'},
     info:[[L('Facility','Instalación'),f||L('All','Todas')],[L('Storage area','Área'),a?disp(allAreas(),a):L('All','Todas')],[L('Month','Mes'),mon],[L('Inspected by','Inspeccionado por'),rs.map(function(r){return disp(ROLES,r.insp);}).filter(function(v,i,a){return v&&a.indexOf(v)===i;}).join(', ')||'—']],
     tables:[{label:ch?L('Inspections','Inspecciones'):L('Weekly inspections','Inspecciones semanales'),cols:cols,rows:rows}],
     sections:[[L('Instructions','Instrucciones'),L('Weekly, mark "Yes" next to every item that meets facility rules and "No" next to every item that does not. Comment on every "No" item, initial each weekly inspection, and report all "No" items to the appropriate supervisor.','Cada semana marque "Sí" en cada punto que cumple las reglas y "No" en los que no. Comente cada "No", ponga sus iniciales en cada inspección y reporte los "No" al supervisor correspondiente.')],
       [L('Overall comments','Comentarios generales'),mm.overall||''],[L('Reviewed by','Revisado por'),[disp(ROLES,mm.rev),mm.revDate].filter(Boolean).join(' · ')]],
     signoff:{label:L('Review','Revisión'),slots:[L('Reviewed by - name and signature','Revisado por - nombre y firma'),L('EHS - name and signature','EHS - nombre y firma')],dateLabel:L('Date','Fecha'),signed:mm.sigs||[],signedWord:L('Signed electronically','Firmado electrónicamente')},
-    footer:(ch?'8 CCR §5194 · §5164 · ':'22 CCR §66265.174 · ')+L('Generated ','Generado ')+App.today()};
+    footer:(ch?K.foot:'22 CCR §66265.174 · ')+L('Generated ','Generado ')+App.today()};
 }
 function bindMonth(){
   document.getElementById('mMonth').value=App.today().slice(0,7);
@@ -1536,7 +1580,7 @@ function bindMonth(){
     if(!rs.length){ App.toast(L('No inspections for this month.','No hay inspecciones este mes.')); return; }
     App.armDelete(b,function(){ var ids=rs.map(function(r){return r.id;}); recs=recs.filter(function(r){return ids.indexOf(r.id)<0;}); App.set('recs',recs); delete months[monthKey()]; App.set('months',months);
       disarm(b,'clrAll'); renderMonth(); renderLog(); App.toast(L(ids.length+' inspections cleared','Se borraron '+ids.length+' inspecciones')); }); });
-  function name(ext){ return (mKind()==='chem'?'Chem-Storage-Inspection-':'HW-Inspection-')+(document.getElementById('mMonth').value||'')+'.'+ext; }
+  function name(ext){ return KT({kind:mKind()}).file+(document.getElementById('mMonth').value||'')+'.'+ext; }
   document.getElementById('mPdf').addEventListener('click',function(e){ if(!monthRecs().length){ App.toast(L('No inspections for this month.','No hay inspecciones este mes.')); return; } busy(e.target,RK.pdf(monthModel()).then(function(b){ saveFile(name('pdf'),b,'application/pdf'); })); });
   document.getElementById('mDoc').addEventListener('click',function(e){ if(!monthRecs().length){ App.toast(L('No inspections for this month.','No hay inspecciones este mes.')); return; } busy(e.target,RK.docx(monthModel()).then(function(b){ saveFile(name('docx'),b,'application/vnd.openxmlformats-officedocument.wordprocessingml.document'); })); });
 }
@@ -1557,7 +1601,7 @@ function saveFile(name,data,mime){
 }
 function busy(btn,p){ var l=btn.textContent; btn.disabled=true; btn.textContent=L('Preparing…','Preparando…');
   p.catch(function(err){ console.error(err); App.toast(L('Could not create the file.','No se pudo crear el archivo.')); }).then(function(){ btn.disabled=false; btn.textContent=l; }); }
-function fname(d,ext){ return (isChem(d)?'Chem-Storage-Inspection-':'HW-Inspection-')+(d.facility||'').replace(/[^A-Za-z0-9]+/g,'-')+'-'+d.date+'.'+ext; }
+function fname(d,ext){ return KT(d).file+(d.facility||'').replace(/[^A-Za-z0-9]+/g,'-')+'-'+d.date+'.'+ext; }
 function bindReportView(){
   document.getElementById('pdfBtn').addEventListener('click',function(e){ busy(e.target,RK.pdf(model(viewing)).then(function(b){ saveFile(fname(viewing,'pdf'),b,'application/pdf'); })); });
   document.getElementById('docBtn').addEventListener('click',function(e){ busy(e.target,RK.docx(model(viewing)).then(function(b){ saveFile(fname(viewing,'docx'),b,'application/vnd.openxmlformats-officedocument.wordprocessingml.document'); })); });
@@ -1579,12 +1623,12 @@ function renderLog(){
   keys.sort().forEach(function(k){ var r=groups[k], days=App.daysBetween(r.date,App.today()), a=age(Object.assign({},r,{date:App.today()}));
     var st=days>7?'<span class="pill bad">'+esc(L('Overdue','Vencida'))+'</span>':days>=6?'<span class="pill warn">'+esc(L('Due','Toca'))+'</span>':'<span class="pill good">OK</span>';
     var ag=a?'<span class="pill '+(a.left<0?'bad':a.left<=14?'warn':'mute')+'">'+a.days+' / '+a.lim+L(' days',' días')+'</span>':'—';
-    var tr=document.createElement('tr'); tr.innerHTML='<td>'+esc(r.facility)+'</td><td>'+esc(disp(allAreas(),r.area))+(isChem(r)?' <span class="pill info">'+esc(L('Chemical','Químicos'))+'</span>':'')+'</td><td>'+esc(r.date)+'</td><td>'+ag+'</td><td>'+st+'</td>'; body.appendChild(tr); });
+    var tr=document.createElement('tr'); tr.innerHTML='<td>'+esc(r.facility)+'</td><td>'+esc(disp(allAreas(),r.area))+(notHw(r)?' <span class="pill info">'+esc(L(KT(r).short[0],KT(r).short[1]))+'</span>':'')+'</td><td>'+esc(r.date)+'</td><td>'+ag+'</td><td>'+st+'</td>'; body.appendChild(tr); });
   var f=document.getElementById('lFac').value, only=document.getElementById('lOnly').value;
   var list=recs.filter(function(r){ return (!f||r.facility===f) && (!only||nos(r).length); }).sort(function(a,b){return a.date<b.date?1:-1;});
   var box=document.getElementById('lList'); box.innerHTML=list.length?'':'<p class="hint">'+esc(L('Nothing matches.','Nada coincide.'))+'</p>';
   list.forEach(function(r){ var n=nos(r), el=document.createElement('div'); el.className='item '+(n.length?'bad':'good');
-    el.innerHTML='<div class="head"><div><b>'+esc(r.date)+' · '+esc(r.facility)+'</b>'+(r.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+'<div class="meta">'+(isChem(r)?esc(L('Chemical storage · ','Químicos · ')):'')+esc(disp(allAreas(),r.area))+' · '+esc(r.count)+L(' containers',' contenedores')+' · '+esc(r.init)+'</div></div>'+
+    el.innerHTML='<div class="head"><div><b>'+esc(r.date)+' · '+esc(r.facility)+'</b>'+(r.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+'<div class="meta">'+(notHw(r)?esc(L(KT(r).short[0]+' · ',KT(r).short[1]+' · ')):'')+esc(disp(allAreas(),r.area))+' · '+esc(r.count)+L(' containers',' contenedores')+' · '+esc(r.init)+'</div></div>'+
       '<div><span class="pill '+(n.length?'bad':'good')+'">'+(n.length?n.length+' "No"':esc(L('All OK','Todo bien')))+'</span> '+((r.sigs||[])[0]?'<span class="pill info">✍ '+esc(L('Signed','Firmado'))+'</span>':'')+((r.sigs||[])[1]?' <span class="pill good">'+esc(L('Reviewed','Revisado'))+'</span>':'')+'</div></div>'+
       (n.length?'<div class="meta">'+n.map(function(i){return esc(tx(i))+': '+esc(disp(FIND[i.id]||[],r.notes[i.id]));}).join(' · ')+'</div>':'')+
       '<div class="row noprint"><button class="btn sm primary" data-a="view">'+esc(L('View','Ver'))+'</button><button class="btn sm navy" data-a="edit">'+esc(L('Edit','Editar'))+'</button><button class="btn sm danger" data-a="del">'+esc(L('Delete','Eliminar'))+'</button></div>';
@@ -1596,10 +1640,10 @@ function renderLog(){
 function bindLog(){
   ['lFac','lOnly'].forEach(function(id){ document.getElementById(id).addEventListener('change',renderLog); });
   document.getElementById('lCsv').addEventListener('click',function(){
-    var ALL=ITEMS.concat(CITEMS);
+    var ALL=ITEMS.concat(CITEMS,TITEMS);
     var rows=[['Type','Date','Facility','Storage area','Inspector','Initials','Containers','Container type','Time limit (days)','Oldest start date','Days stored'].concat(ALL.map(function(i){return i.en;})).concat(['"No" comments','Corrective actions','Reported to','Overall comments','Inspector signed','Reviewer signed'])];
     recs.forEach(function(r){ var a=age(r);
-      rows.push([isChem(r)?'Chemical storage':'Hazardous waste',r.date,r.facility,r.area,r.insp,r.init,r.count,r.ctype,isChem(r)?'':r.gen,r.oldest,a?a.days:''].concat(ALL.map(function(i){return r.ans[i.id]||'';})).concat([nos(r).map(function(i){return i.en+': '+(r.notes[i.id]||'');}).join('; '),nos(r).map(function(i){return r.acts[i.id]||'';}).join('; '),r.sup,r.overall,(r.sigs||[])[0]?(r.sigs[0].name+' '+r.sigs[0].at):'',(r.sigs||[])[1]?(r.sigs[1].name+' '+r.sigs[1].at):''])); });
+      rows.push([isChem(r)?'Chemical storage':isTank(r)?'Storage tank':'Hazardous waste',r.date,r.facility,r.area,r.insp,r.init,r.count,r.ctype,notHw(r)?'':r.gen,r.oldest,a?a.days:''].concat(ALL.map(function(i){return r.ans[i.id]||'';})).concat([nos(r).map(function(i){return i.en+': '+(r.notes[i.id]||'');}).join('; '),nos(r).map(function(i){return r.acts[i.id]||'';}).join('; '),r.sup,r.overall,(r.sigs||[])[0]?(r.sigs[0].name+' '+r.sigs[0].at):'',(r.sigs||[])[1]?(r.sigs[1].name+' '+r.sigs[1].at):''])); });
     saveFile('hazwaste-inspections-'+App.today()+'.csv',App.csv(rows),'text/csv'); });
   document.getElementById('lJson').addEventListener('click',function(){ saveFile('hazwaste-inspections-'+App.today()+'.json',JSON.stringify({tool:'hazwaste',ver:1,exported:new Date().toISOString(),records:recs},null,1),'application/json'); });
   document.getElementById('lImport').addEventListener('change',function(e){ var f=e.target.files[0]; if(!f) return;
