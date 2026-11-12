@@ -179,6 +179,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
       <label class="f"><span class="req" data-i18n="time">Time</span><input type="time" id="oTime"></label>
       <label class="f"><span class="req" data-i18n="shift">Shift</span><select id="oShift"></select></label>
       <label class="f"><span class="req" data-i18n="observer">Observer</span><input id="oObs"></label>
+      <label class="f"><span data-i18n="emp">Employee observed (optional)</span><input id="oEmp" autocomplete="off" data-i18n-ph="empPh"></label>
       <label class="f"><span class="req" data-i18n="facility">Facility</span><select id="oFac"></select></label>
       <label class="f"><span class="req" data-i18n="dept">Department</span><select id="oDept"></select></label>
       <label class="f"><span data-i18n="task">Task observed</span><select id="oTask"></select></label>
@@ -269,8 +270,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 
 <script>
 window.TOOL = {id:'bbs', ver:1,noLogo:true,sync:{arrays:['cards'],kv:['checklist']}, i18n:{
-en:{shift:'Shift',byShift:'Percent safe by shift',teamPdf:'Team summary PDF',teamPdfHint:'For toolbox talks and safety meetings. No worker names.',equip:'Equipment / machine',tabSetup:'Checklist',cardType:'Card type',quick:'Quick card',full:'Full card',qHint:'Tap a category, then mark what you saw.',photo:'Photo (optional)',photoHint:"Photograph the condition or task, not the worker's face.",setupTitle:'Observation checklist',setupHint:'Turn categories and behaviors on or off, and add your own. Changes apply to new cards on every device; saved cards keep what was recorded.',addCat:'Add a category',nameEn:'Name in English',nameEs:'Nombre en español (optional)',add:'Add',appTitle:'BBS Observation Card',tabObserve:'Observe',tabDash:'Dashboard',tabRecords:'Records',noNameTitle:'No names, no blame',
-noNameBody:"Observe the task, not the person. Do not write the worker's name. Tell the worker what you saw, recognize safe work first, then talk about at-risk behavior and why it happens.",
+en:{emp:'Employee observed (optional)',empPh:'Name or employee ID',shift:'Shift',byShift:'Percent safe by shift',teamPdf:'Team summary PDF',teamPdfHint:'For toolbox talks and safety meetings. No worker names.',equip:'Equipment / machine',tabSetup:'Checklist',cardType:'Card type',quick:'Quick card',full:'Full card',qHint:'Tap a category, then mark what you saw.',photo:'Photo (optional)',photoHint:"Photograph the condition or task, not the worker's face.",setupTitle:'Observation checklist',setupHint:'Turn categories and behaviors on or off, and add your own. Changes apply to new cards on every device; saved cards keep what was recorded.',addCat:'Add a category',nameEn:'Name in English',nameEs:'Nombre en español (optional)',add:'Add',appTitle:'BBS Observation Card',tabObserve:'Observe',tabDash:'Dashboard',tabRecords:'Records',noNameTitle:'No names, no blame',
+noNameBody:"Observe the task, not the person. The employee's name is optional: add it only for recognition or a coaching follow-up. It never prints on the Safety Share or team summary. Tell the worker what you saw, recognize safe work first, then talk about at-risk behavior and why it happens.",
 obsInfo:'Observation details',date:'Date',time:'Time',observer:'Observer',facility:'Facility',dept:'Department',task:'Task observed',taskPh:'e.g. Clearing a jam on the bagger',people:'Workers observed',
 behaviors:'Behaviors',behHint:'Mark only what you actually saw. Leave the rest blank.',coaching:'Coaching conversation',feedback:'Feedback given',
 barriers:'Why did the at-risk behavior happen? (barriers)',discussed:'What was discussed',discPh:'What you recognized, what you asked, what the worker said',
@@ -279,8 +280,8 @@ safe:'Safe',atrisk:'At-risk',reset:'Reset',save:'Save card',dashTitle:'Safe beha
 byBarrier:'Barriers behind at-risk behavior',byFac:'Percent safe by facility',saved:'Saved cards',exportCsv:'Export CSV',exportJson:'Export backup (JSON)',importJson:'Import backup',print:'Print',
 allFacilities:'All facilities',copyNote:'In this viewer, export copies the data to your clipboard. Open the offline file to download.',
 foot:'Behavior-based safety supports, and does not replace, hazard controls. Fix the barriers you find with the hierarchy of controls.'},
-es:{shift:'Turno',byShift:'Porcentaje seguro por turno',teamPdf:'PDF resumen para el equipo',teamPdfHint:'Para pláticas de seguridad y juntas. Sin nombres de trabajadores.',equip:'Equipo / máquina',tabSetup:'Lista',cardType:'Tipo de tarjeta',quick:'Tarjeta rápida',full:'Tarjeta completa',qHint:'Toque una categoría y marque lo que vio.',photo:'Foto (opcional)',photoHint:'Fotografíe la condición o la tarea, no la cara del trabajador.',setupTitle:'Lista de observación',setupHint:'Active o desactive categorías y comportamientos, y agregue los suyos. Los cambios aplican a tarjetas nuevas en todos los dispositivos; las tarjetas guardadas conservan lo registrado.',addCat:'Agregar categoría',nameEn:'Name in English',nameEs:'Nombre en español (opcional)',add:'Agregar',appTitle:'Tarjeta de Observación BBS',tabObserve:'Observar',tabDash:'Tablero',tabRecords:'Registros',noNameTitle:'Sin nombres, sin culpa',
-noNameBody:'Observe la tarea, no a la persona. No escriba el nombre del trabajador. Dígale lo que vio, reconozca primero el trabajo seguro y luego hable del comportamiento de riesgo y por qué pasa.',
+es:{emp:'Empleado observado (opcional)',empPh:'Nombre o número de empleado',shift:'Turno',byShift:'Porcentaje seguro por turno',teamPdf:'PDF resumen para el equipo',teamPdfHint:'Para pláticas de seguridad y juntas. Sin nombres de trabajadores.',equip:'Equipo / máquina',tabSetup:'Lista',cardType:'Tipo de tarjeta',quick:'Tarjeta rápida',full:'Tarjeta completa',qHint:'Toque una categoría y marque lo que vio.',photo:'Foto (opcional)',photoHint:'Fotografíe la condición o la tarea, no la cara del trabajador.',setupTitle:'Lista de observación',setupHint:'Active o desactive categorías y comportamientos, y agregue los suyos. Los cambios aplican a tarjetas nuevas en todos los dispositivos; las tarjetas guardadas conservan lo registrado.',addCat:'Agregar categoría',nameEn:'Name in English',nameEs:'Nombre en español (opcional)',add:'Agregar',appTitle:'Tarjeta de Observación BBS',tabObserve:'Observar',tabDash:'Tablero',tabRecords:'Registros',noNameTitle:'Sin nombres, sin culpa',
+noNameBody:'Observe la tarea, no a la persona. El nombre del empleado es opcional: agréguelo solo para reconocimiento o seguimiento de coaching. Nunca se imprime en el PDF para compartir ni en el resumen del equipo. Dígale lo que vio, reconozca primero el trabajo seguro y luego hable del comportamiento de riesgo y por qué pasa.',
 obsInfo:'Datos de la observación',date:'Fecha',time:'Hora',observer:'Observador',facility:'Instalación',dept:'Departamento',task:'Tarea observada',taskPh:'ej. Destapando un atasco en la embolsadora',people:'Trabajadores observados',
 behaviors:'Comportamientos',behHint:'Marque solo lo que realmente vio. Deje lo demás en blanco.',coaching:'Conversación de coaching',feedback:'Retroalimentación dada',
 barriers:'¿Por qué ocurrió el comportamiento de riesgo? (barreras)',discussed:'Qué se habló',discPh:'Lo que reconoció, lo que preguntó, lo que dijo el trabajador',
@@ -1423,7 +1424,7 @@ var BAR=[{k:'equip',en:'Equipment or tool',es:'Equipo o herramienta'},{k:'ppefit
   {k:'time',en:'Time or production pressure',es:'Presión de tiempo o producción'},{k:'train',en:'Training or knowledge',es:'Capacitación o conocimiento'},{k:'habit',en:'Habit / shortcut',es:'Costumbre / atajo'},
   {k:'layout',en:'Workstation layout',es:'Diseño de la estación'},{k:'staff',en:'Staffing',es:'Falta de personal'}];
 
-function blank(){ var tm=App.nowTime(); return {id:null,photos:[],equip:'',shift:shiftFor(tm),date:App.today(),time:tm,observer:'',facility:'',dept:'',task:'',people:'1',marks:{},fb:[],bar:[],disc:'',agree:false,fix:'',owner:''}; }
+function blank(){ var tm=App.nowTime(); return {id:null,photos:[],equip:'',emp:'',shift:shiftFor(tm),date:App.today(),time:tm,observer:'',facility:'',dept:'',task:'',people:'1',marks:{},fb:[],bar:[],disc:'',agree:false,fix:'',owner:''}; }
 var cur = App.get('draft', null) || blank();
 var cards = App.get('cards', null);
 if(!cards){
@@ -1490,7 +1491,7 @@ function chipSet(boxId, list, field){
       save(); chipSet(boxId,list,field); }); box.appendChild(b); });
 }
 function deptOptions(sel, all){ var keep=sel.value; sel.innerHTML=(all?'':'<option value="">—</option>')+DEPTS.map(function(d){return '<option value="'+d.k+'">'+esc(tx(d))+'</option>';}).join(''); sel.value=keep; }
-var MAP=[['oDate','date'],['oTime','time'],['oShift','shift'],['oObs','observer'],['oFac','facility'],['oDept','dept'],['oTask','task'],['oEquip','equip'],['oPeople','people'],['oDisc','disc'],['oFix','fix'],['oOwner','owner']];
+var MAP=[['oDate','date'],['oTime','time'],['oShift','shift'],['oObs','observer'],['oEmp','emp'],['oFac','facility'],['oDept','dept'],['oTask','task'],['oEquip','equip'],['oPeople','people'],['oDisc','disc'],['oFix','fix'],['oOwner','owner']];
 function renderSig(){ GSig.panel(document.getElementById('sigCard'),{rec:function(){ return cur; },slots:function(){ return [tx({en:'Observer',es:'Observador'}),tx({en:'Supervisor (optional)',es:'Supervisor (opcional)'})]; },lang:App.L,save:save}); }
 function fill(){ renderSig(); taskOptions(); equipOptions(); MAP.forEach(function(p){ document.getElementById(p[0]).value=cur[p[1]]||''; }); document.getElementById('oAgree').checked=!!cur.agree;
   applyMode(); renderCats(); renderTally(); renderPhotos(); chipSet('fbChips',FB,'fb'); chipSet('barChips',BAR,'bar'); }
@@ -1557,7 +1558,7 @@ function renderRecords(){
   list.forEach(function(c){ var x=tally(c); var d=DEPTS.find(function(z){return z.k===c.dept;});
     var risks=Object.keys(c.marks).filter(function(k){return c.marks[k]==='r';});
     var el=document.createElement('div'); el.className='item '+(x.r?(x.pct<75?'bad':'warn'):'good');
-    el.innerHTML='<div class="head"><div><b>'+esc(c.date)+' · '+esc(c.facility)+'</b>'+(c.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+(c.mode==='quick'?' <span class="pill info">'+esc(tx({en:'Quick',es:'Rápida'}))+'</span>':'')+'<div class="meta">'+(c.time?esc(c.time)+' · ':'')+(c.shift?esc(shiftTx(c.shift))+' · ':'')+esc(d?tx(d):'')+(c.task?' · '+esc(taskTx(c.task)):'')+(c.equip?' · '+esc(equipTx(c.equip)):'')+' · '+esc(c.observer)+'</div></div>'+
+    el.innerHTML='<div class="head"><div><b>'+esc(c.date)+' · '+esc(c.facility)+'</b>'+(c.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+(c.mode==='quick'?' <span class="pill info">'+esc(tx({en:'Quick',es:'Rápida'}))+'</span>':'')+'<div class="meta">'+(c.time?esc(c.time)+' · ':'')+(c.shift?esc(shiftTx(c.shift))+' · ':'')+esc(d?tx(d):'')+(c.task?' · '+esc(taskTx(c.task)):'')+(c.equip?' · '+esc(equipTx(c.equip)):'')+' · '+esc(c.observer)+(c.emp?' · '+esc(tx({en:'Employee: ',es:'Empleado: '}))+esc(c.emp):'')+'</div></div>'+
       '<span class="pill '+(x.r?'warn':'good')+'">'+x.s+' ✓ · '+x.r+' !</span></div>'+
       (risks.length?'<div class="meta">'+risks.map(function(k){return esc(behLabel(k));}).join('<br>')+'</div>':'')+
       ((c.sigs||[]).some(Boolean)?'<div class="row" style="gap:12px">'+c.sigs.filter(Boolean).map(function(q){ return '<span style="display:grid;gap:2px"><img alt="" src="'+q.img+'" style="height:40px;width:auto;background:#fff;border-radius:4px"><span class="meta">'+esc(q.name)+' · '+esc(q.at)+'</span></span>'; }).join('')+'</div>':'')+
@@ -1575,10 +1576,10 @@ function bindRecords(){
   ['dFac','dRange'].forEach(function(id){ document.getElementById(id).addEventListener('change', renderDash); });
   document.getElementById('dPdf').addEventListener('click', function(e){ if(!filtered().length){ App.toast(L('No cards for this filter.','No hay tarjetas para este filtro.')); return; } busy(e.target, RK.pdf(summaryModel()).then(function(b){ saveFile('BBS-Team-Summary-'+App.today()+'.pdf', b); })); });
   document.getElementById('rCsv').addEventListener('click', function(){
-    var rows=[['Date','Time','Shift','Facility','Department','Task','Equipment / machine','Observer','Workers','Category','Behavior','Result','Feedback','Barriers','Agreed','Follow-up','Owner','Signed by']];
+    var rows=[['Date','Time','Shift','Facility','Department','Task','Equipment / machine','Observer','Employee observed','Workers','Category','Behavior','Result','Feedback','Barriers','Agreed','Follow-up','Owner','Signed by']];
     cards.forEach(function(c){ var d=DEPTS.find(function(z){return z.k===c.dept;});
       Object.keys(c.marks).forEach(function(k){ var p=k.split('.'); var cat=allCats().find(function(x){return x.k===p[0];}); var b=cat?cat.b.find(function(x){return x.k===p[1];}):null;
-        rows.push([c.date,c.time,c.shift||shiftFor(c.time),c.facility,d?d.en:c.dept,c.task,c.equip||'',c.observer,c.people,cat?cat.en:p[0],b?b.en:p[1],c.marks[k]==='s'?'Safe':'At-risk',c.fb.join(' '),c.bar.join(' '),c.agree?'Yes':'No',c.fix,c.owner,(c.sigs||[]).filter(Boolean).map(function(q){return q.name+' '+q.at;}).join('; ')]); }); });
+        rows.push([c.date,c.time,c.shift||shiftFor(c.time),c.facility,d?d.en:c.dept,c.task,c.equip||'',c.observer,c.emp||'',c.people,cat?cat.en:p[0],b?b.en:p[1],c.marks[k]==='s'?'Safe':'At-risk',c.fb.join(' '),c.bar.join(' '),c.agree?'Yes':'No',c.fix,c.owner,(c.sigs||[]).filter(Boolean).map(function(q){return q.name+' '+q.at;}).join('; ')]); }); });
     App.exportFile('bbs-observations-'+App.today()+'.csv', App.csv(rows), 'text/csv'); });
   document.getElementById('rJson').addEventListener('click', function(){ App.exportJSON(cards); });
   document.getElementById('rImport').addEventListener('change', function(e){ var f=e.target.files[0]; if(!f) return;
