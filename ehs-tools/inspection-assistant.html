@@ -118,7 +118,8 @@
     new MutationObserver(function(){labels();refresh()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']})}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 })();
-</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2942"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="EHS Tools"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2942"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="EHS Tools"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<style>.sgblocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}.sgblock{display:grid;gap:10px;align-content:start;border:1px solid var(--line,#d5dde6);border-radius:12px;padding:12px}</style></head><body>
 <title>Safety Inspection Assistant</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -344,15 +345,20 @@ details.more[open] summary{margin-bottom:8px}
 
         <div class="panel">
           <h2 data-i18n="hSign">Signatures</h2>
-          <div class="row2">
-            <label class="f"><span data-i18n="prepBy">Prepared by</span><input id="g-prepBy"></label>
-            <label class="f"><span data-i18n="title">Title</span><input id="g-title"></label>
-            <label class="f"><span data-i18n="date">Date</span><input type="date" id="g-date"></label>
-            <label class="f"><span data-i18n="revBy">Reviewed by</span><input id="g-revBy"></label>
-            <label class="f"><span data-i18n="revDate">Review date</span><input type="date" id="g-revDate"></label>
-          </div>
           <p class="muted" style="margin:0" data-i18n="signNote">Sign below to put your signature on the Word, PDF and preview. Leave blank to sign on paper.</p>
-          <div id="sigCard"></div>
+          <div class="sgblocks">
+            <div class="sgblock">
+              <label class="f"><span data-i18n="prepBy">Prepared by</span><input id="g-prepBy"></label>
+              <label class="f"><span data-i18n="title">Title</span><input id="g-title"></label>
+              <label class="f"><span data-i18n="date">Date</span><input type="date" id="g-date"></label>
+              <div class="gsig"><div class="gs-pad" id="sgPad0"></div></div>
+            </div>
+            <div class="sgblock">
+              <label class="f"><span data-i18n="revBy">Reviewed by</span><input id="g-revBy"></label>
+              <label class="f"><span data-i18n="revDate">Review date</span><input type="date" id="g-revDate"></label>
+              <div class="gsig"><div class="gs-pad" id="sgPad1"></div></div>
+            </div>
+          </div>
         </div>
 
         <div class="panel">
@@ -611,16 +617,16 @@ details.more[open] summary{margin-bottom:8px}
     var tt=T[o.lang()==='es'?'es':'en'], rec=o.rec(); if(!rec) return; if(!rec.sigs) rec.sigs=[];
     var s=rec.sigs[k]; box.innerHTML='<h3>'+esc(label)+'</h3>';
     if(s&&s.img){ var d=document.createElement('div'); d.className='gs-done';
-      d.innerHTML='<img alt="" src="'+s.img+'"><div class="gs-who">✓ '+esc(s.name||'')+' · '+esc(s.at||'')+'</div><div class="gs-row"><button type="button" class="gs-btn d">'+esc(tt.remove)+'</button></div>';
+      d.innerHTML='<img alt="" src="'+s.img+'"><div class="gs-who">✓ '+esc((typeof o.nameFrom==='function'?o.nameFrom(k):s.name)||'')+' · '+esc(s.at||'')+'</div><div class="gs-row"><button type="button" class="gs-btn d">'+esc(tt.remove)+'</button></div>';
       var b=d.querySelector('button'), armed=false;
       b.addEventListener('click',function(){ if(!armed){ armed=true; b.textContent=tt.sure; setTimeout(function(){ armed=false; b.textContent=tt.remove; },3000); return; }
         rec.sigs[k]=null; o.save(); o.onChange&&o.onChange(); pad(box,o,k,label); });
       box.appendChild(d); return; }
-    var cv=document.createElement('canvas'), nm=document.createElement('input'), row=document.createElement('div'), lid='gsl'+(++uid);
+    var cv=document.createElement('canvas'), nm=document.createElement('input'), row=document.createElement('div'), lid='gsl'+(++uid), ext=typeof o.nameFrom==='function';
     nm.placeholder=tt.name; nm.setAttribute('aria-label',tt.name); nm.value=(o.defaultName&&o.defaultName(k))||'';
     if(o.names&&o.names.length){ nm.setAttribute('list',lid); var dl=document.createElement('datalist'); dl.id=lid; dl.innerHTML=o.names.map(function(n){return '<option value="'+esc(n)+'">';}).join(''); box.appendChild(dl); }
     row.className='gs-row'; row.innerHTML='<button type="button" class="gs-btn p" data-a="s">'+esc(tt.sign)+'</button><button type="button" class="gs-btn" data-a="c">'+esc(tt.clear)+'</button>';
-    box.appendChild(cv); box.appendChild(nm); box.appendChild(row);
+    box.appendChild(cv); if(!ext) box.appendChild(nm); box.appendChild(row);
     var ctx, drawing=false, last=null, empty=true;
     function size(){ var r=cv.getBoundingClientRect(); if(!r.width) return; var dpr=window.devicePixelRatio||1; cv.width=r.width*dpr; cv.height=r.height*dpr; ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
       ctx.fillStyle='#fff'; ctx.fillRect(0,0,r.width,r.height); ctx.strokeStyle='#0f2942'; ctx.lineWidth=2.4; ctx.lineCap='round'; ctx.lineJoin='round'; empty=true; }
@@ -628,13 +634,14 @@ details.more[open] summary{margin-bottom:8px}
     cv.addEventListener('pointerdown',function(e){ if(!ctx||!cv.width) size(); drawing=true; last=pt(e); try{cv.setPointerCapture(e.pointerId);}catch(_){} e.preventDefault(); });
     cv.addEventListener('pointermove',function(e){ if(!drawing||!ctx) return; var p=pt(e); ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last=p; empty=false; e.preventDefault(); });
     function commit(){ if(empty) return; var out=document.createElement('canvas'); out.width=600; out.height=180; var c=out.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,600,180); c.drawImage(cv,0,0,600,180);
-      rec.sigs[k]={img:out.toDataURL('image/png'),name:nm.value.trim(),at:stamp()}; o.save(); }
+      rec.sigs[k]={img:out.toDataURL('image/png'),name:ext?String(o.nameFrom(k)||'').trim():nm.value.trim(),at:stamp()}; o.save(); if(o.onSigned) o.onSigned(k); }
     ['pointerup','pointercancel'].forEach(function(ev){ cv.addEventListener(ev,function(){ if(drawing){ drawing=false; commit(); } }); });
     nm.addEventListener('input',function(){ nm.classList.remove('gs-bad'); if(rec.sigs[k]){ rec.sigs[k].name=nm.value.trim(); o.save(); } });
     setTimeout(size,0); row.querySelector('[data-a=c]').addEventListener('click',function(){ size(); if(rec.sigs[k]){ rec.sigs[k]=null; o.save(); } });
     row.querySelector('[data-a=s]').addEventListener('click',function(){
       if(empty && !rec.sigs[k]){ toast(tt.draw); return; }
-      if(!nm.value.trim()){ nm.classList.add('gs-bad'); toast(tt.needName); nm.focus(); return; }
+      if(ext){ if(!String(o.nameFrom(k)||'').trim()){ toast(o.needName?o.needName(k):tt.needName); if(o.focusName) o.focusName(k); return; } }
+      else if(!nm.value.trim()){ nm.classList.add('gs-bad'); toast(tt.needName); nm.focus(); return; }
       commit(); o.onChange&&o.onChange(); pad(box,o,k,label); toast(tt.signed); });
   }
   function panel(mount,o){
@@ -735,7 +742,17 @@ BIND.forEach(([id,g,k])=>$(id).addEventListener("input",e=>{S[g][k]=e.target.val
 $("h-frequency").addEventListener("input",()=>{showQuarter();if($("h-frequency").value!=="Quarterly"){S.header.quarter="";$("h-quarter").value="";save()}});
 
 /* ---------- language ---------- */
-function renderSig(){ const el=document.getElementById('sigCard'); if(!el||!S) return; GSig.panel(el,{rec:()=>S,slots:()=>[lang==="es"?"Preparado por":"Prepared by",lang==="es"?"Revisado por":"Reviewed by"],lang:()=>lang,save:save,names:[S.sign&&S.sign.prepBy,S.sign&&S.sign.revBy].filter(Boolean),title:lang==='es'?'Firmas digitales':'Digital signatures'}); }
+const SIGF=[["g-prepBy","prepBy","g-date","date"],["g-revBy","revBy","g-revDate","revDate"]];
+/* the signer name is the Prepared by / Reviewed by field: keep a signed pad's name in step with it */
+["input","change"].forEach(ev=>document.addEventListener(ev,e=>{ const t=e.target; if(!t||!S||!S.sigs) return;
+  SIGF.forEach((f,k)=>{ if(t.id!==f[0]&&t.id!==f[0]+"-sel") return; setTimeout(()=>{ const q=S.sigs[k]; if(!q) return; const n=String((S.sign&&S.sign[f[1]])||"").trim(); if(q.name!==n){ q.name=n; save(); renderSig(); } },0); }); }));
+function renderSig(){ if(!S) return; [0,1].forEach(k=>{ const el=document.getElementById('sgPad'+k); if(!el) return;
+  GSig.pad(el,{rec:()=>S,lang:()=>lang,save:save,onChange:()=>renderSig(),
+    nameFrom:i=>S.sign&&S.sign[SIGF[i][1]],
+    needName:i=>lang==="es"?(i?"Primero escriba quién revisó.":"Primero escriba quién preparó el reporte."):(i?"Enter the Reviewed by name first.":"Enter the Prepared by name first."),
+    focusName:i=>{ const e=document.getElementById(SIGF[i][0]+'-sel')||document.getElementById(SIGF[i][0]); if(e) e.focus(); },
+    onSigned:i=>{ const f=SIGF[i]; if(!S.sign[f[3]]){ S.sign[f[3]]=today(); const d=document.getElementById(f[2]); if(d) d.value=S.sign[f[3]]; save(); } }},
+    k,lang==="es"?"Firma":"Signature"); }); }
 function applyLang(){document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;el.textContent=(lang==="es"?ES[k]:EN[k])||EN[k]});
  $("lang-en").setAttribute("aria-pressed",lang==="en");$("lang-es").setAttribute("aria-pressed",lang==="es");document.documentElement.lang=lang;renderLog();renderTally()}
 $("lang-en").onclick=()=>{lang="en";try{localStorage.setItem("sar-lang",lang)}catch(e){}applyLang();renderSig()};
@@ -929,20 +946,22 @@ function model(){const c=counts();const F=[...S.findings].sort(byId);const h=S.h
  capHead:["Obs #","Required Action","Control Type","Area","Work Order #","Responsible Person","Due Date","Status"],
  cap:F.map(f=>[f.id,f.action,f.controlType,f.area||"Pending",f.wo,f.resp,f.due?fmtDate(f.due):"Target: "+SHORT_TF[level(f.severity,f.likelihood)],f.status]),
  summary:[["Findings",`${S.observations.length} observation(s), ${F.length} finding(s): Critical ${c.CRITICAL} · High ${c.HIGH} · Medium ${c.MEDIUM} · Low ${c.LOW}`],["Most significant hazards",S.summary.significant],["Priority corrective actions",S.summary.priority],["Potential compliance implications",S.summary.implications],["Follow-up inspection recommendations",S.summary.followup]].filter((r,i)=>i===0||String(r[1]||"").trim()),
- sign:[["Prepared By",S.sign.prepBy],["Title",S.sign.title],["Date",S.sign.date?fmtDate(S.sign.date):""],["Signature",""],["Reviewed By",S.sign.revBy],["Review Date",S.sign.revDate?fmtDate(S.sign.revDate):""]],
+ sign:[["Prepared By",[S.sign.prepBy,S.sign.title].filter(Boolean).join(", ")],["Date",S.sign.date?fmtDate(S.sign.date):""],["Signature",{sig:0}],["Reviewed By",S.sign.revBy],["Review Date",S.sign.revDate?fmtDate(S.sign.revDate):""],["Signature",{sig:1}]],
  photos:S.observations.flatMap(o=>o.photos.map((p,i)=>({src:p,cap:`Obs ${o.no}${o.photos.length>1?`, photo ${i+1}`:""}`})))}}
 
 const subtitle=()=>{const h=S.header;return[h.facility,h.type,h.frequency==="Quarterly"&&h.quarter?h.quarter:""].map(x=>String(x||"").trim()).filter(Boolean).join("  ·  ")};
 const grid3=rows=>{const out=[];for(let i=0;i<rows.length;i+=3){const r=[];for(let k=0;k<3;k++){const p=rows[i+k];if(p)r.push(p[0],p[1]??"")}out.push(r)}return out};
 const spanOf=(r,i)=>i===r.length-1?7-r.length:1;
 function renderPaper(){const r=model();const nl=s=>esc(s).replace(/\n/g,"<br>");
- const g6=(rows,tall)=>`<table class="g6${tall?" tall":""}">${grid3(rows).map(r=>`<tr>${r.map((c,i)=>i%2?`<td${spanOf(r,i)>1?` colspan="${spanOf(r,i)}"`:""}>${nl(c||"")}</td>`:`<th>${esc(c)}</th>`).join("")}</tr>`).join("")}</table>`;
+ const sigQ=c=>c&&typeof c==="object"&&c.sig!==undefined?((S.sigs||[])[c.sig]||null):undefined;
+const sigCellHtml=q=>q&&q.img?`<img alt="" src="${q.img}" style="height:46px;width:auto;display:block;background:#fff"><div style="font-size:10px;color:#566476">Signed electronically · ${esc(q.at||"")}</div>`:"";
+const g6=(rows,tall)=>`<table class="g6${tall?" tall":""}">${grid3(rows).map(r=>`<tr>${r.map((c,i)=>i%2?`<td${spanOf(r,i)>1?` colspan="${spanOf(r,i)}"`:""}>${sigQ(c)!==undefined?sigCellHtml(sigQ(c)):nl(c||"")}</td>`:`<th>${esc(c)}</th>`).join("")}</tr>`).join("")}</table>`;
  const kv=rows=>`<table class="kv"><tr><th>Field</th><th>Information</th></tr>${rows.map(([a,b])=>`<tr><th>${esc(a)}</th><td>${nl(b||"")}</td></tr>`).join("")}</table>`;
  const tbl=(head,rows,lvlCol)=>`<table><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr>${rows.length?rows.map(r=>`<tr>${r.map((c,i)=>`<td${i===lvlCol?' class="lvl"':""}>${nl(c)}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${head.length}">None documented.</td></tr>`}</table>`;
  $("paper").innerHTML=`<img class="r-logo" src="${LOGO}" alt="Company logo"><h1>SAFETY INSPECTION REPORT</h1>${subtitle()?`<p class="r-sub">${esc(subtitle())}</p>`:""}${g6(r.header)}<h3 class="disc-h">${DISCLAIMER.title}</h3><p><b>${DISCLAIMER.sub}</b></p>${DISCLAIMER.paras.map(x=>`<p class="disc">${esc(x)}</p>`).join("")}
  <h3>Hazard Identification and Compliance</h3>${tbl(r.hazHead,r.haz,5)}
  <h3>Corrective Action Plan</h3>${tbl(r.capHead,r.cap,-1)}
- <h3>Signature Section</h3>${g6(r.sign,true)}${(S.sigs||[]).some(Boolean)?GSig.html(S.sigs,["Prepared by","Reviewed by"]):""}
+ <h3>Signature Section</h3>${g6(r.sign,true)}
  ${r.photos.length?`<h3>Inspection Photographs</h3><div class="photos">${r.photos.map(p=>`<figure><img src="${p.src}" alt="${esc(p.cap)}"><figcaption>${esc(p.cap)}</figcaption></figure>`).join("")}</div>`:""}`}
 
 function fileBase(){const d=S.header.inspDate||S.header.reportDate||today();const f=(S.header.facility||"Inspection").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_").slice(0,40)||"Inspection";return `Safety_Inspection_Report_${f}_${d}`}
@@ -959,7 +978,7 @@ $("dl-docx").onclick=async()=>{if(!window.docx){$("export-msg").textContent="The
  const para=(t,bold)=>String(t||"").split("\n").map(x=>new D.Paragraph({children:[run(x,bold)]}));
  const cell=(t,bold,shade)=>new D.TableCell({children:para(t,bold).length?para(t,bold):[new D.Paragraph("")],shading:shade?{type:D.ShadingType.CLEAR,color:"auto",fill:"E7E7E7"}:undefined,margins:{top:60,bottom:60,left:90,right:90}});
  const table=(head,rows,widths)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:widths,borders,rows:[new D.TableRow({tableHeader:true,children:head.map(h=>cell(h,true,true))}),...(rows.length?rows:[head.map((_,i)=>i===1?"None documented.":"")]).map(rw=>new D.TableRow({cantSplit:false,children:rw.map((c,i)=>cell(c,head[i]==="Risk Level"))}))]});
- const g6=(rows,tall)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:[1700,2860,1700,2860,1700,2860],borders,rows:grid3(rows).map(r=>new D.TableRow({height:tall?{value:540,rule:D.HeightRule.ATLEAST}:undefined,children:r.map((c,i)=>{if(!(i%2))return cell(c,true,true);const sp=spanOf(r,i);if(sp<2)return cell(c||"");const tc=cell(c||"");return new D.TableCell({columnSpan:sp,children:para(c||"").length?para(c||""):[new D.Paragraph("")],margins:{top:60,bottom:60,left:90,right:90}})})}))});
+ const g6=(rows,tall)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:[1700,2860,1700,2860,1700,2860],borders,rows:grid3(rows).map(r=>new D.TableRow({height:tall?{value:540,rule:D.HeightRule.ATLEAST}:undefined,children:r.map((c,i)=>{if(!(i%2))return cell(c,true,true);if(c&&typeof c==="object"){const q=(S.sigs||[])[c.sig];return new D.TableCell({children:q&&q.img?[new D.Paragraph({children:[new D.ImageRun({data:dataURLBytes(q.img),transformation:{width:150,height:45}})]}),new D.Paragraph({children:[new D.TextRun({text:"Signed electronically · "+(q.at||""),font:"Times New Roman",size:16,color:"566476"})]})]:[new D.Paragraph("")],margins:{top:60,bottom:60,left:90,right:90}})}const sp=spanOf(r,i);if(sp<2)return cell(c||"");const tc=cell(c||"");return new D.TableCell({columnSpan:sp,children:para(c||"").length?para(c||""):[new D.Paragraph("")],margins:{top:60,bottom:60,left:90,right:90}})})}))});
  const kv=(rows,withHead)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:[3200,10200],borders,rows:[...(withHead?[new D.TableRow({tableHeader:true,children:[cell("Field",true,true),cell("Information",true,true)]})]:[]),...rows.map(([a,b])=>new D.TableRow({children:[cell(a,true),cell(b||"")]}))]});
  const H=t=>new D.Paragraph({spacing:{before:240,after:100},children:[new D.TextRun({text:t,bold:true,font:"Times New Roman",size:24})]});
  const kids=[new D.Paragraph({children:[new D.ImageRun({data:dataURLBytes(LOGO),transformation:((window.GLogo&&GLogo.current())?GLogo.fit(216,58):{width:216,height:58})})]}),new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:200},children:[new D.TextRun({text:"SAFETY INSPECTION REPORT",bold:true,font:"Times New Roman",size:32})]}),...(subtitle()?[new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:200},children:[new D.TextRun({text:subtitle(),font:"Times New Roman",size:24})]})]:[]),g6(r.header),
@@ -969,7 +988,7 @@ $("dl-docx").onclick=async()=>{if(!window.docx){$("export-msg").textContent="The
   H("Hazard Identification and Compliance"),table(r.hazHead,r.haz,[900,3900,1600,1400,1400,1200,3000]),
   H("Corrective Action Plan"),table(r.capHead,r.cap,[900,4300,1500,1600,1300,1500,1200,1100]),
   H("Signature Section"),g6(r.sign,true)];
- (S.sigs||[]).forEach((q,k)=>{ if(!q||!q.img) return; kids.push(new D.Paragraph({spacing:{before:160},keepNext:true,children:[new D.ImageRun({data:dataURLBytes(q.img),transformation:{width:200,height:60}})]}),new D.Paragraph({children:[run((k?"Reviewed by: ":"Prepared by: ")+q.name+" · "+q.at+" · Signed electronically",false)]})); });
+
  if(r.photos.length){kids.push(new D.Paragraph({pageBreakBefore:true,spacing:{after:120},children:[new D.TextRun({text:"Inspection Photographs",bold:true,font:"Times New Roman",size:24})]}));
   for(let i=0;i<r.photos.length;i++){const p=r.photos[i];const[w,h]=await imgSize(p.src);const k=Math.min(900/w,560/h);const W=Math.round(w*k),Hh=Math.round(h*k);
    kids.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,keepNext:true,pageBreakBefore:i>0,children:[new D.ImageRun({data:dataURLBytes(p.src),transformation:{width:W,height:Hh}})]}),
@@ -992,8 +1011,8 @@ async function buildPdf(){if(!window.jspdf){$("export-msg").textContent="The PDF
   doc.lastAutoTable.finalY=dy-14;}
  sec("Hazard Identification and Compliance");doc.autoTable({...st,startY:y,head:[r.hazHead],body:r.haz.length?clean(r.haz):[["","None documented.","","","","",""]],columnStyles:{0:{cellWidth:38},5:{fontStyle:"bold"}}});
  sec("Corrective Action Plan");doc.autoTable({...st,startY:y,head:[r.capHead],body:r.cap.length?clean(r.cap):[["","None documented.","","","","","",""]],columnStyles:{0:{cellWidth:38},1:{cellWidth:220}}});
- sec("Signature Section");doc.autoTable({...st,startY:y,body:grid3(r.sign).map(r=>r.map((c,i)=>i%2&&spanOf(r,i)>1?{content:c,colSpan:spanOf(r,i)}:c)),columnStyles:{0:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},2:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},4:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88}},bodyStyles:{minCellHeight:28}});
- { const SG=(S.sigs||[]).filter(Boolean).length?S.sigs:null; if(SG){ let yy=doc.lastAutoTable.finalY+14; if(yy>doc.internal.pageSize.getHeight()-90){doc.addPage();yy=m;} ["Prepared by","Reviewed by"].forEach((lb,k)=>{ const q=SG[k]; const x=m+k*260; if(q&&q.img){ try{doc.addImage(q.img,"PNG",x,yy,160,48);}catch(e){} } doc.setDrawColor(120); doc.line(x,yy+50,x+230,yy+50); doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.text(lb.toUpperCase(),x,yy+60); doc.setFont("helvetica","normal"); if(q) doc.text((q.name+"  ·  "+q.at+"  ·  Signed electronically"),x,yy+71); }); y=yy+80; } }
+ sec("Signature Section");doc.autoTable({...st,startY:y,body:grid3(r.sign).map(r=>r.map((c,i)=>c&&typeof c==="object"?{content:"",_sig:c.sig,styles:{minCellHeight:52}}:(i%2&&spanOf(r,i)>1?{content:c,colSpan:spanOf(r,i)}:c))),didDrawCell:d=>{ const raw=d.cell.raw; if(d.section==="body"&&raw&&raw._sig!==undefined){ const q=(S.sigs||[])[raw._sig]; if(q&&q.img){ try{ doc.addImage(q.img,"PNG",d.cell.x+4,d.cell.y+3,Math.min(120,d.cell.width-8),36); }catch(e){} doc.setFontSize(6.5); doc.setTextColor(86,100,118); doc.text("Signed electronically · "+(q.at||""),d.cell.x+4,d.cell.y+d.cell.height-4); doc.setTextColor(0); } } },columnStyles:{0:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},2:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},3:{cellWidth:90},4:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},5:{cellWidth:170}},bodyStyles:{minCellHeight:28}});
+ { const SG=null; if(SG){ let yy=doc.lastAutoTable.finalY+14; if(yy>doc.internal.pageSize.getHeight()-90){doc.addPage();yy=m;} ["Prepared by","Reviewed by"].forEach((lb,k)=>{ const q=SG[k]; const x=m+k*260; if(q&&q.img){ try{doc.addImage(q.img,"PNG",x,yy,160,48);}catch(e){} } doc.setDrawColor(120); doc.line(x,yy+50,x+230,yy+50); doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.text(lb.toUpperCase(),x,yy+60); doc.setFont("helvetica","normal"); if(q) doc.text((q.name+"  ·  "+q.at+"  ·  Signed electronically"),x,yy+71); }); y=yy+80; } }
  if(r.photos.length){const PH=doc.internal.pageSize.getHeight();const cw=PW-2*m;
   for(let i=0;i<r.photos.length;i++){const p=r.photos[i];doc.addPage();let top=m;
    if(i===0){doc.setFont("times","bold");doc.setFontSize(12);doc.text("Inspection Photographs",m,m+6);top=m+16}
@@ -1006,7 +1025,7 @@ $("dl-pdf").onclick=async()=>{const b=await buildPdf();if(b)await offer(fileBase
 
 /* Copy */
 $("copy").onclick=async()=>{renderPaper();const html=`<div style="font-family:'Times New Roman';font-size:11pt">${$("paper").innerHTML.replace(/<table/g,'<table border="1" cellpadding="4" style="border-collapse:collapse;width:100%"')}</div>`;
- const r=model();const txt=["SAFETY INSPECTION REPORT",...(subtitle()?[subtitle()]:[]),...r.header.map(x=>x.join(": ")),"","DISCLAIMER — "+DISCLAIMER.sub,...DISCLAIMER.paras,"","HAZARDS",...r.haz.map(x=>x.join(" | ")),"","CORRECTIVE ACTIONS",...r.cap.map(x=>x.join(" | ").replace(/\n/g," ")),"","SIGNATURES",...r.sign.map(x=>x.join(": "))].join("\n");
+ const r=model();const txt=["SAFETY INSPECTION REPORT",...(subtitle()?[subtitle()]:[]),...r.header.map(x=>x.join(": ")),"","DISCLAIMER — "+DISCLAIMER.sub,...DISCLAIMER.paras,"","HAZARDS",...r.haz.map(x=>x.join(" | ")),"","CORRECTIVE ACTIONS",...r.cap.map(x=>x.join(" | ").replace(/\n/g," ")),"","SIGNATURES",...r.sign.map(x=>x[0]+": "+(x[1]&&typeof x[1]==="object"?(((S.sigs||[])[x[1].sig]||{}).at?"Signed electronically "+S.sigs[x[1].sig].at:""):x[1]))].join("\n");
  try{if(window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([txt],{type:"text/plain"})})])}else{await navigator.clipboard.writeText(txt)}$("export-msg").textContent="Report copied. Paste into Word."}
  catch(e){try{await navigator.clipboard.writeText(txt);$("export-msg").textContent="Report copied as plain text."}catch(e2){const s=window.getSelection(),rg=document.createRange();rg.selectNodeContents($("paper"));s.removeAllRanges();s.addRange(rg);$("export-msg").textContent="Copy was blocked. The report is selected; press Ctrl/Cmd+C."}}};
 
