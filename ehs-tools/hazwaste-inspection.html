@@ -1240,7 +1240,10 @@ var ROLES=[O('EHS Coordinator','Coordinador de EHS'),O('EHS Technician','Técnic
 var CTYPES=[O('55-gal steel drums','Tambos de acero de 55 gal'),O('55-gal poly drums','Tambos de plástico de 55 gal'),O('30-gal drums','Tambos de 30 gal'),O('5-gal pails','Cubetas de 5 gal'),O('Totes (IBC)','Totes (IBC)'),
   O('Used oil tank','Tanque de aceite usado'),O('Battery / lamp boxes','Cajas de baterías / lámparas'),O('Mixed','Mixto')];
 var GEN=[{k:90,en:'Large quantity generator · 90 days',es:'Gran generador · 90 días'},{k:180,en:'Small quantity generator · 180 days',es:'Pequeño generador · 180 días'},{k:270,en:'Small quantity generator, 200+ miles to TSDF · 270 days',es:'Pequeño generador, 200+ millas a la planta · 270 días'}];
-var KINDS=[{k:'hw',en:'Hazardous waste storage (weekly · 22 CCR)',es:'Almacén de residuos peligrosos (semanal · 22 CCR)'},{k:'chem',en:'Chemical storage area (products · Title 8)',es:'Área de almacenamiento de químicos (productos · Título 8)'},{k:'tank',en:'Storage tanks (diesel, propane, natural gas)',es:'Tanques de almacenamiento (diésel, propano, gas natural)'}];
+var KINDS=[{k:'hw',en:'Hazardous waste storage (weekly · 22 CCR)',es:'Almacén de residuos peligrosos (semanal · 22 CCR)'},{k:'chem',en:'Chemical storage area (products · Title 8)',es:'Área de almacenamiento de químicos (productos · Título 8)'},
+  {k:'diesel',en:'Diesel tank',es:'Tanque de diésel'},{k:'gasoline',en:'Gasoline tank',es:'Tanque de gasolina'},{k:'propane',en:'Propane tank / cylinders',es:'Tanque / cilindros de propano'},
+  {k:'natgas',en:'Natural gas meter and piping',es:'Medidor y tubería de gas natural'},{k:'oiltank',en:'Hydraulic / lube oil tank',es:'Tanque de aceite hidráulico / lubricante'},
+  {k:'tank',en:'Other storage tank (general checklist)',es:'Otro tanque (lista general)'}];
 var CAREAS=[O('Chemical storage room','Cuarto de almacenamiento de químicos'),O('Sanitation chemical room','Cuarto de químicos de sanitización'),O('CIP / chemical dosing area','Área de CIP / dosificación de químicos'),
   O('Maintenance chemical cabinet','Gabinete de químicos de mantenimiento'),O('Flammable storage cabinet','Gabinete de inflamables'),O('Corrosives cabinet (acids / caustics)','Gabinete de corrosivos (ácidos / cáusticos)'),
   O('Lubricant / oil room','Cuarto de lubricantes / aceites'),O('Propane cylinder cage','Jaula de cilindros de propano'),O('Lab / QA chemical storage','Químicos de laboratorio / calidad'),O('Pesticide / fertilizer storage','Almacén de pesticidas / fertilizantes')];
@@ -1276,6 +1279,47 @@ var TITEMS=[
  {id:'t_gas',en:'Propane / natural gas: no gas odor; regulator, piping and shutoff valve protected, labeled and accessible',es:'Propano / gas natural: sin olor a gas; regulador, tubería y válvula de cierre protegidos, rotulados y accesibles',ref:'Cal. Fire Code Ch. 61'},
  {id:'t_ext',en:'Fire extinguisher present, charged and inspected',es:'Extintor presente, cargado e inspeccionado',ref:'8 CCR §6151'},
  {id:'t_plan',en:'SPCC / spill plan and emergency contacts available',es:'Plan SPCC / de derrames y contactos de emergencia disponibles',ref:'40 CFR 112 · H&SC Ch. 6.67 (APSA)'}];
+var XITEMS=[
+ {id:'g_bond',en:'Dispenser grounded / bonded; emergency fuel shutoff marked and accessible',es:'Despachador aterrizado / unido; paro de emergencia rotulado y accesible',ref:'Cal. Fire Code Ch. 23 / Ch. 57'},
+ {id:'p_cond',en:'Tank, supports and paint in good condition',es:'Tanque, soportes y pintura en buen estado',ref:'NFPA 58 · Cal. Fire Code Ch. 61',sub:{en:'No rust, dents or damage; legs and base solid',es:'Sin óxido, abolladuras ni daños; patas y base firmes'}},
+ {id:'p_leak',en:'No gas odor or hissing at valves, fittings and piping',es:'Sin olor a gas ni silbido en válvulas, conexiones y tubería',ref:'NFPA 58'},
+ {id:'p_relief',en:'Relief valve cap in place; regulator vent protected and pointing down',es:'Tapa de la válvula de alivio puesta; ventila del regulador protegida y hacia abajo',ref:'NFPA 58'},
+ {id:'p_gauge',en:'Fill gauge working; tank not filled over 80%',es:'Indicador de llenado funcionando; tanque no más de 80%',ref:'NFPA 58'},
+ {id:'p_clear',en:'Clearance kept from buildings, openings and ignition sources; no weeds or combustibles',es:'Distancia respetada de edificios, aberturas y fuentes de ignición; sin maleza ni combustibles',ref:'Cal. Fire Code Ch. 61'},
+ {id:'p_impact',en:'Vehicle impact protection (bollards / barriers) in place',es:'Protección contra impacto de vehículos (bolardos / barreras)',ref:'Cal. Fire Code §312'},
+ {id:'p_sign',en:'"Flammable Gas" and "No Smoking" signs posted',es:'Letreros de "Gas inflamable" y "No fumar"',ref:'Cal. Fire Code Ch. 61'},
+ {id:'p_shut',en:'Shutoff valve accessible and labeled',es:'Válvula de cierre accesible y rotulada',ref:'NFPA 58'},
+ {id:'p_cyl',en:'Cylinders in the cage secured, valves closed, relief valve up; cage locked',es:'Cilindros en la jaula asegurados, válvulas cerradas, alivio hacia arriba; jaula con candado',ref:'NFPA 58 · Cal. Fire Code Ch. 61'},
+ {id:'n_odor',en:'No gas odor or hissing at the meter, regulator or piping',es:'Sin olor a gas ni silbido en medidor, regulador o tubería',ref:'NFPA 54'},
+ {id:'n_meter',en:'Meter and regulator protected from vehicle impact',es:'Medidor y regulador protegidos contra impacto de vehículos',ref:'Cal. Fire Code §312'},
+ {id:'n_vent',en:'Regulator vent clear and not blocked',es:'Ventila del regulador libre y sin bloqueo',ref:'NFPA 54'},
+ {id:'n_pipe',en:'Piping supported, painted and free of corrosion',es:'Tubería soportada, pintada y sin corrosión',ref:'NFPA 54 · Cal. Plumbing Code Ch. 12'},
+ {id:'n_label',en:'Piping identified (labeled or painted yellow); shutoff valve tagged',es:'Tubería identificada (rotulada o pintada de amarillo); válvula de cierre etiquetada',ref:'NFPA 54'},
+ {id:'n_shut',en:'Main shutoff valve accessible; shutoff wrench nearby',es:'Válvula principal accesible; llave de cierre cercana',ref:'NFPA 54'},
+ {id:'n_clear',en:'Area around the meter and gas equipment clear of storage',es:'Área del medidor y equipo de gas libre de almacenamiento',ref:'Cal. Fire Code Ch. 3'},
+ {id:'n_conn',en:'Appliance connectors and drip legs in good condition',es:'Conectores de equipos y piernas de goteo en buen estado',ref:'NFPA 54'},
+ {id:'n_det',en:'Gas detector (if installed) working and tested',es:'Detector de gas (si existe) funcionando y probado',ref:'Manufacturer'},
+ {id:'x_emer',en:'Emergency shutoff steps and supplier / utility phone number posted',es:'Pasos de cierre de emergencia y teléfono del proveedor / compañía de gas a la vista',ref:'Good practice'}];
+var POOL={}; TITEMS.concat(XITEMS).forEach(function(i){ POOL[i.id]=i; });
+var PET=['t_cond','t_leak','t_cont','t_drain','t_gauge','t_fill','t_valve','t_sign','t_impact','t_ign','t_ext','t_plan'];
+var PETREF='40 CFR 112 (SPCC: 112.7(c) containment, 112.7(g) security, 112.8(c) bulk storage containers and inspections); California Health & Safety Code Ch. 6.67 (Aboveground Petroleum Storage Act); California Fire Code §312 (vehicle impact protection), Ch. 57 (flammable and combustible liquids); 8 CCR §6151 (portable fire extinguishers).';
+var TANKS={
+ diesel:{title:['Diesel Tank Inspection','Inspección de Tanque de Diésel'],file:'Diesel-Tank-Inspection-',short:['Diesel','Diésel'],ref:['SPCC · APSA · Fire Code','SPCC · APSA · Código de Incendios'],refs:PETREF,foot:'40 CFR 112 · APSA · ',items:PET,
+   areas:[O('Diesel fueling station (AST)','Estación de diésel (tanque sobre el suelo)'),O('Emergency generator diesel tank','Tanque de diésel del generador de emergencia'),O('Generator day tank','Tanque diario del generador'),O('Fire pump diesel tank','Tanque de diésel de la bomba contra incendios'),O('Mobile / skid diesel tank','Tanque de diésel móvil / en patín')]},
+ gasoline:{title:['Gasoline Tank Inspection','Inspección de Tanque de Gasolina'],file:'Gasoline-Tank-Inspection-',short:['Gasoline','Gasolina'],ref:['SPCC · APSA · Fire Code','SPCC · APSA · Código de Incendios'],refs:PETREF.replace('Ch. 57 (flammable and combustible liquids)','Ch. 23 (motor fuel-dispensing), Ch. 57 (flammable and combustible liquids)'),foot:'40 CFR 112 · APSA · ',
+   items:['t_cond','t_leak','t_cont','t_drain','t_gauge','t_fill','g_bond','t_valve','t_sign','t_impact','t_ign','t_ext','t_plan'],
+   areas:[O('Gasoline AST','Tanque de gasolina sobre el suelo'),O('Gasoline dispenser','Despachador de gasolina'),O('Small equipment fuel storage','Combustible para equipo menor')]},
+ propane:{title:['Propane Tank Inspection','Inspección de Tanque de Propano'],file:'Propane-Inspection-',short:['Propane','Propano'],ref:['NFPA 58 · Fire Code Ch. 61','NFPA 58 · Código de Incendios Cap. 61'],
+   refs:'NFPA 58 (Liquefied Petroleum Gas Code); California Fire Code Ch. 61 (LP-gases), §312 (vehicle impact protection); 8 CCR §6151 (portable fire extinguishers).',foot:'NFPA 58 · CFC Ch. 61 · ',
+   items:['p_cond','p_leak','p_relief','p_gauge','p_clear','p_impact','p_sign','p_shut','p_cyl','t_ext','x_emer'],
+   areas:[O('Propane tank (bulk)','Tanque de propano (granel)'),O('Forklift propane cylinder cage','Jaula de cilindros de propano de montacargas'),O('Propane exchange cage','Jaula de intercambio de propano'),O('Heater / burner propane tank','Tanque de propano de calentador / quemador')]},
+ natgas:{title:['Natural Gas System Inspection','Inspección del Sistema de Gas Natural'],file:'Natural-Gas-Inspection-',short:['Natural gas','Gas natural'],ref:['NFPA 54 · Fire Code','NFPA 54 · Código de Incendios'],
+   refs:'NFPA 54 (National Fuel Gas Code); California Plumbing Code Ch. 12 (fuel gas piping); California Fire Code §312 (vehicle impact protection); 8 CCR §6151 (portable fire extinguishers); contact the gas utility for any leak.',foot:'NFPA 54 · ',
+   items:['n_odor','n_meter','n_vent','n_pipe','n_label','n_shut','n_clear','n_conn','n_det','t_ext','x_emer'],
+   areas:[O('Natural gas meter and regulator','Medidor y regulador de gas natural'),O('Natural gas piping / boiler room','Tubería de gas natural / cuarto de calderas'),O('Gas-fired equipment room','Cuarto de equipos a gas'),O('Rooftop gas piping','Tubería de gas en el techo')]},
+ oiltank:{title:['Oil Tank Inspection','Inspección de Tanque de Aceite'],file:'Oil-Tank-Inspection-',short:['Oil tank','Tanque de aceite'],ref:['SPCC · APSA','SPCC · APSA'],refs:PETREF,foot:'40 CFR 112 · APSA · ',
+   items:['t_cond','t_leak','t_cont','t_drain','t_gauge','t_fill','t_valve','t_sign','t_ext','t_plan'],
+   areas:[O('Hydraulic / lube oil tank','Tanque de aceite hidráulico / lubricante'),O('Bulk oil storage room','Cuarto de aceite a granel'),O('Oil totes (IBC)','Totes de aceite (IBC)')]}};
 // Items from the facility checklist
 var ITEMS=[
  {id:'lab',en:'Containers marked / labeled properly',es:'Contenedores marcados / etiquetados correctamente',ref:'22 CCR §66262.34(f)',sub:{en:'"Hazardous Waste", contents, hazards, generator name and address',es:'"Residuo peligroso", contenido, riesgos, nombre y dirección del generador'}},
@@ -1297,6 +1341,26 @@ var FIND={
  aisle:[O('Aisle blocked','Pasillo bloqueado'),O('Containers too close together','Contenedores muy juntos'),O('Labels not visible from the aisle','Etiquetas no visibles desde el pasillo')],
  cont:[O('Container not on containment','Contenedor sin contención'),O('Containment pallet cracked or damaged','Tarima de contención rota o dañada'),O('Containment overloaded','Contención sobrecargada')],
  water:[O('Rainwater in containment','Agua de lluvia en la contención'),O('Spilled product in containment','Producto derramado en la contención'),O('Needs pump-out','Necesita vaciarse')]};
+FIND.g_bond=[O('Bonding / ground missing','Falta unión / tierra'),O('Emergency shutoff not marked','Paro de emergencia sin rótulo'),O('Emergency shutoff blocked','Paro de emergencia bloqueado')];
+FIND.p_cond=[O('Rust or corrosion','Óxido o corrosión'),O('Dent or damage','Abolladura o daño'),O('Legs / base damaged','Patas / base dañadas')];
+FIND.p_leak=[O('Gas odor','Olor a gas'),O('Hissing at valve or fitting','Silbido en válvula o conexión'),O('Frost on fitting','Escarcha en conexión')];
+FIND.p_relief=[O('Relief valve cap missing','Falta tapa de la válvula de alivio'),O('Regulator vent unprotected','Ventila del regulador sin protección')];
+FIND.p_gauge=[O('Gauge not working','Indicador sin funcionar'),O('Overfilled','Sobrellenado')];
+FIND.p_clear=[O('Too close to building or opening','Muy cerca de edificio o abertura'),O('Ignition source nearby','Fuente de ignición cercana'),O('Weeds / combustibles','Maleza / combustibles')];
+FIND.p_impact=[O('Bollard missing or damaged','Bolardo faltante o dañado'),O('No impact protection','Sin protección contra impacto')];
+FIND.p_sign=[O('"Flammable Gas" sign missing','Falta letrero de "Gas inflamable"'),O('"No Smoking" sign missing','Falta letrero de "No fumar"')];
+FIND.p_shut=[O('Shutoff blocked','Válvula de cierre bloqueada'),O('Shutoff not labeled','Válvula de cierre sin rótulo')];
+FIND.p_cyl=[O('Cylinders not secured','Cilindros sin asegurar'),O('Valve open','Válvula abierta'),O('Relief valve not up','Válvula de alivio no está hacia arriba'),O('Cage not locked','Jaula sin candado'),O('Damaged cylinder','Cilindro dañado')];
+FIND.n_odor=[O('Gas odor','Olor a gas'),O('Hissing at meter or regulator','Silbido en medidor o regulador')];
+FIND.n_meter=[O('No impact protection','Sin protección contra impacto'),O('Bollard damaged','Bolardo dañado')];
+FIND.n_vent=[O('Vent blocked','Ventila bloqueada'),O('Vent screen missing','Falta malla de la ventila')];
+FIND.n_pipe=[O('Corroded piping','Tubería corroída'),O('Missing pipe support','Falta soporte de tubería'),O('Paint failing','Pintura deteriorada')];
+FIND.n_label=[O('Piping not identified','Tubería sin identificar'),O('Shutoff not tagged','Válvula de cierre sin etiqueta')];
+FIND.n_shut=[O('Shutoff blocked','Válvula de cierre bloqueada'),O('Wrench missing','Falta la llave')];
+FIND.n_clear=[O('Storage against meter','Almacenamiento junto al medidor'),O('Combustibles near gas equipment','Combustibles cerca del equipo de gas')];
+FIND.n_conn=[O('Connector damaged or kinked','Conector dañado o doblado'),O('Drip leg missing','Falta pierna de goteo')];
+FIND.n_det=[O('Detector not working','Detector sin funcionar'),O('Test overdue','Prueba vencida')];
+FIND.x_emer=[O('Phone number not posted','Teléfono no visible'),O('Shutoff steps not posted','Pasos de cierre no visibles')];
 FIND.c_lab=[O('Label missing','Falta la etiqueta'),O('Secondary container not labeled','Contenedor secundario sin etiqueta'),O('Label faded or illegible','Etiqueta borrosa o ilegible')];
 FIND.c_sds=[O('SDS missing','Falta la HDS'),O('SDS out of date','HDS desactualizada'),O('Binder not in the area','La carpeta no está en el área')];
 FIND.c_inv=[O('Chemical not on the inventory','Químico fuera del inventario'),O('Unknown / unlabeled container','Contenedor desconocido / sin etiqueta'),O('Expired product','Producto vencido')];
@@ -1333,16 +1397,16 @@ var ACTIONS=[O('Relabel container','Volver a etiquetar el contenedor'),O('Add ac
   O('Close and lock drain valve','Cerrar y poner candado a la válvula de drenaje'),O('Repair gauge / alarm / vent','Reparar indicador / alarma / ventila'),O('Lock valve / secure dispenser','Poner candado / asegurar despachador'),
   O('Replace signs / labels','Cambiar letreros / rótulos'),O('Install or repair bollards','Instalar o reparar bolardos'),O('Call gas utility / shut off gas','Llamar a la compañía de gas / cerrar el gas'),
   O('Replace or service extinguisher','Cambiar o dar servicio al extintor'),O('Update SPCC plan / contacts','Actualizar plan SPCC / contactos')];
-var SUG={t_cond:'Repair or recoat tank',t_leak:'Stop leak and clean up',t_cont:'Pump out containment (check for sheen)',t_drain:'Close and lock drain valve',t_gauge:'Repair gauge / alarm / vent',t_fill:'Restock spill kit / PPE',t_valve:'Lock valve / secure dispenser',t_sign:'Replace signs / labels',t_impact:'Install or repair bollards',t_ign:'Remove ignition source / post sign',t_gas:'Call gas utility / shut off gas',t_ext:'Replace or service extinguisher',t_plan:'Update SPCC plan / contacts',c_lab:'Label container / print GHS label',c_sds:'Add or update SDS',c_inv:'Update chemical inventory',c_seg:'Separate incompatible chemicals',c_closed:'Close lid / remove funnel',c_cont:'Move onto containment pallet',c_flam:'Move flammables into cabinet',c_ign:'Remove ignition source / post sign',c_shelf:'Move heavy items to lower shelf',c_eye:'Clear access / flush eyewash',c_spill:'Restock spill kit / PPE',c_aisle:'Clear aisle / exit / extinguisher',lab:'Relabel container',date:'Add accumulation start date',time:'Schedule waste pickup',leak:'Overpack or transfer contents',closed:'Close lid / remove funnel',dent:'Replace damaged container',aisle:'Rearrange to restore aisle space',cont:'Move onto containment pallet',water:'Pump out and dispose of liquid'};
+var SUG={g_bond:'Lock valve / secure dispenser',p_cond:'Repair or recoat tank',p_leak:'Call gas utility / shut off gas',p_relief:'Repair gauge / alarm / vent',p_gauge:'Repair gauge / alarm / vent',p_clear:'Remove ignition source / post sign',p_impact:'Install or repair bollards',p_sign:'Replace signs / labels',p_shut:'Clear aisle / exit / extinguisher',p_cyl:'Lock valve / secure dispenser',n_odor:'Call gas utility / shut off gas',n_meter:'Install or repair bollards',n_vent:'Repair gauge / alarm / vent',n_pipe:'Repair or recoat tank',n_label:'Replace signs / labels',n_shut:'Clear aisle / exit / extinguisher',n_clear:'Clear aisle / exit / extinguisher',n_conn:'Stop leak and clean up',n_det:'Repair gauge / alarm / vent',x_emer:'Update SPCC plan / contacts',t_cond:'Repair or recoat tank',t_leak:'Stop leak and clean up',t_cont:'Pump out containment (check for sheen)',t_drain:'Close and lock drain valve',t_gauge:'Repair gauge / alarm / vent',t_fill:'Restock spill kit / PPE',t_valve:'Lock valve / secure dispenser',t_sign:'Replace signs / labels',t_impact:'Install or repair bollards',t_ign:'Remove ignition source / post sign',t_gas:'Call gas utility / shut off gas',t_ext:'Replace or service extinguisher',t_plan:'Update SPCC plan / contacts',c_lab:'Label container / print GHS label',c_sds:'Add or update SDS',c_inv:'Update chemical inventory',c_seg:'Separate incompatible chemicals',c_closed:'Close lid / remove funnel',c_cont:'Move onto containment pallet',c_flam:'Move flammables into cabinet',c_ign:'Remove ignition source / post sign',c_shelf:'Move heavy items to lower shelf',c_eye:'Clear access / flush eyewash',c_spill:'Restock spill kit / PPE',c_aisle:'Clear aisle / exit / extinguisher',lab:'Relabel container',date:'Add accumulation start date',time:'Schedule waste pickup',leak:'Overpack or transfer contents',closed:'Close lid / remove funnel',dent:'Replace damaged container',aisle:'Rearrange to restore aisle space',cont:'Move onto containment pallet',water:'Pump out and dispose of liquid'};
 var OVER=[O('All items meet facility rules.','Todos los puntos cumplen las reglas.'),O('No-marked items reported to supervisor.','Los puntos "No" se reportaron al supervisor.'),
   O('Waste pickup scheduled.','Recolección programada.'),O('Area clean and organized.','Área limpia y ordenada.'),O('Spill kit stocked.','Kit de derrames completo.')];
 
 function isChem(d){ return d&&d.kind==='chem'; }
-function isTank(d){ return d&&d.kind==='tank'; }
+function isTank(d){ return !!d&&(d.kind==='tank'||!!TANKS[d.kind]); }
 function notHw(d){ return isChem(d)||isTank(d); }
-function itemsFor(d){ return isChem(d)?CITEMS:isTank(d)?TITEMS:ITEMS; }
-function areasFor(d){ return isChem(d)?CAREAS:isTank(d)?TAREAS:AREAS; }
-function allAreas(){ return AREAS.concat(CAREAS,TAREAS); }
+function itemsFor(d){ if(d&&TANKS[d.kind]) return TANKS[d.kind].items.map(function(id){ return POOL[id]; }); return isChem(d)?CITEMS:isTank(d)?TITEMS:ITEMS; }
+function areasFor(d){ if(d&&TANKS[d.kind]) return TANKS[d.kind].areas; return isChem(d)?CAREAS:isTank(d)?TAREAS:AREAS; }
+function allAreas(){ var a=AREAS.concat(CAREAS,TAREAS); Object.keys(TANKS).forEach(function(k){ a=a.concat(TANKS[k].areas); }); return a; }
 var KTXT={hw:{kick:['EHS · HAZARDOUS WASTE','EHS · RESIDUOS PELIGROSOS'],title:['Hazardous Waste Storage Inspection','Inspección de Residuos Peligrosos'],mtitle:['Container Storage Area Inspection','Inspección del Almacén de Contenedores'],file:'HW-Inspection-',short:['','']},
   chem:{kick:['EHS · CHEMICAL STORAGE','EHS · ALMACÉN DE QUÍMICOS'],title:['Chemical Storage Area Inspection','Inspección del Área de Almacenamiento de Químicos'],mtitle:['Chemical Storage Area Inspection','Inspección del Área de Almacenamiento de Químicos'],file:'Chem-Storage-Inspection-',short:['Chemical','Químicos'],
     refs:'8 CCR §5194 (Hazard Communication: labels, SDS, inventory), §5164 (storage of hazardous substances), §5162 (emergency eyewash and shower), §3380 (PPE), §6151 (portable fire extinguishers); California Fire Code Ch. 57 (flammable and combustible liquids).',foot:'8 CCR §5194 · §5164 · '},
@@ -1355,6 +1419,7 @@ function freqTxt(d){ return d&&d.freq?disp(FREQS,d.freq):''; }
 function setTitle(){ var k=(cur&&cur.kind)||'hw', K=KT(cur), f=freqTxt(cur);
   document.getElementById('hTitle').textContent=L(K.title[0],K.title[1]);
   document.getElementById('hKick').textContent=(f?(App.L()==='es'?'Inspección '+f.toLowerCase():f+' inspection'):L('Inspection','Inspección'))+' · '+(App.L()==='es'?KREFES[k]:KREF[k]); }
+Object.keys(TANKS).forEach(function(k){ var T=TANKS[k]; KTXT[k]={kick:['EHS · '+T.short[0].toUpperCase(),'EHS · '+T.short[1].toUpperCase()],title:T.title,mtitle:T.title,file:T.file,short:T.short,refs:T.refs,foot:T.foot}; KREF[k]=T.ref[0]; KREFES[k]=T.ref[1]; });
 function KT(d){ return KTXT[(d&&d.kind)||'hw']||KTXT.hw; }
 function disp(list,v){ if(!v) return ''; var o=list.find(function(x){return x.en===v||x.es===v;}); return o?tx(o):v; }
 function combo(box,list,val,onSet,opt){
@@ -1651,10 +1716,10 @@ function renderLog(){
 function bindLog(){
   ['lFac','lOnly'].forEach(function(id){ document.getElementById(id).addEventListener('change',renderLog); });
   document.getElementById('lCsv').addEventListener('click',function(){
-    var ALL=ITEMS.concat(CITEMS,TITEMS);
+    var ALL=ITEMS.concat(CITEMS,TITEMS,XITEMS);
     var rows=[['Type','Frequency','Date','Facility','Storage area','Inspector','Initials','Containers','Container type','Time limit (days)','Oldest start date','Days stored'].concat(ALL.map(function(i){return i.en;})).concat(['"No" comments','Corrective actions','Reported to','Overall comments','Inspector signed','Reviewer signed'])];
     recs.forEach(function(r){ var a=age(r);
-      rows.push([isChem(r)?'Chemical storage':isTank(r)?'Storage tank':'Hazardous waste',r.freq||'',r.date,r.facility,r.area,r.insp,r.init,r.count,r.ctype,notHw(r)?'':r.gen,r.oldest,a?a.days:''].concat(ALL.map(function(i){return r.ans[i.id]||'';})).concat([nos(r).map(function(i){return i.en+': '+(r.notes[i.id]||'');}).join('; '),nos(r).map(function(i){return r.acts[i.id]||'';}).join('; '),r.sup,r.overall,(r.sigs||[])[0]?(r.sigs[0].name+' '+r.sigs[0].at):'',(r.sigs||[])[1]?(r.sigs[1].name+' '+r.sigs[1].at):''])); });
+      rows.push([(KINDS.find(function(k){return k.k===(r.kind||'hw');})||KINDS[0]).en,r.freq||'',r.date,r.facility,r.area,r.insp,r.init,r.count,r.ctype,notHw(r)?'':r.gen,r.oldest,a?a.days:''].concat(ALL.map(function(i){return r.ans[i.id]||'';})).concat([nos(r).map(function(i){return i.en+': '+(r.notes[i.id]||'');}).join('; '),nos(r).map(function(i){return r.acts[i.id]||'';}).join('; '),r.sup,r.overall,(r.sigs||[])[0]?(r.sigs[0].name+' '+r.sigs[0].at):'',(r.sigs||[])[1]?(r.sigs[1].name+' '+r.sigs[1].at):''])); });
     saveFile('hazwaste-inspections-'+App.today()+'.csv',App.csv(rows),'text/csv'); });
   document.getElementById('lJson').addEventListener('click',function(){ saveFile('hazwaste-inspections-'+App.today()+'.json',JSON.stringify({tool:'hazwaste',ver:1,exported:new Date().toISOString(),records:recs},null,1),'application/json'); });
   document.getElementById('lImport').addEventListener('change',function(e){ var f=e.target.files[0]; if(!f) return;
