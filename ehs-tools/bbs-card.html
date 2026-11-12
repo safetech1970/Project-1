@@ -180,7 +180,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
       <label class="f"><span class="req" data-i18n="observer">Observer</span><input id="oObs"></label>
       <label class="f"><span class="req" data-i18n="facility">Facility</span><select id="oFac"></select></label>
       <label class="f"><span class="req" data-i18n="dept">Department</span><select id="oDept"></select></label>
-      <label class="f fullOnly"><span data-i18n="task">Task observed</span><input id="oTask" data-i18n-ph="taskPh"></label>
+      <label class="f"><span data-i18n="task">Task observed</span><select id="oTask"></select></label>
+      <label class="f"><span data-i18n="equip">Equipment / machine</span><select id="oEquip"></select></label>
       <label class="f fullOnly"><span data-i18n="people">Workers observed</span><input type="number" id="oPeople" min="1" inputmode="numeric"></label>
     </div>
   </div>
@@ -265,7 +266,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
 
 <script>
 window.TOOL = {id:'bbs', ver:1,noLogo:true,sync:{arrays:['cards'],kv:['checklist']}, i18n:{
-en:{tabSetup:'Checklist',cardType:'Card type',quick:'Quick card',full:'Full card',qHint:'Tap a category, then mark what you saw.',photo:'Photo (optional)',photoHint:"Photograph the condition or task, not the worker's face.",setupTitle:'Observation checklist',setupHint:'Turn categories and behaviors on or off, and add your own. Changes apply to new cards on every device; saved cards keep what was recorded.',addCat:'Add a category',nameEn:'Name in English',nameEs:'Nombre en español (optional)',add:'Add',appTitle:'BBS Observation Card',tabObserve:'Observe',tabDash:'Dashboard',tabRecords:'Records',noNameTitle:'No names, no blame',
+en:{equip:'Equipment / machine',tabSetup:'Checklist',cardType:'Card type',quick:'Quick card',full:'Full card',qHint:'Tap a category, then mark what you saw.',photo:'Photo (optional)',photoHint:"Photograph the condition or task, not the worker's face.",setupTitle:'Observation checklist',setupHint:'Turn categories and behaviors on or off, and add your own. Changes apply to new cards on every device; saved cards keep what was recorded.',addCat:'Add a category',nameEn:'Name in English',nameEs:'Nombre en español (optional)',add:'Add',appTitle:'BBS Observation Card',tabObserve:'Observe',tabDash:'Dashboard',tabRecords:'Records',noNameTitle:'No names, no blame',
 noNameBody:"Observe the task, not the person. Do not write the worker's name. Tell the worker what you saw, recognize safe work first, then talk about at-risk behavior and why it happens.",
 obsInfo:'Observation details',date:'Date',time:'Time',observer:'Observer',facility:'Facility',dept:'Department',task:'Task observed',taskPh:'e.g. Clearing a jam on the bagger',people:'Workers observed',
 behaviors:'Behaviors',behHint:'Mark only what you actually saw. Leave the rest blank.',coaching:'Coaching conversation',feedback:'Feedback given',
@@ -275,7 +276,7 @@ safe:'Safe',atrisk:'At-risk',reset:'Reset',save:'Save card',dashTitle:'Safe beha
 byBarrier:'Barriers behind at-risk behavior',byFac:'Percent safe by facility',saved:'Saved cards',exportCsv:'Export CSV',exportJson:'Export backup (JSON)',importJson:'Import backup',print:'Print',
 allFacilities:'All facilities',copyNote:'In this viewer, export copies the data to your clipboard. Open the offline file to download.',
 foot:'Behavior-based safety supports, and does not replace, hazard controls. Fix the barriers you find with the hierarchy of controls.'},
-es:{tabSetup:'Lista',cardType:'Tipo de tarjeta',quick:'Tarjeta rápida',full:'Tarjeta completa',qHint:'Toque una categoría y marque lo que vio.',photo:'Foto (opcional)',photoHint:'Fotografíe la condición o la tarea, no la cara del trabajador.',setupTitle:'Lista de observación',setupHint:'Active o desactive categorías y comportamientos, y agregue los suyos. Los cambios aplican a tarjetas nuevas en todos los dispositivos; las tarjetas guardadas conservan lo registrado.',addCat:'Agregar categoría',nameEn:'Name in English',nameEs:'Nombre en español (opcional)',add:'Agregar',appTitle:'Tarjeta de Observación BBS',tabObserve:'Observar',tabDash:'Tablero',tabRecords:'Registros',noNameTitle:'Sin nombres, sin culpa',
+es:{equip:'Equipo / máquina',tabSetup:'Lista',cardType:'Tipo de tarjeta',quick:'Tarjeta rápida',full:'Tarjeta completa',qHint:'Toque una categoría y marque lo que vio.',photo:'Foto (opcional)',photoHint:'Fotografíe la condición o la tarea, no la cara del trabajador.',setupTitle:'Lista de observación',setupHint:'Active o desactive categorías y comportamientos, y agregue los suyos. Los cambios aplican a tarjetas nuevas en todos los dispositivos; las tarjetas guardadas conservan lo registrado.',addCat:'Agregar categoría',nameEn:'Name in English',nameEs:'Nombre en español (opcional)',add:'Agregar',appTitle:'Tarjeta de Observación BBS',tabObserve:'Observar',tabDash:'Tablero',tabRecords:'Registros',noNameTitle:'Sin nombres, sin culpa',
 noNameBody:'Observe la tarea, no a la persona. No escriba el nombre del trabajador. Dígale lo que vio, reconozca primero el trabajo seguro y luego hable del comportamiento de riesgo y por qué pasa.',
 obsInfo:'Datos de la observación',date:'Fecha',time:'Hora',observer:'Observador',facility:'Instalación',dept:'Departamento',task:'Tarea observada',taskPh:'ej. Destapando un atasco en la embolsadora',people:'Trabajadores observados',
 behaviors:'Comportamientos',behHint:'Marque solo lo que realmente vio. Deje lo demás en blanco.',coaching:'Conversación de coaching',feedback:'Retroalimentación dada',
@@ -805,12 +806,67 @@ function ckCfg(){ var c=App.get('checklist',null)||{}; c.hide=c.hide||{}; c.add=
 function allCats(){ var c=ckCfg(); return CATS.concat(c.cats.map(function(x){ return {k:x.k,en:x.en,es:x.es||x.en,b:[],custom:true}; })).map(function(cat){
     return {k:cat.k,en:cat.en,es:cat.es,custom:cat.custom,b:cat.b.concat((c.add[cat.k]||[]).map(function(b){ return {k:b.k,en:b.en,es:b.es||b.en,custom:true}; }))}; }); }
 function activeCats(){ var h=ckCfg().hide; return allCats().filter(function(c){ return !h[c.k]; }).map(function(c){ return {k:c.k,en:c.en,es:c.es,b:c.b.filter(function(b){ return !h[c.k+'.'+b.k]; })}; }).filter(function(c){ return c.b.length; }); }
+/* Tasks by department (English is stored; Spanish is shown). The current department's tasks are listed first. */
+function L2(a){ return a.map(function(x){ return {k:x[0],en:x[0],es:x[1]}; }); }
+var TASKS={
+ prod:L2([['Feeding product onto the line','Alimentar producto a la línea'],['Bin dumping / loading the hopper','Vaciar contenedores / cargar la tolva'],['Sorting / grading on the inspection belt','Seleccionar / clasificar en la banda de inspección'],['Trimming with a knife','Recortar con cuchillo'],
+  ['Operating the peeler','Operar la peladora'],['Operating the slicer / dicer / cutter','Operar la rebanadora / cortadora en cubos / cortadora'],['Operating the optical sorter','Operar el seleccionador óptico'],['Operating the washer / flume','Operar la lavadora / canal de agua'],
+  ['Clearing a jam','Destapar un atasco'],['Changeover / line setup','Cambio de producto / preparación de línea'],['Adjusting machine settings','Ajustar la máquina'],['Removing debris from a conveyor','Quitar basura de un transportador'],
+  ['Monitoring / walking the line','Vigilar / recorrer la línea'],['Dry cleaning during production','Limpieza en seco durante producción'],['QA sampling and inspection','Muestreo e inspección de calidad'],['Operating the hydrocooler','Operar el hidroenfriador']]),
+ pack:L2([['Operating the bagger','Operar la embolsadora'],['Changing the film roll','Cambiar el rollo de película'],['Clearing a bagger jam','Destapar un atasco de la embolsadora'],['Hand packing','Empacar a mano'],
+  ['Operating the case erector','Operar la formadora de cajas'],['Operating the case packer','Operar la empacadora de cajas'],['Taping / sealing cases','Encintar / sellar cajas'],['Weighing / checkweigher','Pesar / báscula de control'],
+  ['Labeling / date coding','Etiquetar / codificar fecha'],['Building pallets / stacking cases','Armar tarimas / estibar cajas'],['Working in the palletizer / robot cell','Trabajar en la celda del paletizador / robot'],['Stretch wrapping pallets','Emplayar tarimas'],
+  ['Strapping / banding','Flejar'],['Refilling boxes and packaging supplies','Surtir cajas y material de empaque'],['Metal detector check','Revisión del detector de metales']]),
+ san:L2([['Foaming / applying chemicals','Aplicar espuma / químicos'],['High-pressure rinsing','Enjuagar con alta presión'],['Mixing / diluting chemicals','Mezclar / diluir químicos'],['Disassembling equipment for cleaning','Desarmar equipo para limpiar'],
+  ['Reassembling equipment after cleaning','Armar equipo después de limpiar'],['Operating the CIP system','Operar el sistema CIP'],['Cleaning drains','Limpiar drenajes'],['Cleaning overhead / elevated surfaces','Limpiar superficies altas / elevadas'],
+  ['Sanitizing knives and tools','Sanitizar cuchillos y herramientas'],['Cleaning conveyors under lockout','Limpiar transportadores con candado aplicado'],['Pre-op inspection','Inspección pre-operacional'],['Taking out trash / cardboard','Sacar basura / cartón']]),
+ maint:L2([['Lockout / tagout','Bloqueo y etiquetado'],['Preventive maintenance','Mantenimiento preventivo'],['Electrical troubleshooting','Revisión eléctrica'],['Welding / cutting (hot work)','Soldar / cortar (trabajo en caliente)'],
+  ['Grinding','Esmerilar'],['Changing belts or chains','Cambiar bandas o cadenas'],['Replacing bearings / motors / gearboxes','Cambiar baleros / motores / reductores'],['Hydraulic repair','Reparación hidráulica'],
+  ['Lubricating equipment','Lubricar equipo'],['Working from a ladder','Trabajar en escalera'],['Working from a scissor / boom lift','Trabajar en elevador de tijera / brazo'],['Fabrication in the shop','Fabricación en el taller'],
+  ['Confined space entry','Entrada a espacio confinado'],['Roof work','Trabajo en el techo'],['Refrigeration / ammonia work','Trabajo de refrigeración / amoníaco'],['Moving heavy parts / rigging','Mover piezas pesadas / maniobras'],
+  ['Working on a running machine (adjust / test)','Trabajo con la máquina en marcha (ajuste / prueba)'],['Contractor work oversight','Supervisión de contratistas']]),
+ ship:L2([['Loading trailers','Cargar tráileres'],['Unloading trailers','Descargar tráileres'],['Operating a forklift','Operar montacargas'],['Operating a pallet jack','Operar patín'],
+  ['Using the dock plate / leveler','Usar la placa / nivelador del andén'],['Chocking wheels / trailer restraint','Calzar llantas / sujetar tráiler'],['Picking orders','Surtir pedidos'],['Staging pallets','Acomodar tarimas'],
+  ['Inspecting the trailer','Inspeccionar el tráiler'],['Changing or charging batteries','Cambiar o cargar baterías'],['Changing a propane cylinder','Cambiar cilindro de propano'],['Securing loads (straps / load bars)','Asegurar cargas (bandas / barras)']]),
+ cold:L2([['Working in the cooler','Trabajar en el enfriador'],['Working in the freezer','Trabajar en el congelador'],['Putting away pallets in racks','Acomodar tarimas en racks'],['Picking from racks','Surtir de los racks'],
+  ['Forced-air cooling setup','Preparar enfriamiento con aire forzado'],['Applying ice','Aplicar hielo'],['Temperature checks','Revisar temperaturas']]),
+ field:L2([['Hand harvesting','Cosecha a mano'],['Operating a harvester','Operar cosechadora'],['Operating a tractor','Operar tractor'],['Loading bins in the field','Cargar contenedores en el campo'],
+  ['Working on a harvest aid / conveyor','Trabajar en ayudante de cosecha / banda'],['Irrigation work','Trabajo de riego'],['Applying pesticides','Aplicar pesticidas'],['Hoeing / weeding','Azadonear / deshierbar'],
+  ['Driving a truck in the field','Manejar camión en el campo'],['Servicing field sanitation units','Dar servicio a sanitarios de campo'],['Working in the heat','Trabajar en el calor']]),
+ gen:L2([['Housekeeping / sweeping','Limpieza / barrer'],['Walking through the plant','Caminar por la planta'],['Operating the compactor / baler','Operar la compactadora / empacadora de cartón'],['Stocking supplies','Surtir materiales'],
+  ['Pre-shift meeting / stretching','Junta antes del turno / estiramientos'],['Training / new-hire orientation','Capacitación / orientación de nuevo ingreso'],['Escorting visitors or contractors','Acompañar visitas o contratistas']])};
+var TASK_GRP={prod:{en:'Production',es:'Producción'},pack:{en:'Packing',es:'Empaque'},san:{en:'Sanitation',es:'Sanidad'},maint:{en:'Maintenance',es:'Mantenimiento'},ship:{en:'Shipping / Receiving',es:'Embarque / Recibo'},
+  cold:{en:'Cold storage',es:'Cámara fría'},field:{en:'Field / Harvest',es:'Campo / Cosecha'},gen:{en:'General',es:'General'}};
+var EQUIP_GRP=[
+ [{en:'Processing',es:'Proceso'},L2([['Conveyor','Transportador'],['Inspection belt','Banda de inspección'],['Bin dumper / tipper','Volteador de contenedores'],['Hopper','Tolva'],['Peeler','Peladora'],['Slicer / dicer','Rebanadora / cortadora en cubos'],
+   ['Cutter','Cortadora'],['Optical sorter','Seleccionador óptico'],['Washer / flume','Lavadora / canal de agua'],['Hydrocooler','Hidroenfriador'],['Metal detector','Detector de metales']])],
+ [{en:'Packing',es:'Empaque'},L2([['Bagger (VFFS)','Embolsadora (VFFS)'],['Checkweigher','Báscula de control'],['Case erector','Formadora de cajas'],['Case packer','Empacadora de cajas'],['Case sealer / taper','Selladora / encintadora de cajas'],
+   ['Labeler / date coder','Etiquetadora / codificadora'],['Palletizer / robot','Paletizador / robot'],['Stretch wrapper','Emplayadora'],['Strapping machine','Flejadora']])],
+ [{en:'Material handling',es:'Manejo de materiales'},L2([['Forklift (sit-down)','Montacargas (sentado)'],['Forklift (stand-up / reach)','Montacargas (de pie / alcance)'],['Electric pallet jack','Patín eléctrico'],['Manual pallet jack','Patín manual'],
+   ['Order picker','Recogedor de pedidos'],['Hand truck / cart','Diablito / carrito'],['Dock leveler / dock plate','Nivelador / placa de andén'],['Trailer / truck','Tráiler / camión'],['Racking','Racks'],['Battery charger','Cargador de baterías'],['Propane cylinder','Cilindro de propano']])],
+ [{en:'Elevated work',es:'Trabajo en altura'},L2([['Ladder','Escalera'],['Scissor lift','Elevador de tijera'],['Boom lift','Elevador de brazo'],['Work platform / catwalk','Plataforma / pasarela']])],
+ [{en:'Tools',es:'Herramientas'},L2([['Knife','Cuchillo'],['Box cutter','Cúter'],['Hand tools','Herramientas manuales'],['Power tools','Herramientas eléctricas'],['Grinder','Esmeriladora'],['Welder / torch','Soldadora / soplete']])],
+ [{en:'Sanitation and utilities',es:'Sanidad y servicios'},L2([['Pressure washer','Hidrolavadora'],['Foamer','Espumadora'],['Chemical dispenser / mixing station','Dosificador / estación de mezcla de químicos'],['CIP system','Sistema CIP'],['Air compressor','Compresor de aire'],['Boiler','Caldera'],
+   ['Refrigeration / ammonia system','Sistema de refrigeración / amoníaco'],['Electrical panel / MCC','Tablero eléctrico / CCM'],['Hydraulic unit','Unidad hidráulica'],['Motor / gearbox','Motor / reductor'],['Overhead door','Puerta enrollable'],['Compactor / baler','Compactadora / empacadora de cartón']])],
+ [{en:'Field',es:'Campo'},L2([['Tractor','Tractor'],['Harvester','Cosechadora'],['Field trailer / bins','Remolque / contenedores de campo'],['Harvest aid / field conveyor','Ayudante de cosecha / banda de campo'],['Sprayer','Aspersora'],['Irrigation equipment','Equipo de riego'],['Field truck','Camión de campo'],['ATV / UTV','Cuatrimoto / UTV']])],
+ [{en:'None',es:'Ninguno'},L2([['No equipment (manual task)','Sin equipo (tarea manual)']])]];
+function optHtml(list){ return list.map(function(o){ return '<option value="'+esc(o.en)+'">'+esc(tx(o))+'</option>'; }).join(''); }
+function taskOptions(){ var sel=document.getElementById('oTask'), keep=cur.task||sel.value, d=document.getElementById('oDept').value;
+  var keys=Object.keys(TASKS); if(TASKS[d]) keys=[d].concat(keys.filter(function(k){return k!==d;}));
+  sel.innerHTML='<option value="">'+esc(tx({en:'— Select task —',es:'— Seleccione tarea —'}))+'</option>'+keys.map(function(k){ return '<optgroup label="'+esc(tx(TASK_GRP[k]))+'">'+optHtml(TASKS[k])+'</optgroup>'; }).join('');
+  sel.value=keep||''; }
+function equipOptions(){ var sel=document.getElementById('oEquip'), keep=cur.equip||sel.value;
+  sel.innerHTML='<option value="">'+esc(tx({en:'— Select equipment —',es:'— Seleccione equipo —'}))+'</option>'+EQUIP_GRP.map(function(g){ return '<optgroup label="'+esc(tx(g[0]))+'">'+optHtml(g[1])+'</optgroup>'; }).join('');
+  sel.value=keep||''; }
+function findTx(v,groups){ for(var i=0;i<groups.length;i++){ var o=groups[i].find(function(x){return x.en===v;}); if(o) return tx(o); } return v||''; }
+function taskTx(v){ return findTx(v,Object.keys(TASKS).map(function(k){return TASKS[k];})); }
+function equipTx(v){ return findTx(v,EQUIP_GRP.map(function(g){return g[1];})); }
 var FB=[{k:'recog',en:'Recognized safe work',es:'Reconoció trabajo seguro'},{k:'coach',en:'Coached at-risk behavior',es:'Orientó sobre comportamiento de riesgo'},{k:'none',en:'No conversation',es:'Sin conversación'}];
 var BAR=[{k:'equip',en:'Equipment or tool',es:'Equipo o herramienta'},{k:'ppefit',en:'PPE fit or comfort',es:'Ajuste o comodidad del EPP'},{k:'proc',en:'Procedure unclear',es:'Procedimiento no claro'},
   {k:'time',en:'Time or production pressure',es:'Presión de tiempo o producción'},{k:'train',en:'Training or knowledge',es:'Capacitación o conocimiento'},{k:'habit',en:'Habit / shortcut',es:'Costumbre / atajo'},
   {k:'layout',en:'Workstation layout',es:'Diseño de la estación'},{k:'staff',en:'Staffing',es:'Falta de personal'}];
 
-function blank(){ return {id:null,photos:[],date:App.today(),time:App.nowTime(),observer:'',facility:'',dept:'',task:'',people:'1',marks:{},fb:[],bar:[],disc:'',agree:false,fix:'',owner:''}; }
+function blank(){ return {id:null,photos:[],equip:'',date:App.today(),time:App.nowTime(),observer:'',facility:'',dept:'',task:'',people:'1',marks:{},fb:[],bar:[],disc:'',agree:false,fix:'',owner:''}; }
 var cur = App.get('draft', null) || blank();
 var cards = App.get('cards', null);
 if(!cards){
@@ -877,12 +933,13 @@ function chipSet(boxId, list, field){
       save(); chipSet(boxId,list,field); }); box.appendChild(b); });
 }
 function deptOptions(sel, all){ var keep=sel.value; sel.innerHTML=(all?'':'<option value="">—</option>')+DEPTS.map(function(d){return '<option value="'+d.k+'">'+esc(tx(d))+'</option>';}).join(''); sel.value=keep; }
-var MAP=[['oDate','date'],['oTime','time'],['oObs','observer'],['oFac','facility'],['oDept','dept'],['oTask','task'],['oPeople','people'],['oDisc','disc'],['oFix','fix'],['oOwner','owner']];
+var MAP=[['oDate','date'],['oTime','time'],['oObs','observer'],['oFac','facility'],['oDept','dept'],['oTask','task'],['oEquip','equip'],['oPeople','people'],['oDisc','disc'],['oFix','fix'],['oOwner','owner']];
 function renderSig(){ GSig.panel(document.getElementById('sigCard'),{rec:function(){ return cur; },slots:function(){ return [tx({en:'Observer',es:'Observador'}),tx({en:'Supervisor (optional)',es:'Supervisor (opcional)'})]; },lang:App.L,save:save}); }
-function fill(){ renderSig(); MAP.forEach(function(p){ document.getElementById(p[0]).value=cur[p[1]]||''; }); document.getElementById('oAgree').checked=!!cur.agree;
+function fill(){ renderSig(); taskOptions(); equipOptions(); MAP.forEach(function(p){ document.getElementById(p[0]).value=cur[p[1]]||''; }); document.getElementById('oAgree').checked=!!cur.agree;
   applyMode(); renderCats(); renderTally(); renderPhotos(); chipSet('fbChips',FB,'fb'); chipSet('barChips',BAR,'bar'); }
 function bind(){
   MAP.forEach(function(p){ var el=document.getElementById(p[0]); ['input','change'].forEach(function(ev){ el.addEventListener(ev, function(){ cur[p[1]]=el.value; save(); }); }); });
+  document.getElementById('oDept').addEventListener('change', function(){ taskOptions(); });
   document.getElementById('oAgree').addEventListener('change', function(e){ cur.agree=e.target.checked; save(); });
   document.querySelectorAll('#modeSeg button').forEach(function(b){ b.addEventListener('click',function(){ App.set('mode',b.dataset.m); applyMode(); renderCats(); }); });
   document.getElementById('oReset').addEventListener('click', function(e){ App.armDelete(e.target, function(){ var keep={observer:cur.observer,facility:cur.facility,dept:cur.dept}; cur=blank(); Object.assign(cur,keep); save(); fill(); e.target.textContent=t('reset'); e.target.classList.remove('arm'); e.target.dataset.armed=''; }); });
@@ -939,7 +996,7 @@ function renderRecords(){
   list.forEach(function(c){ var x=tally(c); var d=DEPTS.find(function(z){return z.k===c.dept;});
     var risks=Object.keys(c.marks).filter(function(k){return c.marks[k]==='r';});
     var el=document.createElement('div'); el.className='item '+(x.r?(x.pct<75?'bad':'warn'):'good');
-    el.innerHTML='<div class="head"><div><b>'+esc(c.date)+' · '+esc(c.facility)+'</b>'+(c.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+(c.mode==='quick'?' <span class="pill info">'+esc(tx({en:'Quick',es:'Rápida'}))+'</span>':'')+'<div class="meta">'+esc(d?tx(d):'')+(c.task?' · '+esc(c.task):'')+' · '+esc(c.observer)+'</div></div>'+
+    el.innerHTML='<div class="head"><div><b>'+esc(c.date)+' · '+esc(c.facility)+'</b>'+(c.example?' <span class="ex">'+esc(t('example'))+'</span>':'')+(c.mode==='quick'?' <span class="pill info">'+esc(tx({en:'Quick',es:'Rápida'}))+'</span>':'')+'<div class="meta">'+esc(d?tx(d):'')+(c.task?' · '+esc(taskTx(c.task)):'')+(c.equip?' · '+esc(equipTx(c.equip)):'')+' · '+esc(c.observer)+'</div></div>'+
       '<span class="pill '+(x.r?'warn':'good')+'">'+x.s+' ✓ · '+x.r+' !</span></div>'+
       (risks.length?'<div class="meta">'+risks.map(function(k){return esc(behLabel(k));}).join('<br>')+'</div>':'')+
       ((c.sigs||[]).some(Boolean)?'<div class="row" style="gap:12px">'+c.sigs.filter(Boolean).map(function(q){ return '<span style="display:grid;gap:2px"><img alt="" src="'+q.img+'" style="height:40px;width:auto;background:#fff;border-radius:4px"><span class="meta">'+esc(q.name)+' · '+esc(q.at)+'</span></span>'; }).join('')+'</div>':'')+
@@ -955,10 +1012,10 @@ function bindRecords(){
   document.getElementById('rFac').addEventListener('change', renderRecords);
   ['dFac','dRange'].forEach(function(id){ document.getElementById(id).addEventListener('change', renderDash); });
   document.getElementById('rCsv').addEventListener('click', function(){
-    var rows=[['Date','Time','Facility','Department','Task','Observer','Workers','Category','Behavior','Result','Feedback','Barriers','Agreed','Follow-up','Owner','Signed by']];
+    var rows=[['Date','Time','Facility','Department','Task','Equipment / machine','Observer','Workers','Category','Behavior','Result','Feedback','Barriers','Agreed','Follow-up','Owner','Signed by']];
     cards.forEach(function(c){ var d=DEPTS.find(function(z){return z.k===c.dept;});
       Object.keys(c.marks).forEach(function(k){ var p=k.split('.'); var cat=allCats().find(function(x){return x.k===p[0];}); var b=cat?cat.b.find(function(x){return x.k===p[1];}):null;
-        rows.push([c.date,c.time,c.facility,d?d.en:c.dept,c.task,c.observer,c.people,cat?cat.en:p[0],b?b.en:p[1],c.marks[k]==='s'?'Safe':'At-risk',c.fb.join(' '),c.bar.join(' '),c.agree?'Yes':'No',c.fix,c.owner,(c.sigs||[]).filter(Boolean).map(function(q){return q.name+' '+q.at;}).join('; ')]); }); });
+        rows.push([c.date,c.time,c.facility,d?d.en:c.dept,c.task,c.equip||'',c.observer,c.people,cat?cat.en:p[0],b?b.en:p[1],c.marks[k]==='s'?'Safe':'At-risk',c.fb.join(' '),c.bar.join(' '),c.agree?'Yes':'No',c.fix,c.owner,(c.sigs||[]).filter(Boolean).map(function(q){return q.name+' '+q.at;}).join('; ')]); }); });
     App.exportFile('bbs-observations-'+App.today()+'.csv', App.csv(rows), 'text/csv'); });
   document.getElementById('rJson').addEventListener('click', function(){ App.exportJSON(cards); });
   document.getElementById('rImport').addEventListener('change', function(e){ var f=e.target.files[0]; if(!f) return;
