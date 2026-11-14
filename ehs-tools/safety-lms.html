@@ -172,6 +172,22 @@
   .stripe-progress{background:var(--yellow);}
   .stripe-pass{background:var(--green);}
   .stripe-fail{background:var(--red);}
+  .stripe-due{background:#d9531e;}
+  .stripe-expired{background:var(--red);}
+  .badge.due{background:#fdecdf;color:#a63b10;}
+  .badge.expired{background:var(--red);color:#fff;}
+  .renew-banner{border:2px solid #d9531e;background:#fff6ef;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:14px;line-height:1.45;}
+  .renew-banner.bad{border-color:var(--red);background:var(--red-bg);}
+  .renew-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:12px 0 4px;}
+  .renew-stat{border:1.5px solid #d7dce2;border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit;}
+  .renew-stat.on{outline:3px solid #f2b705;}
+  .renew-stat .n{font-size:24px;font-weight:800;line-height:1.1;}
+  .renew-stat .l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+  .renew-stat.current .n{color:var(--green);} .renew-stat.due .n{color:#d9531e;} .renew-stat.expired .n{color:var(--red);}
+  .st-pill{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+  .st-pill.current{background:var(--green-bg);color:var(--green);} .st-pill.due{background:#fdecdf;color:#a63b10;}
+  .st-pill.expired{background:var(--red);color:#fff;} .st-pill.failed{background:var(--red-bg);color:var(--red);}
+  .st-pill.notstarted{background:var(--steel-100);color:var(--muted);}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:16px;}
   .course-title{font-size:15.5px;font-weight:700;margin:0 0 4px;}
@@ -2282,6 +2298,18 @@ const UI_STRINGS = {
   passingScoreLabel: ["PASSING SCORE","PUNTUACI\u00d3N M\u00cdNIMA"],
   dateCompletedLabel: ["DATE COMPLETED","FECHA DE FINALIZACI\u00d3N"],
   certIdLabel: ["CERT ID","ID DE CERTIFICADO"],
+  validUntilLabel: ["VALID UNTIL","V\u00c1LIDO HASTA"],
+  badgeCurrent: ["Current","Vigente"],
+  badgeDue: ["Due Soon","Por Vencer"],
+  badgeExpired: ["Expired","Vencido"],
+  expiresOn: ["Expires","Vence"],
+  expiredOn: ["Expired","Venci\u00f3"],
+  noExpiry: ["No expiration","Sin vencimiento"],
+  renewBtn: ["Renew Now","Renovar Ahora"],
+  daysLeft: ["days left","d\u00edas restantes"],
+  renewBannerExpired: ["training has expired. Retake it to stay certified.","capacitaci\u00f3n ha vencido. Vuelva a tomarla para mantenerse certificado."],
+  renewBannerExpiredPl: ["trainings have expired. Retake them to stay certified.","capacitaciones han vencido. Vuelva a tomarlas para mantenerse certificado."],
+  renewBannerDue: ["due for renewal soon.","por vencer pronto."],
   employeeSignature: ["Employee Signature","Firma del Empleado"],
   ehsAdminSignature: ["EHS Program Administrator","Administrador del Programa EHS"],
   printSavePdf: ["Download PDF","Descargar PDF"],
@@ -2404,20 +2432,71 @@ function getLatestCompletion(employeeId, courseId){
   if(list.length===0) return null;
   return list.sort((a,b)=> new Date(b.date) - new Date(a.date))[0];
 }
+/* ---------- Renewals: certifications that expire ---------- */
+const RENEW_OPTIONS = [0,6,12,24,36];
+function getLatestPass(employeeId, courseId){
+  const list = DB.completions.filter(c=>c.employeeId===employeeId && c.courseId===courseId && c.passed);
+  if(list.length===0) return null;
+  return list.sort((a,b)=> new Date(b.date) - new Date(a.date))[0];
+}
+function courseRenewMonths(c){ return Math.max(0, parseInt(c && c.renewMonths) || 0); }
+function dueSoonDays(){ const d = parseInt(DB.dueSoonDays); return d > 0 ? d : 30; }
+function addMonths(date, m){ const x = new Date(date); const day = x.getDate(); x.setMonth(x.getMonth()+m); if(x.getDate() < day) x.setDate(0); return x; }
+function renewLabel(m, es){ if(!m) return es ? 'Sin vencimiento' : 'Never expires';
+  if(m % 12 === 0){ const y = m/12; return es ? (y===1 ? 'Cada a\u00f1o' : 'Cada '+y+' a\u00f1os') : (y===1 ? 'Every year' : 'Every '+y+' years'); }
+  return es ? 'Cada '+m+' meses' : 'Every '+m+' months'; }
+function renewSelectHtml(id, val, extra){
+  const opts = RENEW_OPTIONS.indexOf(val) < 0 ? RENEW_OPTIONS.concat([val]).sort((a,b)=>a-b) : RENEW_OPTIONS;
+  return `<select id="${id}" data-no-other ${extra||''}>${opts.map(m=>`<option value="${m}" ${m===val?'selected':''}>${renewLabel(m)}</option>`).join('')}</select>`;
+}
+/* Status of one employee for one course.
+   code: notstarted | failed | current | due | expired. A later failed retake does not cancel a valid pass. */
+function certStatus(employeeId, course){
+  const last = getLatestCompletion(employeeId, course.id);
+  const pass = getLatestPass(employeeId, course.id);
+  const months = courseRenewMonths(course);
+  if(!pass) return { code: last ? 'failed' : 'notstarted', last, pass:null, expires:null, days:null };
+  if(!months) return { code:'current', last, pass, expires:null, days:null };
+  const expires = addMonths(pass.date, months);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const end = new Date(expires); end.setHours(0,0,0,0);
+  const days = Math.round((end - today) / 86400000);
+  return { code: days < 0 ? 'expired' : (days <= dueSoonDays() ? 'due' : 'current'), last, pass, expires, days };
+}
+function statusText(st, es){
+  const T = { notstarted:['Not Started','No Iniciado'], failed:['Failed','Reprobado'], current:['Current','Vigente'], due:['Due Soon','Por Vencer'], expired:['Expired','Vencido'] }[st.code];
+  return es ? T[1] : T[0];
+}
 function showDashboard(){
   showScreen('screen-dashboard');
   const heading = document.getElementById('dashboardHeading');
   if(heading) heading.textContent = ui('myTraining');
   const grid = document.getElementById('dashboardGrid');
   if(DB.courses.length===0){ grid.innerHTML = `<p class="muted">${ui('noCourses')}</p>`; return; }
-  grid.innerHTML = DB.courses.map(c=>{
-    const comp = getLatestCompletion(SESSION.employeeId, c.id);
+  const STS = DB.courses.map(c=>({ c, st: certStatus(SESSION.employeeId, c) }));
+  const nExp = STS.filter(x=>x.st.code==='expired').length, nDue = STS.filter(x=>x.st.code==='due').length;
+  let banner = '';
+  if(nExp || nDue){
+    const parts = [];
+    if(nExp) parts.push(`<b>${nExp}</b> ${nExp===1 ? ui('renewBannerExpired') : ui('renewBannerExpiredPl')}`);
+    if(nDue) parts.push(`<b>${nDue}</b> ${ui('renewBannerDue')}`);
+    banner = `<div class="renew-banner ${nExp?'bad':''}" style="grid-column:1/-1">\u26a0\ufe0f ${parts.join('<br>')}</div>`;
+  }
+  const rank = { expired:0, due:1, failed:2, notstarted:3, current:4 };
+  STS.sort((a,b)=> rank[a.st.code] - rank[b.st.code]);
+  grid.innerHTML = banner + STS.map(({c, st})=>{
+    const comp = st.last;
     let stripe='stripe-notstarted', badge='notstarted', badgeText=ui('badgeNotStarted'), meta='';
+    if(st.code==='current'){ stripe='stripe-pass'; badge='pass'; badgeText = courseRenewMonths(c) ? ui('badgeCurrent') : ui('badgePassed'); }
+    else if(st.code==='due'){ stripe='stripe-due'; badge='due'; badgeText=ui('badgeDue'); }
+    else if(st.code==='expired'){ stripe='stripe-expired'; badge='expired'; badgeText=ui('badgeExpired'); }
+    else if(st.code==='failed'){ stripe='stripe-fail'; badge='fail'; badgeText=ui('badgeFailed'); }
     if(comp){
-      if(comp.passed){ stripe='stripe-pass'; badge='pass'; badgeText=ui('badgePassed'); }
-      else { stripe='stripe-fail'; badge='fail'; badgeText=ui('badgeFailed'); }
-      meta = `${ui('scoreLabel')} ${comp.score}% \u00b7 ${new Date(comp.date).toLocaleDateString()}`;
+      const shown = st.pass || comp;
+      meta = `${ui('scoreLabel')} ${shown.score}% \u00b7 ${new Date(shown.date).toLocaleDateString()}`;
+      if(st.expires) meta += `<br>${st.code==='expired' ? ui('expiredOn') : ui('expiresOn')} ${st.expires.toLocaleDateString()}${st.code==='due' ? ` \u00b7 ${st.days} ${ui('daysLeft')}` : ''}`;
     }
+    const renew = st.code==='expired' || st.code==='due';
     return `
     <div class="tag">
       <div class="top-stripe ${stripe}"></div>
@@ -2426,8 +2505,8 @@ function showDashboard(){
       <span class="badge ${badge}">${badgeText}</span>
       ${meta?`<div class="meta-line">${meta}</div>`:''}
       <div class="card-actions">
-        <button class="btn small" onclick="startCourse('${c.id}')">${comp ? ui('retakeBtn') : ui('startBtn')}</button>
-        ${comp && comp.passed ? `<button class="btn ghost small" onclick="viewCertificate('${c.id}')">${ui('certificateBtn')}</button>` : ''}
+        <button class="btn small" onclick="startCourse('${c.id}')">${renew ? ui('renewBtn') : (comp ? ui('retakeBtn') : ui('startBtn'))}</button>
+        ${st.pass ? `<button class="btn ghost small" onclick="viewCertificate('${c.id}')">${ui('certificateBtn')}</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2729,7 +2808,7 @@ function viewCertificate(courseId, employeeId){
   CURRENT_CERT = { courseId, empId };
   const course = DB.courses.find(c=>c.id===courseId);
   const emp = DB.employees.find(e=>e.id===empId);
-  const comp = getLatestCompletion(empId, courseId);
+  const comp = getLatestPass(empId, courseId);
   if(!comp || !comp.passed){ alert('This employee has not passed this course yet.'); return; }
   const isOwner = SESSION.role==='employee' && empId===SESSION.employeeId;
 
@@ -2754,6 +2833,7 @@ function viewCertificate(courseId, employeeId){
       <div class="cert-meta">
         ${ui('scoreLabel')}: ${comp?comp.score:'-'}%&nbsp;&nbsp;\u00b7&nbsp;&nbsp;${ui('passingScoreLabel')}: ${course.passScore}%<br>
         ${ui('dateCompletedLabel')}: ${comp?new Date(comp.date).toLocaleDateString():''}&nbsp;&nbsp;\u00b7&nbsp;&nbsp;${ui('certIdLabel')}: ${comp?comp.id.toUpperCase():''}
+        ${courseRenewMonths(course) ? `<br><b>${ui('validUntilLabel')}: ${addMonths(comp.date, courseRenewMonths(course)).toLocaleDateString()}</b>` : ''}
       </div>
       <div class="cert-sign-row">
         <div class="cert-sign-line">
@@ -2872,7 +2952,7 @@ function clearSigCanvas(){
   SIG_STATE.hasStroke = false;
 }
 function saveSignature(courseId, empId){
-  const comp = getLatestCompletion(empId, courseId);
+  const comp = getLatestPass(empId, courseId);
   if(!comp) return;
   if(SIG_STATE.mode==='draw'){
     if(!SIG_STATE.hasStroke){ alert(ui('sigRequiredAlert')); return; }
@@ -2898,7 +2978,7 @@ async function shareCertificateFile(){
   const { courseId, empId } = CURRENT_CERT;
   const emp = DB.employees.find(e=>e.id===empId);
   const course = DB.courses.find(c=>c.id===courseId);
-  const comp = getLatestCompletion(empId, courseId);
+  const comp = getLatestPass(empId, courseId);
   if(!comp) return;
   const filename = `certificate_${(emp?emp.name:'employee').replace(/[^a-z0-9]+/gi,'_')}_${comp.id}.png`;
   let file;
@@ -2925,7 +3005,7 @@ async function shareCertificateFile(){
 function certFileBase(empId, courseId){
   const emp = DB.employees.find(e=>e.id===empId);
   const course = DB.courses.find(c=>c.id===courseId);
-  const comp = getLatestCompletion(empId, courseId);
+  const comp = getLatestPass(empId, courseId);
   const n = s => String(s||'').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'').slice(0,40);
   return `Certificate_${n(emp?emp.name:'employee')}_${n(course?course.title:'course')}_${comp?comp.id:''}`;
 }
@@ -2983,7 +3063,7 @@ function wrapCenteredText(ctx, text, cx, y, maxWidth, lineHeight){
 async function buildCertificateCanvas(empId, courseId){
   const course = DB.courses.find(c=>c.id===courseId);
   const emp = DB.employees.find(e=>e.id===empId);
-  const comp = getLatestCompletion(empId, courseId);
+  const comp = getLatestPass(empId, courseId);
   const canvas = document.createElement('canvas');
   canvas.width = 1000; canvas.height = 760;
   const ctx = canvas.getContext('2d');
@@ -3045,6 +3125,8 @@ async function buildCertificateCanvas(empId, courseId){
   ctx.fillStyle = '#5b6472'; ctx.font = '700 13px ui-monospace, monospace';
   ctx.fillText(`${ui('scoreLabel')}: ${comp?comp.score:'-'}%   \u00b7   ${ui('passingScoreLabel')}: ${course.passScore}%`, 500, y); y += 22;
   ctx.fillText(`${ui('dateCompletedLabel')}: ${comp?new Date(comp.date).toLocaleDateString():''}   \u00b7   ${ui('certIdLabel')}: ${comp?comp.id.toUpperCase():''}`, 500, y);
+  if(comp && courseRenewMonths(course)){ y += 22; ctx.fillStyle = '#a63b10'; ctx.font = '800 14px ui-monospace, monospace';
+    ctx.fillText(`${ui('validUntilLabel')}: ${addMonths(comp.date, courseRenewMonths(course)).toLocaleDateString()}`, 500, y); ctx.fillStyle = '#5b6472'; }
 
   const sigY = 660;
   ctx.strokeStyle = '#1c2430'; ctx.lineWidth = 1.5;
@@ -3090,7 +3172,7 @@ async function sendCompletionEmail(courseId, employeeId){
   const empId = employeeId || SESSION.employeeId;
   const course = DB.courses.find(c=>c.id===courseId);
   const emp = DB.employees.find(e=>e.id===empId);
-  const comp = getLatestCompletion(empId, courseId);
+  const comp = getLatestPass(empId, courseId);
   if(!comp || !comp.passed){ alert('This employee has not passed this course yet.'); return; }
   if(!DB.notifyEmail){
     if(SESSION.role==='admin'){
@@ -3198,7 +3280,7 @@ function renderAdminCourses(){
         <div class="item-row" style="padding:14px 18px;">
           <div>
             <div class="name">${escapeHtml(c.title)}</div>
-            <div class="sub">${c.pages.length} content page(s) \u00b7 ${c.quiz.length} quiz question(s) \u00b7 pass ${c.passScore}%</div>
+            <div class="sub">${c.pages.length} content page(s) \u00b7 ${c.quiz.length} quiz question(s) \u00b7 pass ${c.passScore}% \u00b7 ${renewLabel(courseRenewMonths(c))}</div>
           </div>
           <div class="item-actions">
             <button class="btn small" onclick="previewCourse('${c.id}')">Preview</button>
@@ -3234,6 +3316,9 @@ function renderCourseEditorModal(){
     <input type="text" id="ed_desc" value="${escapeHtml(EDITOR.description)}" placeholder="One line shown on the course card">
     <label>Passing Score (%)</label>
     <input type="number" id="ed_pass" value="${EDITOR.passScore}" min="0" max="100" style="max-width:120px;">
+    <label>Certification Renewal</label>
+    <div style="max-width:220px;">${renewSelectHtml('ed_renew', courseRenewMonths(EDITOR))}</div>
+    <p class="muted small" style="margin-top:4px;">When a pass expires, the course shows as Expired and the employee is asked to retake it. Forklift operators must be re-evaluated at least every 3 years (Title 8 \u00a73668).</p>
 
     <div class="section-head"><h2 style="margin-top:20px;">Content Pages</h2></div>
     <div id="ed_pages">${EDITOR.pages.map((p,i)=>renderPageEditorRow(p,i)).join('')}</div>
@@ -3331,6 +3416,7 @@ function saveCourseEditor(){
   EDITOR.title = document.getElementById('ed_title').value.trim();
   EDITOR.description = document.getElementById('ed_desc').value.trim();
   EDITOR.passScore = Math.max(0, Math.min(100, parseInt(document.getElementById('ed_pass').value)||80));
+  EDITOR.renewMonths = Math.max(0, parseInt(document.getElementById('ed_renew').value)||0);
   if(!EDITOR.title){ alert('Please enter a course title.'); return; }
   for(const q of EDITOR.quiz){
     if(!q.question.trim()){ alert('Every quiz question needs question text.'); return; }
@@ -3461,6 +3547,11 @@ function renderAdminReports(){
       <button class="btn small mt14" onclick="generateCertFromAdmin()">Generate Certificate</button>
     </div>
 
+    <div class="fieldset">
+      <h3>Certification Status</h3>
+      <p class="muted small">Expired and due-soon certifications appear first on each employee's training screen. "Due soon" means within ${dueSoonDays()} days (change in Settings). Tap a box to filter the table.</p>
+      <div class="renew-stats" id="renewStats"></div>
+    </div>
     <div class="flex-between mt20">
       <div class="row" style="max-width:320px;">
         <select id="reportLocFilter" onchange="setReportFilter(this.value)">
@@ -3472,7 +3563,7 @@ function renderAdminReports(){
     </div>
     <div class="table-wrap mt14">
       <table>
-        <thead><tr><th>Employee ID</th><th>Employee</th><th>Facility</th><th>Course</th><th>Status</th><th>Score</th><th>Date</th><th></th></tr></thead>
+        <thead><tr><th>Employee ID</th><th>Employee</th><th>Facility</th><th>Course</th><th>Status</th><th>Score</th><th>Date</th><th>Expires</th><th></th></tr></thead>
         <tbody id="reportBody"></tbody>
       </table>
     </div>
@@ -3490,34 +3581,53 @@ function setReportFilter(val){
   document.getElementById('adminReports').dataset.filterLoc = val;
   renderReportRows(val);
 }
+function setStatusFilter(code){
+  const el = document.getElementById('adminReports');
+  el.dataset.filterStatus = el.dataset.filterStatus === code ? '' : code;
+  renderReportRows(el.dataset.filterLoc || '');
+}
+function renderRenewStats(allRows){
+  const box = document.getElementById('renewStats'); if(!box) return;
+  const cur = document.getElementById('adminReports').dataset.filterStatus || '';
+  const n = k => allRows.filter(r=>r.code===k).length;
+  const items = [['expired','Expired'],['due','Due Soon'],['current','Current'],['failed','Failed'],['notstarted','Not Started']];
+  box.innerHTML = items.map(([k,l])=>`<button type="button" class="renew-stat ${k} ${cur===k?'on':''}" onclick="setStatusFilter('${k}')"><div class="n">${n(k)}</div><div class="l">${l}</div></button>`).join('');
+}
 function buildReportRows(filterLoc){
   const rows=[];
   DB.employees.filter(e=>!filterLoc || e.location===filterLoc).forEach(emp=>{
     DB.courses.forEach(course=>{
-      const comp = getLatestCompletion(emp.id, course.id);
+      const st = certStatus(emp.id, course);
+      const comp = st.pass || st.last;
       rows.push({
-        employeeId: emp.id, courseId: course.id,
+        employeeId: emp.id, courseId: course.id, code: st.code,
         employeeNumber: emp.employeeNumber||'', employee: emp.name, location: emp.location||'', course: course.title,
-        status: comp ? (comp.passed?'Completed - Passed':'Completed - Failed') : 'Not Started',
+        status: statusText(st) + (st.code==='due' ? ` (${st.days} days)` : ''),
         score: comp ? comp.score+'%' : '-',
         date: comp ? new Date(comp.date).toLocaleDateString() : '-',
-        passed: !!(comp && comp.passed)
+        expires: st.expires ? st.expires.toLocaleDateString() : (st.pass ? 'No expiration' : '-'),
+        days: st.days,
+        passed: !!st.pass
       });
     });
   });
   return rows;
 }
 function renderReportRows(filterLoc){
-  const rows = buildReportRows(filterLoc);
+  const all = buildReportRows(filterLoc);
+  renderRenewStats(all);
+  const fs = document.getElementById('adminReports').dataset.filterStatus || '';
+  const rows = fs ? all.filter(r=>r.code===fs) : all;
   document.getElementById('reportBody').innerHTML = rows.length===0
-    ? `<tr><td colspan="8" class="center muted" style="padding:20px;">No data yet.</td></tr>`
-    : rows.map(r=>`<tr><td style="font-family:ui-monospace,Consolas,monospace;">${escapeHtml(r.employeeNumber||'\u2014')}</td><td>${escapeHtml(r.employee)}</td><td>${escapeHtml(r.location)}</td><td>${escapeHtml(r.course)}</td><td>${r.status}</td><td>${r.score}</td><td>${r.date}</td><td>${r.passed?`<div class="item-actions"><button class="btn ghost small" onclick="viewCertificate('${r.courseId}','${r.employeeId}')">Certificate</button><button class="btn ghost small" onclick="sendCompletionEmail('${r.courseId}','${r.employeeId}')">Email</button></div>`:''}</td></tr>`).join('');
+    ? `<tr><td colspan="9" class="center muted" style="padding:20px;">No data yet.</td></tr>`
+    : rows.map(r=>`<tr><td style="font-family:ui-monospace,Consolas,monospace;">${escapeHtml(r.employeeNumber||'\u2014')}</td><td>${escapeHtml(r.employee)}</td><td>${escapeHtml(r.location)}</td><td>${escapeHtml(r.course)}</td><td><span class="st-pill ${r.code}">${escapeHtml(r.status)}</span></td><td>${r.score}</td><td>${r.date}</td><td>${escapeHtml(r.expires)}</td><td>${r.passed?`<div class="item-actions"><button class="btn ghost small" onclick="viewCertificate('${r.courseId}','${r.employeeId}')">Certificate</button><button class="btn ghost small" onclick="sendCompletionEmail('${r.courseId}','${r.employeeId}')">Email</button></div>`:''}</td></tr>`).join('');
 }
 function exportCsv(){
   const filterLoc = document.getElementById('adminReports').dataset.filterLoc || '';
-  const rows = buildReportRows(filterLoc);
-  const header = ['Employee ID','Employee','Facility','Course','Status','Score','Date'];
-  const csv = [header.join(',')].concat(rows.map(r=>[r.employeeNumber,r.employee,r.location,r.course,r.status,r.score,r.date].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','))).join('\n');
+  const fs = document.getElementById('adminReports').dataset.filterStatus || '';
+  const rows = buildReportRows(filterLoc).filter(r=>!fs || r.code===fs);
+  const header = ['Employee ID','Employee','Facility','Course','Status','Score','Date','Expires','Days Left'];
+  const csv = [header.join(',')].concat(rows.map(r=>[r.employeeNumber,r.employee,r.location,r.course,r.status,r.score,r.date,r.expires,r.days==null?'':r.days].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','))).join('\n');
   const blob = new Blob(['\ufeff' + csv], {type:'text/csv'});
   saveFile(`training_report_${new Date().toISOString().slice(0,10)}.csv`, blob);
 }
@@ -3542,6 +3652,18 @@ function renderAdminSettings(){
       </div>
     </div>
     <div class="fieldset">
+      <h3>Certification Renewals</h3>
+      <p class="muted small">Set how long a passing score stays valid for each course. When it runs out, the course shows as Expired on the employee's screen and in Reports.</p>
+      <div class="table-wrap"><table><thead><tr><th>Course</th><th style="width:190px">Renewal</th></tr></thead><tbody>
+        ${DB.courses.map(c=>`<tr><td>${escapeHtml(c.title)}</td><td>${renewSelectHtml('rn_'+c.id, courseRenewMonths(c), `onchange="setCourseRenewal('${c.id}', this.value)"`)}</td></tr>`).join('')}
+      </tbody></table></div>
+      <label class="mt14">Show "Due Soon" this many days before expiration</label>
+      <div class="row" style="max-width:300px;">
+        <input type="number" id="dueSoonInput" min="1" max="180" value="${dueSoonDays()}">
+        <button class="btn secondary" style="flex:0 0 auto;" onclick="saveDueSoon()">Save</button>
+      </div>
+    </div>
+    <div class="fieldset">
       <h3>Backup &amp; Restore</h3>
       <p class="muted small">Export all courses, employees, and completion records to a JSON file, or restore from a previous backup. Records are stored in this browser only. Export a backup regularly and before clearing browser data or switching devices.</p>
       <button class="btn secondary small" onclick="exportBackup()">Export Backup (.json)</button>
@@ -3554,6 +3676,15 @@ function renderAdminSettings(){
       <button class="btn danger small" onclick="resetAllData()">Reset All Data</button>
     </div>
   `;
+}
+function setCourseRenewal(courseId, val){
+  const c = DB.courses.find(x=>x.id===courseId); if(!c) return;
+  c.renewMonths = Math.max(0, parseInt(val)||0); saveData(DB); toast('Renewal saved.');
+}
+function saveDueSoon(){
+  const v = parseInt(document.getElementById('dueSoonInput').value);
+  if(!(v>0 && v<=180)){ alert('Enter a number of days from 1 to 180.'); return; }
+  DB.dueSoonDays = v; saveData(DB); toast('Saved.');
 }
 function saveNotifyEmail(){
   const val = document.getElementById('notifyEmailInput').value.trim();
