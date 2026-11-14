@@ -1013,11 +1013,23 @@ async function buildPdf(){if(!window.jspdf){$("export-msg").textContent="The PDF
   doc.lastAutoTable.finalY=dy-14;}
  sec("Hazard Identification and Compliance");doc.autoTable({...st,startY:y,head:[r.hazHead],body:r.haz.length?clean(r.haz):[["","None documented.","","","","",""]],columnStyles:{0:{cellWidth:38},5:{fontStyle:"bold"}}});
  sec("Corrective Action Plan");doc.autoTable({...st,startY:y,head:[r.capHead],body:r.cap.length?clean(r.cap):[["","None documented.","","","","","",""]],columnStyles:{0:{cellWidth:38},1:{cellWidth:220}}});
- {const sigBody=grid3(r.sign).map(r=>r.map((c,i)=>c&&typeof c==="object"?{content:"",_sig:c.sig,styles:{minCellHeight:52}}:(i%2&&spanOf(r,i)>1?{content:c,colSpan:spanOf(r,i)}:c)));const sigOpt={...st,body:sigBody,columnStyles:{0:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},2:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},3:{cellWidth:90},4:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},5:{cellWidth:170}},bodyStyles:{minCellHeight:28}};let sigH=120;try{const tmp=new window.jspdf.jsPDF({orientation:"landscape",unit:"pt",format:"letter"});tmp.autoTable({...sigOpt,startY:0});sigH=tmp.lastAutoTable.finalY;}catch(e){}sec("Signature Section",sigH+14);doc.autoTable({...sigOpt,startY:y,pageBreak:"avoid",margin:{left:m,right:m,bottom:30},didDrawCell:d=>{ const raw=d.cell.raw; if(d.section==="body"&&raw&&raw._sig!==undefined){ const q=(S.sigs||[])[raw._sig]; if(q&&q.img){ try{ doc.addImage(q.img,"PNG",d.cell.x+4,d.cell.y+3,Math.min(120,d.cell.width-8),36); }catch(e){} doc.setFontSize(6.5); doc.setTextColor(86,100,118); doc.text("Signed electronically · "+(q.at||""),d.cell.x+4,d.cell.y+d.cell.height-4); doc.setTextColor(0); } } },});}
+ {const PHs=doc.internal.pageSize.getHeight(), mk=c=>grid3(r.sign).map(rw=>rw.map((cc,ii)=>cc&&typeof cc==="object"?{content:"",_sig:cc.sig,styles:{minCellHeight:c?36:52}}:(ii%2&&spanOf(rw,ii)>1?{content:cc,colSpan:spanOf(rw,ii)}:cc)));
+ const sigOpt=c=>({...st,body:mk(c),styles:{...st.styles,cellPadding:c?3:4},columnStyles:{0:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},2:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},3:{cellWidth:90},4:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:88},5:{cellWidth:170}},bodyStyles:{minCellHeight:c?22:28}});
+ const meas=c=>{try{const tmp=new window.jspdf.jsPDF({orientation:"landscape",unit:"pt",format:"letter"});tmp.autoTable({...sigOpt(c),startY:0});return tmp.lastAutoTable.finalY}catch(e){return c?84:110}};
+ window.__drawSig=(y0,c)=>{doc.setFont("times","bold");doc.setFontSize(12);doc.setTextColor(0);doc.text("Signature Section",m,y0);
+  doc.autoTable({...sigOpt(c),startY:y0+6,pageBreak:"avoid",margin:{left:m,right:m,bottom:24},didDrawCell:d=>{ const raw=d.cell.raw; if(d.section==="body"&&raw&&raw._sig!==undefined){ const q=(S.sigs||[])[raw._sig]; if(q&&q.img){ const ih=c?22:36; try{ doc.addImage(q.img,"PNG",d.cell.x+4,d.cell.y+3,Math.min(ih*600/180,d.cell.width-8),ih); }catch(e){} doc.setFontSize(6.5); doc.setTextColor(86,100,118); doc.text("Signed electronically · "+(q.at||""),d.cell.x+4,d.cell.y+d.cell.height-3); doc.setTextColor(0); } } }});
+  return doc.lastAutoTable.finalY;};
+ const y0=(doc.lastAutoTable?doc.lastAutoTable.finalY:y)+20, room=PHs-26-y0, hN=meas(false)+6, hC=meas(true)+6;
+ window.__sigOnPhoto=false;
+ if(hN<=room) window.__drawSig(y0,false);
+ else if(hC<=room) window.__drawSig(y0,true);
+ else if(r.photos.length) window.__sigOnPhoto=true;
+ else {doc.addPage();window.__drawSig(m,false);}
+}
  { const SG=null; if(SG){ let yy=doc.lastAutoTable.finalY+14; if(yy>doc.internal.pageSize.getHeight()-90){doc.addPage();yy=m;} ["Prepared by","Reviewed by"].forEach((lb,k)=>{ const q=SG[k]; const x=m+k*260; if(q&&q.img){ try{doc.addImage(q.img,"PNG",x,yy,160,48);}catch(e){} } doc.setDrawColor(120); doc.line(x,yy+50,x+230,yy+50); doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.text(lb.toUpperCase(),x,yy+60); doc.setFont("helvetica","normal"); if(q) doc.text((q.name+"  ·  "+q.at+"  ·  Signed electronically"),x,yy+71); }); y=yy+80; } }
  if(r.photos.length){const PH=doc.internal.pageSize.getHeight();const cw=PW-2*m;
   for(let i=0;i<r.photos.length;i++){const p=r.photos[i];doc.addPage();let top=m;
-   if(i===0){doc.setFont("times","bold");doc.setFontSize(12);doc.text("Inspection Photographs",m,m+6);top=m+16}
+   if(i===0){let hy=m+6;if(window.__sigOnPhoto){hy=window.__drawSig(m+6,true)+24;}doc.setFont("times","bold");doc.setFontSize(12);doc.text("Inspection Photographs",m,hy);top=hy+10}
    const ch=PH-top-m-28;const[w,h]=await imgSize(p.src);const k=Math.min(cw/w,ch/h);const iw=w*k,ih=h*k;const x=m+(cw-iw)/2;
    doc.addImage(p.src,"JPEG",x,top,iw,ih,undefined,"NONE");doc.setLineWidth(1);doc.setDrawColor(0);doc.rect(x,top,iw,ih);
    doc.setFont("times","bold");doc.setFontSize(11);doc.text(stripEmoji(p.cap),PW/2,top+ih+16,{align:"center"})}}
