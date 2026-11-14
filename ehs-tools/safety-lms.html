@@ -3716,3 +3716,128 @@ showScreen('screen-welcome');
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
 })();
 /*/GOTHER*/</script>
+<script>/*GUI*/
+/* Display options for every app: a small gear button (bottom left) opens a panel with theme, text size,
+   high contrast, bigger touch targets, bold text and reduced motion. Saved on this device. Never printed. */
+(function(){
+  if(window.__GUI) return; window.__GUI=1;
+  var KEY='g_ui_v1', D={theme:'auto',size:100,contrast:false,touch:false,bold:false,motion:false,hide:false}, P={};
+  try{ P=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ P={}; }
+  for(var k in D) if(!(k in P)) P[k]=D[k];
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
+  var root=document.documentElement, appTheme=null;
+  function es(){ return (root.lang||'').toLowerCase().slice(0,2)==='es'; }
+  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)'},
+          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)'}};
+  function t(k){ return TX[es()?'es':'en'][k]; }
+  /* does the app's own CSS know about a dark theme? */
+  function hasDark(){
+    var txt=''; [].forEach.call(document.querySelectorAll('style'),function(s){ if(s.id!=='gui-css') txt+=s.textContent; });
+    return /data-theme=["']?dark/.test(txt);
+  }
+  var darkOK=null;
+  function css(){
+    if(document.getElementById('gui-css')) return;
+    var st=document.createElement('style'); st.id='gui-css';
+    st.textContent=
+      '#gui-btn{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:9990;width:40px;height:40px;border-radius:50%;border:1px solid rgba(15,41,66,.35);background:#fff;color:#0f2942;box-shadow:0 2px 8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.82;padding:0}'+
+      '#gui-btn:hover,#gui-btn:focus-visible{opacity:1}#gui-btn svg{width:20px;height:20px}'+
+      '#gui-hot{position:fixed;left:0;bottom:0;width:22px;height:22px;z-index:9989;background:transparent;border:0;padding:0;cursor:pointer}'+
+      '#gui-pan{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:9991;width:min(330px,calc(100vw - 20px));max-height:calc(100vh - 80px);overflow:auto;background:#fff;color:#14202e;border:1px solid #c9d3de;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:14px;font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:left;zoom:1}'+
+      '#gui-pan *{box-sizing:border-box}#gui-pan h2{margin:0 0 10px;font-size:16px;font-weight:700;color:#0f2942}#gui-pan .gui-gr{margin:0 0 12px}#gui-pan .gui-lb{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#566476;margin:0 0 6px}'+
+      '#gui-pan .gui-seg{display:flex;border:1px solid #0f2942;border-radius:9px;overflow:hidden}#gui-pan .gui-seg button{flex:1;min-height:40px;border:0;border-left:1px solid #0f2942;background:#fff;color:#0f2942;font:600 14px system-ui,-apple-system,sans-serif;cursor:pointer;padding:0 6px}#gui-pan .gui-seg button:first-child{border-left:0}#gui-pan .gui-seg button[aria-pressed=true]{background:#0f2942;color:#fff}'+
+      '#gui-pan label.gui-ck{display:flex;align-items:center;gap:10px;min-height:40px;cursor:pointer;font-size:15px;color:#14202e}#gui-pan label.gui-ck input{width:20px;height:20px;accent-color:#0f2942;margin:0;flex:none}'+
+      '#gui-pan .gui-ft{display:flex;gap:8px;margin-top:6px}#gui-pan .gui-ft button{flex:1;min-height:40px;border-radius:9px;border:1px solid #0f2942;font:700 14px system-ui,-apple-system,sans-serif;cursor:pointer}#gui-pan .gui-ft .gui-x{background:#0f2942;color:#fff}#gui-pan .gui-ft .gui-r{background:#fff;color:#0f2942}#gui-pan .gui-nt{font-size:12px;color:#566476;margin:10px 0 0}'+
+      '@media screen{'+
+        'html.gui-inv{filter:invert(.9) hue-rotate(180deg);background:#fff}'+
+        'html.gui-inv img,html.gui-inv video,html.gui-inv canvas,html.gui-inv picture,html.gui-inv svg image,html.gui-inv iframe,html.gui-inv [style*="background-image"],html.gui-inv #gui-btn,html.gui-inv #gui-pan{filter:invert(1) hue-rotate(180deg)}'+
+        'html.gui-hc body{filter:contrast(1.2)}html.gui-hc.gui-inv body{filter:contrast(1.15)}'+
+        'html.gui-hc :focus-visible{outline:3px solid #d9531e!important;outline-offset:2px}'+
+        'html.gui-bold body{font-weight:600}html.gui-bold b,html.gui-bold strong,html.gui-bold h1,html.gui-bold h2,html.gui-bold h3{font-weight:800}'+
+        'html.gui-touch button,html.gui-touch .btn,html.gui-touch select,html.gui-touch input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),html.gui-touch [role=button],html.gui-touch [role=tab]{min-height:50px}'+
+        'html.gui-touch input[type=checkbox],html.gui-touch input[type=radio]{width:24px;height:24px}'+
+        'html.gui-motion *,html.gui-motion *::before,html.gui-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}'+
+      '}'+
+      '@media print{#gui-btn,#gui-hot,#gui-pan{display:none!important}html{zoom:1!important;filter:none!important}}';
+    (document.head||root).appendChild(st);
+  }
+  function apply(){
+    if(darkOK===null) darkOK=hasDark();
+    if(appTheme===null) appTheme=root.getAttribute('data-theme');
+    var cl=root.classList;
+    cl.remove('gui-inv');
+    if(P.theme==='auto'){ if(appTheme==null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme',appTheme); }
+    else if(darkOK){ root.setAttribute('data-theme',P.theme); }
+    else { if(P.theme==='dark') cl.add('gui-inv'); }
+    var z0=root.style.zoom; root.style.zoom=P.size&&P.size!==100?(P.size/100):'';
+    cl.toggle('gui-hc',!!P.contrast); cl.toggle('gui-touch',!!P.touch); cl.toggle('gui-bold',!!P.bold); cl.toggle('gui-motion',!!P.motion);
+    var b=document.getElementById('gui-btn'); if(b) b.style.display=P.hide?'none':'';
+    if(z0!==root.style.zoom){ try{ window.dispatchEvent(new Event('resize')); }catch(e){} }
+    setTimeout(function(){ if(typeof place==='function') place(); },60);
+  }
+  var GEAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  function seg(name,opts){
+    return '<div class="gui-gr"><div class="gui-lb">'+t(name)+'</div><div class="gui-seg" role="group" aria-label="'+t(name)+'">'+opts.map(function(o){
+      return '<button type="button" data-k="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(String(P[name])===String(o[0]))+'">'+o[1]+'</button>'; }).join('')+'</div></div>';
+  }
+  function ck(name){ return '<label class="gui-ck"><input type="checkbox" data-k="'+name+'"'+(P[name]?' checked':'')+'>'+t(name)+'</label>'; }
+  function close(){ var p=document.getElementById('gui-pan'); if(p) p.remove(); var b=document.getElementById('gui-btn'); if(b) b.setAttribute('aria-expanded','false'); }
+  function open(){
+    css(); close();
+    var p=document.createElement('div'); p.id='gui-pan'; p.setAttribute('role','dialog'); p.setAttribute('aria-label',t('t'));
+    p.innerHTML='<h2>'+t('t')+'</h2>'+
+      seg('theme',[['auto',t('auto')],['light',t('light')],['dark',t('dark')]])+
+      seg('size',[[90,'A−'],[100,'A'],[115,'A+'],[130,'A++']])+
+      '<div class="gui-gr">'+ck('contrast')+ck('touch')+ck('bold')+ck('motion')+ck('hide')+'</div>'+
+      '<div class="gui-ft"><button type="button" class="gui-r">'+t('reset')+'</button><button type="button" class="gui-x">'+t('close')+'</button></div>'+
+      '<p class="gui-nt">'+t('note')+'</p>';
+    document.body.appendChild(p); posPan(p);
+    p.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      if(b.dataset.k){ var v=b.dataset.v; P[b.dataset.k]=b.dataset.k==='size'?Number(v):v; save(); apply(); open(); var f=document.querySelector('#gui-pan button[data-k="'+b.dataset.k+'"][data-v="'+v+'"]'); if(f) f.focus(); }
+      else if(b.classList.contains('gui-r')){ for(var k in D) P[k]=D[k]; save(); apply(); open(); }
+      else if(b.classList.contains('gui-x')){ close(); var g=document.getElementById('gui-btn'); if(g&&!P.hide) g.focus(); }
+    });
+    p.addEventListener('change',function(e){ var i=e.target; if(i.dataset&&i.dataset.k){ P[i.dataset.k]=!!i.checked; save(); apply(); } });
+    p.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+    var b=document.getElementById('gui-btn'); if(b) b.setAttribute('aria-expanded','true');
+    var first=p.querySelector('button[aria-pressed=true]'); if(first) first.focus();
+  }
+  /* keep the gear off other fixed bars and buttons (sync pill, action bars): try the bottom corners, moving up if taken */
+  var spot={side:'left',bottom:10};
+  function fixedAt(x,y){ var el=document.elementFromPoint(x,y); while(el&&el!==document.body&&el!==root){ var ps=getComputedStyle(el).position; if(ps==='fixed'||ps==='sticky') return true; el=el.parentElement; } return false; }
+  function place(){
+    var b=document.getElementById('gui-btn'); if(!b||P.hide) return;
+    var z=parseFloat(root.style.zoom)||1, W=innerWidth/z, H=innerHeight/z, old=b.style.visibility; b.style.visibility='hidden';
+    var hot=document.getElementById('gui-hot'); if(hot) hot.style.display='none';
+    var pick=null;
+    for(var off=10; off<=Math.min(330,H-60) && !pick; off+=46){
+      for(var si=0; si<2 && !pick; si++){ var side=si?'right':'left', cx=side==='left'?30:W-30, cy=H-off-20;
+        if(!fixedAt(cx,cy)&&!fixedAt(cx-14,cy-14)&&!fixedAt(cx+14,cy+14)) pick={side:side,bottom:off}; } }
+    spot=pick||{side:'left',bottom:10};
+    b.style.visibility=old; if(hot) hot.style.display='';
+    b.style.left=spot.side==='left'?'calc(10px + env(safe-area-inset-left,0px))':'auto';
+    b.style.right=spot.side==='right'?'calc(10px + env(safe-area-inset-right,0px))':'auto';
+    b.style.bottom='calc('+spot.bottom+'px + env(safe-area-inset-bottom,0px))';
+    var p=document.getElementById('gui-pan'); if(p) posPan(p);
+  }
+  function posPan(p){ p.style.left=spot.side==='left'?'calc(10px + env(safe-area-inset-left,0px))':'auto'; p.style.right=spot.side==='right'?'calc(10px + env(safe-area-inset-right,0px))':'auto';
+    p.style.bottom='calc('+(spot.bottom+48)+'px + env(safe-area-inset-bottom,0px))'; p.style.maxHeight='calc(100vh - '+(spot.bottom+70)+'px)'; }
+  function toggle(){ if(document.getElementById('gui-pan')) close(); else open(); }
+  function start(){
+    css(); apply();
+    var b=document.createElement('button'); b.id='gui-btn'; b.type='button'; b.innerHTML=GEAR;
+    function lab(){ b.title=t('t'); b.setAttribute('aria-label',t('t')); } lab();
+    b.setAttribute('aria-expanded','false'); b.addEventListener('click',toggle);
+    var h=document.createElement('button'); h.id='gui-hot'; h.type='button'; h.tabIndex=-1; h.setAttribute('aria-hidden','true'); h.addEventListener('click',function(){ if(P.hide) toggle(); });
+    document.body.appendChild(h); document.body.appendChild(b); apply();
+    setTimeout(place,300); setTimeout(place,1800); var rt; addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(place,250); });
+    document.addEventListener('keydown',function(e){ if(e.altKey&&!e.ctrlKey&&!e.metaKey&&(e.key==='d'||e.key==='D'||e.code==='KeyD')){ e.preventDefault(); toggle(); } });
+    document.addEventListener('pointerdown',function(e){ var p=document.getElementById('gui-pan'); if(p&&!p.contains(e.target)&&e.target.id!=='gui-btn'&&!(e.target.closest&&e.target.closest('#gui-btn'))) close(); },true);
+    new MutationObserver(function(){ lab(); if(document.getElementById('gui-pan')) open(); }).observe(root,{attributes:true,attributeFilter:['lang']});
+    /* an app that switches its own theme later: remember its choice for Auto */
+    new MutationObserver(function(){ if(P.theme==='auto'){ appTheme=root.getAttribute('data-theme'); } }).observe(root,{attributes:true,attributeFilter:['data-theme']});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
+})();
+/*/GUI*/</script>
