@@ -188,6 +188,21 @@
   .st-pill.current{background:var(--green-bg);color:var(--green);} .st-pill.due{background:#fdecdf;color:#a63b10;}
   .st-pill.expired{background:var(--red);color:#fff;} .st-pill.failed{background:var(--red-bg);color:var(--red);}
   .st-pill.notstarted{background:var(--steel-100);color:var(--muted);}
+  .badge.assigned{background:#fff1c2;color:#7a5a00;}
+  .stripe-assigned{background:#f2b705;}
+  .assign-note{font-size:12px;background:#fff8e1;border-left:4px solid #f2b705;padding:6px 9px;border-radius:4px;margin-top:8px;line-height:1.4;}
+  .assign-note.late{background:var(--red-bg);border-left-color:var(--red);}
+  .topic-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px;}
+  .topic-chip{border:1.5px solid #c9d0d9;background:#fff;border-radius:20px;padding:5px 10px;font:600 12px system-ui,sans-serif;cursor:pointer;color:#1c2430;}
+  .topic-chip.on{background:#0f2942;border-color:#0f2942;color:#fff;}
+  .find-row{border:1.5px solid #d7dce2;border-radius:10px;padding:10px 12px;margin-top:8px;background:#fff;}
+  .find-row .src{font:700 10.5px ui-monospace,Consolas,monospace;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+  .find-row .txt{font-size:13.5px;margin:4px 0 6px;line-height:1.4;}
+  .trend{display:flex;align-items:center;gap:8px;font-size:13px;margin:5px 0;}
+  .trend .bar{height:10px;background:#d9531e;border-radius:5px;min-width:4px;}
+  .emp-pick{max-height:220px;overflow:auto;border:1.5px solid #d7dce2;border-radius:8px;padding:6px 10px;background:#fff;}
+  .emp-pick label{display:flex;gap:8px;align-items:center;font-weight:500;text-transform:none;letter-spacing:0;font-size:13.5px;margin:6px 0;}
+  .emp-pick input{width:auto;margin:0;}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:16px;}
   .course-title{font-size:15.5px;font-weight:700;margin:0 0 4px;}
@@ -494,17 +509,19 @@
       <button class="tab active" data-tab="courses" onclick="setAdminTab('courses')">Courses</button>
       <button class="tab" data-tab="employees" onclick="setAdminTab('employees')">Employees</button>
       <button class="tab" data-tab="reports" onclick="setAdminTab('reports')">Reports</button>
+      <button class="tab" data-tab="needs" onclick="setAdminTab('needs')">Training Needs</button>
       <button class="tab" data-tab="settings" onclick="setAdminTab('settings')">Settings</button>
     </div>
     <div id="adminCourses" class="admin-pane"></div>
     <div id="adminEmployees" class="admin-pane hidden"></div>
     <div id="adminReports" class="admin-pane hidden"></div>
+    <div id="adminNeeds" class="admin-pane hidden"></div>
     <div id="adminSettings" class="admin-pane hidden"></div>
   </div>
 
 </div>
 
-<!--GSYNC--><script>window.GSYNC_LS={id:'lms',keys:{'ehs_lms_data_v19':{fields:{employees:'array',completions:'array',courses:'array',locations:'kv',areas:'kv',adminPin:'kv',notifyEmail:'kv'}},'gei_logo':{type:'kv'}}};</script>
+<!--GSYNC--><script>window.GSYNC_LS={id:'lms',keys:{'ehs_lms_data_v19':{fields:{employees:'array',completions:'array',courses:'array',locations:'kv',areas:'kv',adminPin:'kv',notifyEmail:'kv',dueSoonDays:'kv',assignments:'array'}},'gei_logo':{type:'kv'}}};</script>
 <script>
 /* GLogo: interchangeable logo (built-in or an uploaded image). Saved per app, shared with the team through sync. */
 (function(){
@@ -2300,6 +2317,12 @@ const UI_STRINGS = {
   certIdLabel: ["CERT ID","ID DE CERTIFICADO"],
   validUntilLabel: ["VALID UNTIL","V\u00c1LIDO HASTA"],
   badgeCurrent: ["Current","Vigente"],
+  badgeAssigned: ["Assigned","Asignado"],
+  badgeOverdue: ["Overdue","Atrasado"],
+  assignedDue: ["Assigned refresher \u00b7 due","Repaso asignado \u00b7 fecha l\u00edmite"],
+  assignedWhy: ["Why","Motivo"],
+  assignBanner: ["refresher training assigned to you.","capacitaci\u00f3n de repaso asignada a usted."],
+  assignBannerPl: ["refresher trainings assigned to you.","capacitaciones de repaso asignadas a usted."],
   badgeDue: ["Due Soon","Por Vencer"],
   badgeExpired: ["Expired","Vencido"],
   expiresOn: ["Expires","Vence"],
@@ -2463,6 +2486,84 @@ function certStatus(employeeId, course){
   const days = Math.round((end - today) / 86400000);
   return { code: days < 0 ? 'expired' : (days <= dueSoonDays() ? 'due' : 'current'), last, pass, expires, days };
 }
+/* ---------- Training Needs: hazard topics, findings, assigned refreshers ---------- */
+const TOPICS = [
+  {k:'guard', en:'Machine guarding', es:'Guardas de m\u00e1quinas', kw:['guard','pinch','nip point','caught','conveyor','atrap','guarda','banda','rodillo']},
+  {k:'loto', en:'Lockout / hazardous energy', es:'Bloqueo / energ\u00eda peligrosa', kw:['lockout','lock out','loto','tagout','hazardous energy','stored energy','candado','bloqueo','energ\u00eda peligrosa','energia peligrosa','smp-','tsp-']},
+  {k:'elec', en:'Electrical', es:'El\u00e9ctrico', kw:['electric','el\u00e9ctric','panel','extension cord','exposed wire','shock','mcc','arc flash','descarga','cable']},
+  {k:'slip', en:'Slips, trips, falls', es:'Resbalones y ca\u00eddas', kw:['slip','trip','wet floor','spill','resbal','tropez','tropiez','piso mojado','derrame']},
+  {k:'height', en:'Fall protection / ladders', es:'Protecci\u00f3n contra ca\u00eddas', kw:['ladder','fall protection','harness','scissor lift','aerial lift','roof','mezzanine','escalera','arn\u00e9s','arnes','altura','plataforma elevadora']},
+  {k:'pit', en:'Forklift / vehicles', es:'Montacargas / veh\u00edculos', kw:['forklift','fork lift','pallet jack','shuttle truck','yard truck','powered industrial','montacargas','patin','veh\u00edculo','vehiculo','tractor']},
+  {k:'chem', en:'Chemicals / HazCom', es:'Qu\u00edmicos / HazCom', kw:['chemical','sds','hazcom','hazard communication','ghs','corrosive','chlorine','sanitizer','qu\u00edmic','quimic','cloro','corrosiv']},
+  {k:'fire', en:'Fire / hot work', es:'Incendio / trabajo en caliente', kw:['hot work','weld','cutting torch','torch','fire','extinguisher','burn','soldad','incendio','extintor','quemad']},
+  {k:'egress', en:'Exits / emergency', es:'Salidas / emergencias', kw:['exit','egress','evacuat','emergency','salida','evacua','emergencia']},
+  {k:'ergo', en:'Ergonomics / lifting', es:'Ergonom\u00eda / levantamiento', kw:['ergonom','lifting','heavy lift','strain','sprain','over-reach','overreach','twist','repetitive','levant','torced','esguince','postura']},
+  {k:'heat', en:'Heat illness', es:'Enfermedad por calor', kw:['heat illness','heat stress','shade','hydrat','calor','sombra','hidrat']},
+  {k:'ppe', en:'PPE', es:'EPP', kw:['ppe','glove','safety glasses','goggle','hearing protection','face shield','hi-vis','hard hat','epp','guante','lentes','careta','tapones']},
+  {k:'house', en:'Housekeeping / storage', es:'Orden y limpieza', kw:['housekeeping','clutter','storage','stacking','stacked','debris','orden','limpieza','almacen','apilad']},
+  {k:'nh3', en:'Ammonia / refrigeration', es:'Amon\u00edaco / refrigeraci\u00f3n', kw:['ammonia','nh3','refrigeration','amon\u00edaco','amoniaco','refrigeraci']},
+  {k:'gas', en:'Compressed gas', es:'Gas comprimido', kw:['compressed gas','cylinder','acetylene','oxygen','propane','cilindro','acetileno','ox\u00edgeno','oxigeno','propano']}
+];
+function topicLabel(k, es){ const t = TOPICS.find(x=>x.k===k); return t ? (es ? t.es : t.en) : k; }
+function topicsFromText(text){
+  const low = ' ' + String(text||'').toLowerCase() + ' ';
+  return TOPICS.filter(t => t.kw.some(w => { const i = low.indexOf(w); return i >= 0 && !/[a-z\u00e1\u00e9\u00ed\u00f3\u00fa\u00f1]/.test(low.charAt(i-1)); })).map(t=>t.k);
+}
+/* Topics a course covers: what the admin tagged, otherwise guessed from its title and description. */
+function courseTopics(c){
+  if(Array.isArray(c.topics) && c.topics.length) return c.topics;
+  return topicsFromText([c.title, c.titleEs, c.description, c.descriptionEs].join(' '));
+}
+function coursesForTopics(topics){
+  if(!topics.length) return [];
+  /* the finding's first topics count most */
+  return DB.courses.map(c=>({ c, hits: courseTopics(c).reduce((n,t)=>{ const i = topics.indexOf(t); return i<0 ? n : n + (topics.length - i); }, 0) })).filter(x=>x.hits).sort((a,b)=>b.hits-a.hits).map(x=>x.c);
+}
+function assignmentsList(){ if(!Array.isArray(DB.assignments)) DB.assignments = []; return DB.assignments; }
+function assignmentDone(a, empId){
+  return DB.completions.some(c=>c.employeeId===empId && c.courseId===a.courseId && c.passed && new Date(c.date) >= new Date(a.created));
+}
+function todayStr(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDay(ymd){ if(!ymd) return ''; const p = ymd.split('-'); return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString(); }
+/* Open (not yet completed) assignment for this employee and course, if any. */
+function pendingAssignment(empId, courseId){
+  const open = assignmentsList().filter(a=>!a.deleted && a.courseId===courseId && (a.employeeIds||[]).indexOf(empId)>=0 && !assignmentDone(a, empId));
+  if(!open.length) return null;
+  open.sort((a,b)=> (a.due||'9') < (b.due||'9') ? -1 : 1);
+  const a = open[0];
+  return { a, late: !!a.due && a.due < todayStr() };
+}
+
+/* Findings saved on this device by the other EHS field tools (same website only, e.g. the GitHub copy). */
+const NM_OUT_TOPIC = {caught:'guard', fall:'slip', vehicle:'pit', elec:'elec', chem:'chem', burn:'fire', ergo:'ergo', heat:'heat', cut:'ppe'};
+const BBS_TOPIC = {ppe:'ppe', body:'ergo', fork:'pit', house:'house', 'fire.pinch':'guard', 'fire.load':'house', 'fire.path':'pit', 'energy.guard':'guard', 'energy.loto':'loto', 'energy.estop':'guard'};
+function readLS(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function deviceFindings(){
+  const out = [], since = Date.now() - 90*86400000;
+  const recent = d => { const t = new Date(d||0).getTime(); return !t || t >= since; };
+  (readLS('gei_hazard_v1_reports') || []).forEach(r=>{
+    if(!r || r.example || r.deleted || !recent(r.when)) return;
+    const topics = new Set(topicsFromText([r.desc, r.fix, r.catText, r.area].join(' ')));
+    if(r.cat && r.cat !== 'other' && TOPICS.some(t=>t.k===r.cat)) topics.add(r.cat);
+    out.push({ id:'hz_'+r.id, app:'Hazard Report', ref:r.ref||'', facility:r.facility||'', area:r.area||'', date:r.when, text:r.desc||r.catText||'', topics:[...topics] });
+  });
+  (readLS('gei_nearmiss_v1_reports') || []).forEach(r=>{
+    if(!r || r.example || r.deleted || !recent(r.date)) return;
+    const topics = new Set(topicsFromText([r.desc, r.ca, r.action, r.area].join(' ')));
+    (r.outcomes||[]).forEach(o=>{ if(NM_OUT_TOPIC[o]) topics.add(NM_OUT_TOPIC[o]); });
+    out.push({ id:'nm_'+r.id, app:'Near-Miss', ref:r.ref||'', facility:r.facility||'', area:r.area||'', date:r.date, text:r.desc||'', topics:[...topics] });
+  });
+  (readLS('gei_bbs_v1_cards') || []).forEach(r=>{
+    if(!r || r.example || r.deleted || !recent(r.date)) return;
+    const risky = Object.keys(r.marks||{}).filter(k=>r.marks[k]==='r');
+    if(!risky.length) return;
+    const topics = new Set();
+    risky.forEach(k=>{ const t = BBS_TOPIC[k] || BBS_TOPIC[k.split('.')[0]]; if(t) topics.add(t); });
+    out.push({ id:'bbs_'+r.id, app:'BBS Card', ref:'', facility:r.facility||'', area:r.task||r.equip||'', date:r.date, text:'At-risk behavior observed: ' + ([...topics].map(t=>topicLabel(t)).join(', ') || risky.join(', ')) + (r.task ? ' \u2014 ' + r.task : ''), topics:[...topics] });
+  });
+  return out.sort((a,b)=> new Date(b.date||0) - new Date(a.date||0));
+}
+
 function statusText(st, es){
   const T = { notstarted:['Not Started','No Iniciado'], failed:['Failed','Reprobado'], current:['Current','Vigente'], due:['Due Soon','Por Vencer'], expired:['Expired','Vencido'] }[st.code];
   return es ? T[1] : T[0];
@@ -2473,18 +2574,20 @@ function showDashboard(){
   if(heading) heading.textContent = ui('myTraining');
   const grid = document.getElementById('dashboardGrid');
   if(DB.courses.length===0){ grid.innerHTML = `<p class="muted">${ui('noCourses')}</p>`; return; }
-  const STS = DB.courses.map(c=>({ c, st: certStatus(SESSION.employeeId, c) }));
-  const nExp = STS.filter(x=>x.st.code==='expired').length, nDue = STS.filter(x=>x.st.code==='due').length;
+  const STS = DB.courses.map(c=>({ c, st: certStatus(SESSION.employeeId, c), pa: pendingAssignment(SESSION.employeeId, c.id) }));
+  const nExp = STS.filter(x=>x.st.code==='expired').length, nDue = STS.filter(x=>x.st.code==='due').length, nAs = STS.filter(x=>x.pa).length;
   let banner = '';
-  if(nExp || nDue){
+  if(nExp || nDue || nAs){
     const parts = [];
+    if(nAs) parts.push(`<b>${nAs}</b> ${nAs===1 ? ui('assignBanner') : ui('assignBannerPl')}`);
     if(nExp) parts.push(`<b>${nExp}</b> ${nExp===1 ? ui('renewBannerExpired') : ui('renewBannerExpiredPl')}`);
     if(nDue) parts.push(`<b>${nDue}</b> ${ui('renewBannerDue')}`);
     banner = `<div class="renew-banner ${nExp?'bad':''}" style="grid-column:1/-1">\u26a0\ufe0f ${parts.join('<br>')}</div>`;
   }
   const rank = { expired:0, due:1, failed:2, notstarted:3, current:4 };
-  STS.sort((a,b)=> rank[a.st.code] - rank[b.st.code]);
-  grid.innerHTML = banner + STS.map(({c, st})=>{
+  const rk = x => x.pa ? (x.pa.late ? -2 : -1) : rank[x.st.code];
+  STS.sort((a,b)=> rk(a) - rk(b));
+  grid.innerHTML = banner + STS.map(({c, st, pa})=>{
     const comp = st.last;
     let stripe='stripe-notstarted', badge='notstarted', badgeText=ui('badgeNotStarted'), meta='';
     if(st.code==='current'){ stripe='stripe-pass'; badge='pass'; badgeText = courseRenewMonths(c) ? ui('badgeCurrent') : ui('badgePassed'); }
@@ -2496,7 +2599,12 @@ function showDashboard(){
       meta = `${ui('scoreLabel')} ${shown.score}% \u00b7 ${new Date(shown.date).toLocaleDateString()}`;
       if(st.expires) meta += `<br>${st.code==='expired' ? ui('expiredOn') : ui('expiresOn')} ${st.expires.toLocaleDateString()}${st.code==='due' ? ` \u00b7 ${st.days} ${ui('daysLeft')}` : ''}`;
     }
-    const renew = st.code==='expired' || st.code==='due';
+    let renew = st.code==='expired' || st.code==='due';
+    let note = '';
+    if(pa){
+      if(st.code!=='expired'){ stripe = pa.late ? 'stripe-expired' : 'stripe-assigned'; badge = pa.late ? 'expired' : 'assigned'; badgeText = pa.late ? ui('badgeOverdue') : ui('badgeAssigned'); }
+      note = `<div class="assign-note ${pa.late?'late':''}"><b>${ui('assignedDue')} ${pa.a.due ? fmtDay(pa.a.due) : '\u2014'}</b>${pa.a.reason ? `<br>${ui('assignedWhy')}: ${escapeHtml(pa.a.reason)}` : ''}</div>`;
+    }
     return `
     <div class="tag">
       <div class="top-stripe ${stripe}"></div>
@@ -2504,6 +2612,7 @@ function showDashboard(){
       <div class="course-desc">${escapeHtml(tr(c.description, c.descriptionEs)||'')}</div>
       <span class="badge ${badge}">${badgeText}</span>
       ${meta?`<div class="meta-line">${meta}</div>`:''}
+      ${note}
       <div class="card-actions">
         <button class="btn small" onclick="startCourse('${c.id}')">${renew ? ui('renewBtn') : (comp ? ui('retakeBtn') : ui('startBtn'))}</button>
         ${st.pass ? `<button class="btn ghost small" onclick="viewCertificate('${c.id}')">${ui('certificateBtn')}</button>` : ''}
@@ -3264,6 +3373,7 @@ function setAdminTab(tab){
   if(tab==='courses') renderAdminCourses();
   if(tab==='employees') renderAdminEmployees();
   if(tab==='reports') renderAdminReports();
+  if(tab==='needs') renderAdminNeeds();
   if(tab==='settings') renderAdminSettings();
 }
 
@@ -3316,6 +3426,9 @@ function renderCourseEditorModal(){
     <input type="text" id="ed_desc" value="${escapeHtml(EDITOR.description)}" placeholder="One line shown on the course card">
     <label>Passing Score (%)</label>
     <input type="number" id="ed_pass" value="${EDITOR.passScore}" min="0" max="100" style="max-width:120px;">
+    <label>Hazard Topics</label>
+    <p class="muted small" style="margin:2px 0 0;">Used to suggest this course when a finding comes up. Tap to turn on or off.</p>
+    <div class="topic-chips" id="ed_topics">${TOPICS.map(t=>`<button type="button" class="topic-chip ${courseTopics(EDITOR).indexOf(t.k)>=0?'on':''}" data-k="${t.k}" onclick="this.classList.toggle('on')">${t.en}</button>`).join('')}</div>
     <label>Certification Renewal</label>
     <div style="max-width:220px;">${renewSelectHtml('ed_renew', courseRenewMonths(EDITOR))}</div>
     <p class="muted small" style="margin-top:4px;">When a pass expires, the course shows as Expired and the employee is asked to retake it. Forklift operators must be re-evaluated at least every 3 years (Title 8 \u00a73668).</p>
@@ -3417,6 +3530,7 @@ function saveCourseEditor(){
   EDITOR.description = document.getElementById('ed_desc').value.trim();
   EDITOR.passScore = Math.max(0, Math.min(100, parseInt(document.getElementById('ed_pass').value)||80));
   EDITOR.renewMonths = Math.max(0, parseInt(document.getElementById('ed_renew').value)||0);
+  EDITOR.topics = [...document.querySelectorAll('#ed_topics .topic-chip.on')].map(b=>b.dataset.k);
   if(!EDITOR.title){ alert('Please enter a course title.'); return; }
   for(const q of EDITOR.quiz){
     if(!q.question.trim()){ alert('Every quiz question needs question text.'); return; }
@@ -3676,6 +3790,120 @@ function renderAdminSettings(){
       <button class="btn danger small" onclick="resetAllData()">Reset All Data</button>
     </div>
   `;
+}
+let NEED = { topics: [], text: '', source: null, facility: '' };
+function renderAdminNeeds(){
+  const el = document.getElementById('adminNeeds');
+  const finds = deviceFindings();
+  const counts = {}; finds.forEach(f=>f.topics.forEach(t=>{ counts[t] = (counts[t]||0) + 1; }));
+  const trend = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,6);
+  const max = trend.length ? counts[trend[0]] : 1;
+  const active = assignmentsList().filter(a=>!a.deleted).sort((a,b)=> (a.due||'') < (b.due||'') ? -1 : 1);
+  el.innerHTML = `
+    <div class="fieldset">
+      <h3>Assign Refresher from a Finding</h3>
+      <p class="muted small">Describe what was found (a hazard, near miss, at-risk behavior, or audit finding). The app picks the hazard topic and suggests matching courses. Assigned workers see it at the top of their training screen until they pass it.</p>
+      <label>What was found</label>
+      <textarea id="nd_text" rows="3" placeholder="e.g. Operator reached into the bagger to clear a jam without locking out." oninput="needTextChanged()">${escapeHtml(NEED.text)}</textarea>
+      ${NEED.source ? `<p class="small muted" style="margin:4px 0 0;">From ${escapeHtml(NEED.source)} <button class="btn ghost small" onclick="NEED.source=null;NEED.text='';NEED.topics=[];renderAdminNeeds()">Clear</button></p>` : ''}
+      <label>Hazard topic</label>
+      <div class="topic-chips" id="nd_topics">${TOPICS.map(t=>`<button type="button" class="topic-chip ${NEED.topics.indexOf(t.k)>=0?'on':''}" onclick="toggleNeedTopic('${t.k}')">${t.en}</button>`).join('')}</div>
+      <label>Course to assign</label>
+      <div id="nd_courseBox"></div>
+      <label>Who needs it</label>
+      <div class="row" style="max-width:340px;"><select id="nd_fac" onchange="NEED.facility=this.value;renderNeedEmployees()">
+        <option value="">All Facilities</option>${DB.locations.map(l=>`<option value="${escapeHtml(l)}" ${NEED.facility===l?'selected':''}>${escapeHtml(l)}</option>`).join('')}
+      </select></div>
+      <div class="flex-between" style="margin-top:6px;"><span class="small muted" id="nd_count"></span><span><button class="btn ghost small" onclick="pickAllNeedEmployees(true)">Select all</button> <button class="btn ghost small" onclick="pickAllNeedEmployees(false)">Clear</button></span></div>
+      <div class="emp-pick" id="nd_emps"></div>
+      <div class="row mt14" style="max-width:420px;">
+        <div><label style="margin-top:0">Due date</label><input type="date" id="nd_due" value="${(()=>{ const d=new Date(Date.now()+14*86400000); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })()}"></div>
+      </div>
+      <button class="btn mt14" onclick="createAssignment()">Assign Refresher</button>
+    </div>
+
+    <div class="fieldset">
+      <h3>Findings from Your Other Tools</h3>
+      ${finds.length ? `
+        <p class="muted small">Last 90 days from Hazard Report, Near-Miss Reporter, and BBS Card on this device. Tap Assign to start a refresher from one.</p>
+        ${trend.length ? `<div style="margin:8px 0 12px;"><div class="small" style="font-weight:700;margin-bottom:4px;">Top topics</div>${trend.map(t=>`<div class="trend"><span style="width:170px">${topicLabel(t)}</span><span class="bar" style="width:${Math.round(counts[t]/max*140)}px"></span><b>${counts[t]}</b></div>`).join('')}</div>` : ''}
+        ${finds.slice(0,25).map((f,i)=>`<div class="find-row"><div class="src">${escapeHtml(f.app)}${f.ref?' \u00b7 '+escapeHtml(f.ref):''} \u00b7 ${escapeHtml(f.facility||'')} ${f.area?'\u00b7 '+escapeHtml(f.area):''} \u00b7 ${f.date?new Date(f.date).toLocaleDateString():''}</div>
+          <div class="txt">${escapeHtml(f.text.slice(0,220))}</div>
+          <div class="flex-between"><span class="small muted">${f.topics.length ? f.topics.map(t=>topicLabel(t)).join(', ') : 'No topic matched'}</span><button class="btn small" onclick="needFromFinding(${i})">Assign</button></div></div>`).join('')}
+      ` : `<p class="muted small">No findings found on this device. When Hazard Report, Near-Miss Reporter, or BBS Card are used from the same website as this app (for example your GitHub copy), their last 90 days of records show here with suggested training. In other copies, type the finding in the box above.</p>`}
+    </div>
+
+    <div class="fieldset">
+      <h3>Assigned Refreshers</h3>
+      ${active.length ? `<div class="table-wrap"><table><thead><tr><th>Course</th><th>Why</th><th>Due</th><th>Done</th><th></th></tr></thead><tbody>
+        ${active.map(a=>{ const c = DB.courses.find(x=>x.id===a.courseId); const ids = a.employeeIds||[]; const done = ids.filter(id=>assignmentDone(a,id)).length;
+          const late = a.due && a.due < todayStr() && done < ids.length;
+          const pending = ids.filter(id=>!assignmentDone(a,id)).map(id=>{ const e = DB.employees.find(x=>x.id===id); return e ? e.name : '(removed)'; });
+          return `<tr><td>${escapeHtml(c ? c.title : '(deleted course)')}</td><td class="small">${escapeHtml(a.reason||'')}${a.source?`<br><span class="muted">${escapeHtml(a.source)}</span>`:''}</td>
+            <td>${a.due ? fmtDay(a.due) : '\u2014'}${late ? ' <span class="st-pill expired">Overdue</span>' : ''}</td>
+            <td><span class="st-pill ${done===ids.length?'current':(late?'expired':'due')}">${done} / ${ids.length}</span>${pending.length && done<ids.length ? `<div class="small muted" style="margin-top:3px">Waiting: ${escapeHtml(pending.join(', '))}</div>` : ''}</td>
+            <td><button class="btn danger small" onclick="removeAssignment('${a.id}')">Remove</button></td></tr>`; }).join('')}
+      </tbody></table></div>` : '<p class="muted small">No refreshers assigned yet.</p>'}
+    </div>`;
+  el._finds = finds;
+  renderNeedCourses(); renderNeedEmployees();
+}
+function needTextChanged(){
+  NEED.text = document.getElementById('nd_text').value;
+  const auto = topicsFromText(NEED.text);
+  if(auto.join() !== (NEED._auto||[]).join()){ NEED.topics = [...new Set(NEED.topics.filter(t=>(NEED._auto||[]).indexOf(t)<0).concat(auto))]; NEED._auto = auto;
+    document.querySelectorAll('#nd_topics .topic-chip').forEach((b,i)=>b.classList.toggle('on', NEED.topics.indexOf(TOPICS[i].k)>=0)); renderNeedCourses(); }
+}
+function toggleNeedTopic(k){
+  const i = NEED.topics.indexOf(k); if(i>=0) NEED.topics.splice(i,1); else NEED.topics.push(k);
+  document.querySelectorAll('#nd_topics .topic-chip').forEach((b,j)=>b.classList.toggle('on', NEED.topics.indexOf(TOPICS[j].k)>=0));
+  renderNeedCourses();
+}
+function renderNeedCourses(){
+  const box = document.getElementById('nd_courseBox'); if(!box) return;
+  const prev = (document.getElementById('nd_course')||{}).value;
+  const sug = coursesForTopics(NEED.topics), rest = DB.courses.filter(c=>sug.indexOf(c)<0);
+  box.innerHTML = `<select id="nd_course" data-no-other>
+    <option value="">\u2014 Select a course \u2014</option>
+    ${sug.length ? `<optgroup label="Suggested for this finding">${sug.map(c=>`<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('')}</optgroup>` : ''}
+    <optgroup label="${sug.length ? 'Other courses' : 'All courses'}">${rest.map(c=>`<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('')}</optgroup>
+  </select>${NEED.topics.length && !sug.length ? `<p class="small" style="color:#a63b10;margin:4px 0 0;">No course is tagged for ${NEED.topics.map(t=>topicLabel(t)).join(', ')} yet. Tag one in Courses \u2192 Edit \u2192 Hazard Topics, or build a new course.</p>` : ''}`;
+  const sel = document.getElementById('nd_course');
+  if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev; else if(sug.length) sel.value = sug[0].id;
+}
+function renderNeedEmployees(){
+  const box = document.getElementById('nd_emps'); if(!box) return;
+  const checked = new Set([...box.querySelectorAll('input:checked')].map(i=>i.value));
+  const list = DB.employees.filter(e=>!NEED.facility || e.location===NEED.facility).sort((a,b)=>a.name.localeCompare(b.name));
+  box.innerHTML = list.length ? list.map(e=>`<label><input type="checkbox" value="${e.id}" ${checked.has(e.id)?'checked':''} onchange="countNeedEmployees()"> ${escapeHtml(e.name)}${e.role?' \u00b7 '+escapeHtml(e.role):''}${!NEED.facility && e.location?' \u00b7 '+escapeHtml(e.location):''}</label>`).join('') : '<p class="muted small">No employees at this facility.</p>';
+  countNeedEmployees();
+}
+function countNeedEmployees(){ const n = document.querySelectorAll('#nd_emps input:checked').length; const el = document.getElementById('nd_count'); if(el) el.textContent = n + ' selected'; }
+function pickAllNeedEmployees(on){ document.querySelectorAll('#nd_emps input').forEach(i=>{ i.checked = on; }); countNeedEmployees(); }
+function needFromFinding(i){
+  const f = (document.getElementById('adminNeeds')._finds||[])[i]; if(!f) return;
+  NEED.text = f.text; NEED.topics = f.topics.slice(); NEED._auto = topicsFromText(f.text);
+  NEED.source = f.app + (f.ref ? ' ' + f.ref : '') + (f.date ? ', ' + new Date(f.date).toLocaleDateString() : '');
+  if(f.facility && DB.locations.indexOf(f.facility) >= 0) NEED.facility = f.facility;
+  renderAdminNeeds(); document.getElementById('adminNeeds').scrollIntoView({behavior:'smooth'});
+}
+function createAssignment(){
+  const courseId = document.getElementById('nd_course').value;
+  const ids = [...document.querySelectorAll('#nd_emps input:checked')].map(i=>i.value);
+  const due = document.getElementById('nd_due').value;
+  const reason = document.getElementById('nd_text').value.trim();
+  if(!courseId){ alert('Pick a course to assign.'); return; }
+  if(!ids.length){ alert('Select at least one employee.'); return; }
+  assignmentsList().push({ id: uid('asg'), courseId, employeeIds: ids, reason: reason.slice(0,300), topics: NEED.topics.slice(), source: NEED.source || '', due, created: new Date().toISOString() });
+  saveData(DB);
+  const c = DB.courses.find(x=>x.id===courseId);
+  toast(`Assigned "${c ? c.title : ''}" to ${ids.length} employee${ids.length===1?'':'s'}.`);
+  NEED = { topics: [], text: '', source: null, facility: NEED.facility };
+  renderAdminNeeds();
+}
+async function removeAssignment(id){
+  if(!(await askConfirm('Remove this assigned refresher? Completion records are kept.', 'Remove'))) return;
+  DB.assignments = assignmentsList().filter(a=>a.id!==id); saveData(DB); renderAdminNeeds();
 }
 function setCourseRenewal(courseId, val){
   const c = DB.courses.find(x=>x.id===courseId); if(!c) return;
