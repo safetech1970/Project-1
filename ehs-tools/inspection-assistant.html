@@ -1048,7 +1048,7 @@ const OPTS={
  facility:["Field Operations","East Plant","South Plant","West Plant","Main Plant","North Plant"],
  person:[],
  title:["EHS Coordinator","EHS Technician","EHS Manager","Maintenance Supervisor","Production Supervisor","Plant Manager"],
- area:["Receiving","Packing line","Processing line","Inspection conveyor","Palletizing","Sanitation / wash-down","Cold storage","Ammonia machine room","Shipping dock","Warehouse","Battery charging area","Chemical storage","Maintenance shop","Electrical room / MCC","Yard / parking lot","Break room","Office"]};
+ area:["Receiving","Loading","Washline","Seed","Production","Packing line","Processing line","Inspection conveyor","Palletizing","Sanitation / wash-down","Cold storage","Ammonia machine room","Shipping dock","Warehouse","Battery charging area","Chemical storage","Maintenance shop","Electrical room / MCC","Yard / parking lot","Break room","Office"]};
 var COMBOS=[["h-facility","facility"],["h-inspector","person"],["o-area","area"],["g-prepBy","person"],["g-title","title"],["g-revBy","person"]];
 function readExtra(k){try{return JSON.parse(localStorage.getItem("sar-opts-"+k)||"[]")}catch(e){return[]}}
 function optList(k){return[...new Set([...OPTS[k],...readExtra(k)])]}
