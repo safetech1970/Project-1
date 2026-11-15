@@ -956,16 +956,16 @@ function model(){const c=counts();const F=[...S.findings].sort(byId);const h=S.h
 const subtitle=()=>{const h=S.header;return[h.facility,h.type,h.frequency==="Quarterly"&&h.quarter?h.quarter:""].map(x=>String(x||"").trim()).filter(Boolean).join("  ·  ")};
 const grid3=rows=>{const out=[];for(let i=0;i<rows.length;i+=3){const r=[];for(let k=0;k<3;k++){const p=rows[i+k];if(p)r.push(p[0],p[1]??"")}out.push(r)}return out};
 const spanOf=(r,i)=>i===r.length-1?7-r.length:1;
-function renderPaper(){const r=model();const nl=s=>esc(s).replace(/\n/g,"<br>");
+function renderPaper(){const r=model(),RP=rp();if(!RP.photos)r.photos=[];const nl=s=>esc(s).replace(/\n/g,"<br>");
  const sigQ=c=>c&&typeof c==="object"&&c.sig!==undefined?((S.sigs||[])[c.sig]||null):undefined;
 const sigCellHtml=q=>q&&q.img?`<img alt="" src="${q.img}" style="height:46px;width:auto;display:block;background:#fff"><div style="font-size:10px;color:#566476">Signed electronically · ${esc(q.at||"")}</div>`:"";
 const g6=(rows,tall)=>`<table class="g6${tall?" tall":""}">${grid3(rows).map(r=>`<tr>${r.map((c,i)=>i%2?`<td${spanOf(r,i)>1?` colspan="${spanOf(r,i)}"`:""}>${sigQ(c)!==undefined?sigCellHtml(sigQ(c)):nl(c||"")}</td>`:`<th>${esc(c)}</th>`).join("")}</tr>`).join("")}</table>`;
  const kv=rows=>`<table class="kv"><tr><th>Field</th><th>Information</th></tr>${rows.map(([a,b])=>`<tr><th>${esc(a)}</th><td>${nl(b||"")}</td></tr>`).join("")}</table>`;
  const tbl=(head,rows,lvlCol)=>`<table><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr>${rows.length?rows.map(r=>`<tr>${r.map((c,i)=>`<td${i===lvlCol?' class="lvl"':""}>${nl(c)}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${head.length}">None documented.</td></tr>`}</table>`;
- $("paper").innerHTML=`<img class="r-logo" src="${LOGO}" alt="Company logo"><h1>SAFETY INSPECTION REPORT</h1>${subtitle()?`<p class="r-sub">${esc(subtitle())}</p>`:""}${g6(r.header)}<h3 class="disc-h">${DISCLAIMER.title}</h3><p><b>${DISCLAIMER.sub}</b></p>${DISCLAIMER.paras.map(x=>`<p class="disc">${esc(x)}</p>`).join("")}
+ $("paper").innerHTML=`${RP.logo?`<img class="r-logo" src="${LOGO}" alt="Company logo">`:""}<h1>SAFETY INSPECTION REPORT</h1>${subtitle()?`<p class="r-sub">${esc(subtitle())}</p>`:""}${g6(r.header)}${RP.disc?`<h3 class="disc-h">${DISCLAIMER.title}</h3><p><b>${DISCLAIMER.sub}</b></p>${DISCLAIMER.paras.map(x=>`<p class="disc">${esc(x)}</p>`).join("")}`:""}
  <h3>Hazard Identification and Compliance</h3>${tbl(r.hazHead,r.haz,5)}
  <h3>Corrective Action Plan</h3>${tbl(r.capHead,r.cap,-1)}
- <h3>Signature Section</h3>${g6(r.sign,true)}
+ ${RP.sig?`<h3>Signature Section</h3>${g6(r.sign,true)}`:""}
  ${r.photos.length?`<h3>Inspection Photographs</h3><div class="photos">${r.photos.map(p=>`<figure><img src="${p.src}" alt="${esc(p.cap)}"><figcaption>${esc(p.cap)}</figcaption></figure>`).join("")}</div>`:""}`}
 
 function fileBase(){const d=S.header.inspDate||S.header.reportDate||today();const f=(S.header.facility||"Inspection").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_").slice(0,40)||"Inspection";return `Safety_Inspection_Report_${f}_${d}`}
@@ -977,25 +977,26 @@ async function offer(filename,data){const msg=$("export-msg");if(!downloads){exp
 
 /* Word */
 $("dl-docx").onclick=async()=>{if(!window.docx){$("export-msg").textContent="The Word library didn't load. Reload the page and try again.";return}
- const D=window.docx,r=model();const B={style:D.BorderStyle.SINGLE,size:8,color:"000000"};const borders={top:B,bottom:B,left:B,right:B,insideHorizontal:B,insideVertical:B};
- const run=(t,bold)=>new D.TextRun({text:t,bold:!!bold,font:"Times New Roman",size:22});
+ const D=window.docx,r=model(),RP=rp(),TT=rpTheme(),WF=RP.font==="sans"?"Arial":"Times New Roman",SZ=n=>Math.round(n*(window.GRPT?GRPT.scale():1)),HX=c=>GRPT.hex(c);if(!RP.photos)r.photos=[];const B={style:D.BorderStyle.SINGLE,size:8,color:"000000"};const borders={top:B,bottom:B,left:B,right:B,insideHorizontal:B,insideVertical:B};
+ const run=(t,bold)=>new D.TextRun({text:t,bold:!!bold,font:WF,size:SZ(22)});
  let KN=false;
 const para=(t,bold)=>String(t||"").split("\n").map(x=>new D.Paragraph({keepNext:KN,children:[run(x,bold)]}));
- const cell=(t,bold,shade)=>new D.TableCell({children:para(t,bold).length?para(t,bold):[new D.Paragraph("")],shading:shade?{type:D.ShadingType.CLEAR,color:"auto",fill:"E7E7E7"}:undefined,margins:{top:60,bottom:60,left:90,right:90}});
+ const cell=(t,bold,shade)=>new D.TableCell({children:para(t,bold).length?para(t,bold):[new D.Paragraph("")],shading:shade?{type:D.ShadingType.CLEAR,color:"auto",fill:TT?HX(TT.f):"E7E7E7"}:undefined,margins:{top:60,bottom:60,left:90,right:90}});
  const CWF=orient()==="portrait"?10800/14400:1, cw=a=>a.map(w=>Math.round(w*CWF));
  const table=(head,rows,widths)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:widths&&(widths.reduce((a,b)=>a+b,0)>11000?cw(widths):widths),borders,rows:[new D.TableRow({tableHeader:true,children:head.map(h=>cell(h,true,true))}),...(rows.length?rows:[head.map((_,i)=>i===1?"None documented.":"")]).map(rw=>new D.TableRow({cantSplit:true,children:rw.map((c,i)=>cell(c,head[i]==="Risk Level"))}))]});
- const g6=(rows,tall)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:cw([1700,2860,1700,2860,1700,2860]),borders,rows:grid3(rows).map((r,ri,all)=>{KN=!!tall&&ri<all.length-1;const row=new D.TableRow({cantSplit:true,height:tall?{value:540,rule:D.HeightRule.ATLEAST}:undefined,children:r.map((c,i)=>{if(!(i%2))return cell(c,true,true);if(c&&typeof c==="object"){const q=(S.sigs||[])[c.sig];return new D.TableCell({children:q&&q.img?[new D.Paragraph({keepNext:KN,children:[new D.ImageRun({data:dataURLBytes(q.img),transformation:{width:150,height:45}})]}),new D.Paragraph({keepNext:KN,children:[new D.TextRun({text:"Signed electronically · "+(q.at||""),font:"Times New Roman",size:16,color:"566476"})]})]:[new D.Paragraph("")],margins:{top:60,bottom:60,left:90,right:90}})}const sp=spanOf(r,i);if(sp<2)return cell(c||"");const tc=cell(c||"");return new D.TableCell({columnSpan:sp,children:para(c||"").length?para(c||""):[new D.Paragraph("")],margins:{top:60,bottom:60,left:90,right:90}})})});KN=false;return row;})});
+ const g6=(rows,tall)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:cw([1700,2860,1700,2860,1700,2860]),borders,rows:grid3(rows).map((r,ri,all)=>{KN=!!tall&&ri<all.length-1;const row=new D.TableRow({cantSplit:true,height:tall?{value:540,rule:D.HeightRule.ATLEAST}:undefined,children:r.map((c,i)=>{if(!(i%2))return cell(c,true,true);if(c&&typeof c==="object"){const q=(S.sigs||[])[c.sig];return new D.TableCell({children:q&&q.img?[new D.Paragraph({keepNext:KN,children:[new D.ImageRun({data:dataURLBytes(q.img),transformation:{width:150,height:45}})]}),new D.Paragraph({keepNext:KN,children:[new D.TextRun({text:"Signed electronically · "+(q.at||""),font:WF,size:SZ(16),color:"566476"})]})]:[new D.Paragraph("")],margins:{top:60,bottom:60,left:90,right:90}})}const sp=spanOf(r,i);if(sp<2)return cell(c||"");const tc=cell(c||"");return new D.TableCell({columnSpan:sp,children:para(c||"").length?para(c||""):[new D.Paragraph("")],margins:{top:60,bottom:60,left:90,right:90}})})});KN=false;return row;})});
  const kv=(rows,withHead)=>new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},columnWidths:cw([3200,10200]),borders,rows:[...(withHead?[new D.TableRow({tableHeader:true,children:[cell("Field",true,true),cell("Information",true,true)]})]:[]),...rows.map(([a,b])=>new D.TableRow({cantSplit:true,children:[cell(a,true),cell(b||"")]}))]});
- const H=t=>new D.Paragraph({keepNext:true,keepLines:true,spacing:{before:240,after:100},children:[new D.TextRun({text:t,bold:true,font:"Times New Roman",size:24})]});
- const kids=[new D.Paragraph({children:[new D.ImageRun({data:dataURLBytes(LOGO),transformation:((window.GLogo&&GLogo.current())?GLogo.fit(216,58):{width:216,height:58})})]}),new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:200},children:[new D.TextRun({text:"SAFETY INSPECTION REPORT",bold:true,font:"Times New Roman",size:32})]}),...(subtitle()?[new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:200},children:[new D.TextRun({text:subtitle(),font:"Times New Roman",size:24})]})]:[]),g6(r.header),
-  new D.Paragraph({spacing:{before:240,after:80},shading:{type:D.ShadingType.CLEAR,color:"auto",fill:"E7ECF3"},children:[new D.TextRun({text:DISCLAIMER.title,bold:true,font:"Times New Roman",size:26})]}),
+ const H=t=>new D.Paragraph({keepNext:true,keepLines:true,spacing:{before:240,after:100},children:[new D.TextRun({text:t,bold:true,font:WF,size:SZ(24),color:TT?HX(TT.a):undefined})]});
+ const kids=[...(RP.logo?[new D.Paragraph({children:[new D.ImageRun({data:dataURLBytes(LOGO),transformation:((window.GLogo&&GLogo.current())?GLogo.fit(216,58):{width:216,height:58})})]})]:[]),new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:200},children:[new D.TextRun({text:"SAFETY INSPECTION REPORT",bold:true,font:WF,size:SZ(32),color:TT?HX(TT.a):undefined})]}),...(subtitle()?[new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:200},children:[new D.TextRun({text:subtitle(),font:WF,size:SZ(24)})]})]:[]),g6(r.header),
+  ...(RP.disc?[
+  new D.Paragraph({spacing:{before:240,after:80},shading:{type:D.ShadingType.CLEAR,color:"auto",fill:TT?HX(TT.f):"E7ECF3"},children:[new D.TextRun({text:DISCLAIMER.title,bold:true,font:WF,size:SZ(26),color:TT?HX(TT.a):undefined})]}),
   new D.Paragraph({spacing:{after:80},children:[run(DISCLAIMER.sub,true)]}),
-  ...DISCLAIMER.paras.map(x=>new D.Paragraph({alignment:D.AlignmentType.JUSTIFIED,spacing:{after:100},children:[run(x)]})),
+  ...DISCLAIMER.paras.map(x=>new D.Paragraph({alignment:D.AlignmentType.JUSTIFIED,spacing:{after:100},children:[run(x)]}))]:[]),
   H("Hazard Identification and Compliance"),table(r.hazHead,r.haz,CWF<1?[700,2450,1200,1250,1300,1300,2600]:[900,3900,1600,1400,1400,1200,3000]),
   H("Corrective Action Plan"),table(r.capHead,r.cap,CWF<1?[700,2700,1500,1300,900,1300,1300,1100]:[900,4300,1500,1600,1300,1500,1200,1100]),
-  H("Signature Section"),g6(r.sign,true)];
+  ...(RP.sig?[H("Signature Section"),g6(r.sign,true)]:[])];
 
- if(r.photos.length){kids.push(new D.Paragraph({pageBreakBefore:true,spacing:{after:120},children:[new D.TextRun({text:"Inspection Photographs",bold:true,font:"Times New Roman",size:24})]}));
+ if(r.photos.length){kids.push(new D.Paragraph({pageBreakBefore:true,spacing:{after:120},children:[new D.TextRun({text:"Inspection Photographs",bold:true,font:WF,size:SZ(24),color:TT?HX(TT.a):undefined})]}));
   for(let i=0;i<r.photos.length;i++){const p=r.photos[i];const[w,h]=await imgSize(p.src);const k=Math.min(900/w,560/h);const W=Math.round(w*k),Hh=Math.round(h*k);
    kids.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,keepNext:true,pageBreakBefore:i>0,children:[new D.ImageRun({data:dataURLBytes(p.src),transformation:{width:W,height:Hh}})]}),
     new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{before:80},children:[run(p.cap,true)]}))}}
@@ -1004,24 +1005,34 @@ const para=(t,bold)=>String(t||"").split("\n").map(x=>new D.Paragraph({keepNext:
  try{const blob=await D.Packer.toBlob(doc);await offer(fileBase()+".docx",blob)}catch(e){$("export-msg").textContent="The Word file couldn't be built. Try PDF or Copy report."}};
 
 /* PDF */
+window.GRPT_SECTIONS=["logo","disc","photos","sig"];
+function rp(){return window.GRPT?GRPT.get():{theme:"orig",font:"def",size:"std",logo:true,disc:true,photos:true,sig:true}}
+function rpTheme(){return window.GRPT?GRPT.theme():null}
+function rpPreview(){const R=rp(),T=rpTheme(),k=window.GRPT?GRPT.scale():1,h=c=>"#"+GRPT.hex(c);let css="";
+ if(R.font==="sans")css+=".paper{font-family:Arial,Helvetica,sans-serif!important}";else if(R.font==="serif")css+=".paper{font-family:\"Times New Roman\",Times,serif!important}";
+ if(k!==1)css+=".paper{font-size:"+(11*k)+"pt!important}.paper table{font-size:"+(10.5*k)+"pt!important}.paper h1{font-size:"+(18*k)+"pt!important}.paper h3{font-size:"+(12*k)+"pt!important}";
+ if(T)css+=".paper th{background:"+h(T.f)+"!important}.paper .disc-h{background:"+h(T.f)+"!important}.paper h1,.paper h3{color:"+h(T.a)+"!important}";
+ let el=document.getElementById("grpt-paper");if(!el){el=document.createElement("style");el.id="grpt-paper";document.head.appendChild(el)}el.textContent=css}
+window.addEventListener("grpt",()=>{rpPreview();try{if(!document.getElementById("view-report").hidden)renderPaper()}catch(e){}});
+setTimeout(rpPreview,0);
 function orient(){try{const v=localStorage.getItem("sar-orient");return v==="portrait"?"portrait":"landscape"}catch(e){return "landscape"}}
 function applyOrient(){const v=orient();const el=document.getElementById("orient");if(el)el.value=v;const st=document.getElementById("pgori");if(st)st.textContent="@page{size:letter "+v+"}";}
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="orient"){try{localStorage.setItem("sar-orient",e.target.value)}catch(_){}applyOrient();}});
 setTimeout(applyOrient,0);
-async function buildPdf(){const ORI=orient(),P=ORI==="portrait",LW=P?66:88;if(!window.jspdf){$("export-msg").textContent="The PDF library didn't load. Reload the page and try again.";return null}
- const r=model();const doc=new window.jspdf.jsPDF({orientation:ORI,unit:"pt",format:"letter"});const PW=doc.internal.pageSize.getWidth(),m=36;
+async function buildPdf(){const ORI=orient(),P=ORI==="portrait",LW=P?66:88,RP=rp(),TA=rpTheme();if(!window.jspdf){$("export-msg").textContent="The PDF library didn't load. Reload the page and try again.";return null}
+ const r=model();if(!RP.photos)r.photos=[];const doc=new window.jspdf.jsPDF({orientation:ORI,unit:"pt",format:"letter"});const PW=doc.internal.pageSize.getWidth(),m=36;
  const clean=rows=>rows.map(rw=>rw.map(c=>stripEmoji(c)));
  const st={theme:"grid",styles:{font:"times",fontSize:10,lineWidth:1,lineColor:[0,0,0],textColor:[0,0,0],cellPadding:4,valign:"top"},headStyles:{fillColor:[231,231,231],fontStyle:"bold",textColor:[0,0,0]},margin:{left:m,right:m},showHead:"everyPage",rowPageBreak:"avoid"};
- {const _lf=(window.GLogo&&GLogo.current())?GLogo.fit(150,39.9):{width:150,height:39.9};doc.addImage(LOGO,"PNG",m,m-12,_lf.width,_lf.height);}doc.setFont("times","bold");doc.setFontSize(16);doc.text("SAFETY INSPECTION REPORT",PW/2,m+42,{align:"center"});const sub=subtitle();if(sub){doc.setFont("times","normal");doc.setFontSize(12);doc.text(sub,PW/2,m+58,{align:"center"})}
- let y=subtitle()?m+70:m+56;const sec=(t,need=70)=>{y=doc.lastAutoTable?doc.lastAutoTable.finalY+20:y;if(y+need>doc.internal.pageSize.getHeight()-32){doc.addPage();y=m}doc.setFont("times","bold");doc.setFontSize(12);doc.text(t,m,y);y+=6};
+ if(RP.logo){const _lf=(window.GLogo&&GLogo.current())?GLogo.fit(150,39.9):{width:150,height:39.9};doc.addImage(LOGO,"PNG",m,m-12,_lf.width,_lf.height);}doc.setFont("times","bold");doc.setFontSize(16);if(TA)doc.setTextColor(...TA.a);doc.text("SAFETY INSPECTION REPORT",PW/2,m+42,{align:"center"});doc.setTextColor(0);const sub=subtitle();if(sub){doc.setFont("times","normal");doc.setFontSize(12);doc.text(sub,PW/2,m+58,{align:"center"})}
+ let y=subtitle()?m+70:m+56;const sec=(t,need=70)=>{y=doc.lastAutoTable?doc.lastAutoTable.finalY+20:y;if(y+need>doc.internal.pageSize.getHeight()-32){doc.addPage();y=m}doc.setFont("times","bold");doc.setFontSize(12);if(TA)doc.setTextColor(...TA.a);doc.text(t,m,y);doc.setTextColor(0);y+=6};
  doc.autoTable({...st,startY:y,body:grid3(r.header).map(r=>r.map((c,i)=>i%2&&spanOf(r,i)>1?{content:c,colSpan:spanOf(r,i)}:c)),columnStyles:{0:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:LW},2:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:LW},4:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:LW}}});
- {let dy=doc.lastAutoTable.finalY+20;const tw=PW-2*m;doc.setFillColor(231,236,243);doc.rect(m,dy-13,tw,19,"F");doc.setFont("times","bold");doc.setFontSize(13);doc.text(DISCLAIMER.title,m+5,dy);dy+=18;
+ if(RP.disc){let dy=doc.lastAutoTable.finalY+20;const tw=PW-2*m;doc.setFillColor(231,236,243);doc.rect(m,dy-13,tw,19,"F");doc.setFont("times","bold");doc.setFontSize(13);doc.text(DISCLAIMER.title,m+5,dy);dy+=18;
   doc.setFontSize(11);doc.text(DISCLAIMER.sub,m,dy);dy+=14;doc.setFont("times","normal");doc.setFontSize(10.5);
   for(const x of DISCLAIMER.paras){const ls=doc.splitTextToSize(x,tw);if(dy+ls.length*13>doc.internal.pageSize.getHeight()-m){doc.addPage();dy=m}doc.text(ls,m,dy);dy+=ls.length*13+6}
   doc.lastAutoTable.finalY=dy-14;}
  sec("Hazard Identification and Compliance");doc.autoTable({...st,startY:y,head:[r.hazHead],body:r.haz.length?clean(r.haz):[["","None documented.","","","","",""]],columnStyles:{0:{cellWidth:38},5:{fontStyle:"bold"}}});
  sec("Corrective Action Plan");doc.autoTable({...st,startY:y,head:[r.capHead],body:r.cap.length?clean(r.cap):[["","None documented.","","","","","",""]],columnStyles:{0:{cellWidth:38},1:{cellWidth:(P?140:220)}}});
- {const PHs=doc.internal.pageSize.getHeight(), mk=c=>grid3(r.sign).map(rw=>rw.map((cc,ii)=>cc&&typeof cc==="object"?{content:"",_sig:cc.sig,styles:{minCellHeight:c?36:52}}:(ii%2&&spanOf(rw,ii)>1?{content:cc,colSpan:spanOf(rw,ii)}:cc)));
+ window.__sigOnPhoto=false;if(RP.sig){const PHs=doc.internal.pageSize.getHeight(), mk=c=>grid3(r.sign).map(rw=>rw.map((cc,ii)=>cc&&typeof cc==="object"?{content:"",_sig:cc.sig,styles:{minCellHeight:c?36:52}}:(ii%2&&spanOf(rw,ii)>1?{content:cc,colSpan:spanOf(rw,ii)}:cc)));
  const sigOpt=c=>({...st,body:mk(c),styles:{...st.styles,cellPadding:c?3:4},columnStyles:{0:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:LW},2:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:LW},3:{cellWidth:(P?66:90)},4:{fontStyle:"bold",fillColor:[231,231,231],cellWidth:LW},5:{cellWidth:(P?128:170)}},bodyStyles:{minCellHeight:c?22:28}});
  const meas=c=>{try{const tmp=new window.jspdf.jsPDF({orientation:ORI,unit:"pt",format:"letter"});tmp.autoTable({...sigOpt(c),startY:0});return tmp.lastAutoTable.finalY}catch(e){return c?84:110}};
  window.__drawSig=(y0,c)=>{doc.setFont("times","bold");doc.setFontSize(12);doc.setTextColor(0);doc.text("Signature Section",m,y0);
