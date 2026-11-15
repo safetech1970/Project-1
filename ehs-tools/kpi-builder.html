@@ -1412,7 +1412,12 @@ function loadLib(url,test){ if(test()) return Promise.resolve(); if(libs[url]) r
 
 /* PDF (jsPDF built-in fonts are WinAnsi: avoid ≤ ≥ ▲ ▼) */
 var RGB={good:[29,116,70],warn:[154,100,0],bad:[180,35,24],none:[150,160,172]}, BG={good:[227,243,234],warn:[253,243,214],bad:[253,232,230],none:[240,242,245]};
-function pdfHeader(doc,title,sub,PW){ doc.setFillColor(15,41,66); doc.rect(0,0,PW,74,'F'); var x=window.GEI_HDR?window.GEI_HDR(doc,36,74):36;
+var HBH=74;
+function pdfHeader(doc,title,sub,PW){ var LG=window.GEI_LOGO, CEN=!!LG&&!(window.GRPT&&GRPT.get().logopos==='left');
+  if(CEN){ HBH=110; doc.setFillColor(15,41,66); doc.rect(0,0,PW,HBH,'F'); var lh=34, lw=LG.w*lh/LG.h; if(lw>170){ lw=170; lh=lw*LG.h/LG.w; }
+    doc.setFillColor(255,255,255); doc.roundedRect((PW-lw)/2-8,8,lw+16,lh+10,5,5,'F'); try{ doc.addImage(LG.src,'PNG',(PW-lw)/2,13,lw,lh); }catch(e){}
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text(title,PW/2,76,{align:'center'}); doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(242,183,5); doc.text(sub,PW/2,96,{align:'center'}); doc.setTextColor(20,32,46); return; }
+  HBH=74; doc.setFillColor(15,41,66); doc.rect(0,0,PW,74,'F'); var x=window.GEI_HDR?window.GEI_HDR(doc,36,74):36;
   doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text(title,x,34); doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(242,183,5); doc.text(sub,x,54); doc.setTextColor(20,32,46); }
 function pdfChart(doc,k,ser,tgt,x,y,w,h){ doc.setDrawColor(213,221,230); doc.setLineWidth(0.6); doc.rect(x,y,w,h);
   doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(20,32,46); var nm=doc.splitTextToSize(kname(k),w-12)[0]; doc.text(nm,x+6,y+13);
@@ -1432,7 +1437,7 @@ function buildPdf(){ var c=rCtx(), R=rows(c), J=window.jspdf&&window.jspdf.jsPDF
   function foot(){ var n=doc.getNumberOfPages(); for(var i=1;i<=n;i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(110,120,132); doc.text('Grimmway Produce Group EHS  |  '+L('Generated ','Generado ')+App.today(),M,PH-18); doc.text(L('Page ','Página ')+i+L(' of ',' de ')+n,PW-M,PH-18,{align:'right'}); } }
   pdfHeader(doc,title,sub,PW);
   // summary chips
-  var cnt={good:0,warn:0,bad:0,none:0}; R.forEach(function(r){ cnt[r.st]++; }); var y=96, cw=(PW-2*M-30)/4;
+  var cnt={good:0,warn:0,bad:0,none:0}; R.forEach(function(r){ cnt[r.st]++; }); var y=HBH+22, cw=(PW-2*M-30)/4;
   [['good',L('On target','En meta')],['warn',L('Close to target','Cerca de la meta')],['bad',L('Off target','Fuera de meta')],['none',L('No data','Sin datos')]].forEach(function(s,i){ var x=M+i*(cw+10);
     doc.setFillColor.apply(doc,BG[s[0]]); doc.roundedRect(x,y,cw,40,5,5,'F'); doc.setTextColor.apply(doc,RGB[s[0]]); doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text(String(cnt[s[0]]),x+12,y+26); doc.setFontSize(10); doc.text(s[1],x+40,y+25); });
   y+=58;
@@ -1441,7 +1446,7 @@ function buildPdf(){ var c=rCtx(), R=rows(c), J=window.jspdf&&window.jspdf.jsPDF
   function head(){ doc.setFillColor(231,236,242); doc.rect(M,y,PW-2*M,20,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(86,100,118); var x=M; cols.forEach(function(c,i){ doc.text(c[0].toUpperCase(),i>=2&&i<=4?x+c[1]-6:x+6,y+13,{align:i>=2&&i<=4?'right':'left'}); x+=c[1]; }); y+=20; }
   head();
   R.forEach(function(r,ri){ var nm=doc.splitTextToSize(kname(r.k),cols[0][1]-12), rh=Math.max(30,nm.length*11+12);
-    if(y+rh>PH-40){ doc.addPage(); pdfHeader(doc,title,sub,PW); y=92; head(); }
+    if(y+rh>PH-40){ doc.addPage(); pdfHeader(doc,title,sub,PW); y=HBH+18; head(); }
     if(ri%2){ doc.setFillColor(248,250,252); doc.rect(M,y,PW-2*M,rh,'F'); }
     doc.setDrawColor(222,228,235); doc.line(M,y+rh,PW-M,y+rh);
     var x=M; doc.setTextColor(20,32,46); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text(nm,x+6,y+14); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(110,120,132); doc.text(r.k.cat==='lead'?L('Leading','Preventivo'):L('Lagging','Reactivo'),x+6,y+14+nm.length*11-1); x+=cols[0][1];
@@ -1462,14 +1467,14 @@ function buildPdf(){ var c=rCtx(), R=rows(c), J=window.jspdf&&window.jspdf.jsPDF
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(110,120,132);
   if(y+30<PH-30) doc.text(L('Rates per 200,000 hours worked unless noted. Count targets are per month and add up over longer periods. Dashed line on trends = target.','Tasas por 200,000 horas trabajadas salvo indicación. Las metas de conteo son mensuales y se suman en periodos más largos. Línea punteada = meta.'),M,y+18);
   // trend charts, 6 per page
-  var per=6, gw=(PW-2*M-20)/3, gh=(PH-92-40-12)/2;
+  var per=6, gw=(PW-2*M-20)/3, gh=(PH-(HBH+18)-40-12)/2;
   R.forEach(function(r,i){ if(i%per===0){ doc.addPage(); pdfHeader(doc,L('KPI trends','Tendencias de KPI'),sub+'  |  '+L('last 12 months','últimos 12 meses'),PW); }
-    var j=i%per, gx=M+(j%3)*(gw+10), gy=92+Math.floor(j/3)*(gh+12); pdfChart(doc,r.k,r.ser,targetFor(r.k,[c.m],r.ns),gx,gy,gw,gh); });
+    var j=i%per, gx=M+(j%3)*(gw+10), gy=(HBH+18)+Math.floor(j/3)*(gh+12); pdfChart(doc,r.k,r.ser,targetFor(r.k,[c.m],r.ns),gx,gy,gw,gh); });
   // site matrix
-  if(!c.site){ doc.addPage(); pdfHeader(doc,L('Site comparison','Comparación por sitio'),c.label,PW); var ss=sites(), y2=92, c0=200, cwid=(PW-2*M-c0)/(ss.length+1);
+  if(!c.site){ doc.addPage(); pdfHeader(doc,L('Site comparison','Comparación por sitio'),c.label,PW); var ss=sites(), y2=HBH+18, c0=200, cwid=(PW-2*M-c0)/(ss.length+1);
     doc.setFillColor(231,236,242); doc.rect(M,y2,PW-2*M,26,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(86,100,118); doc.text('KPI',M+6,y2+16);
     ss.concat([L('All sites','Todos')]).forEach(function(s,i){ var ln=doc.splitTextToSize(s,cwid-6); doc.text(ln.slice(0,2),M+c0+i*cwid+cwid/2,y2+(ln.length>1?11:16),{align:'center'}); }); y2+=26;
-    R.forEach(function(r){ if(y2+24>PH-40){ doc.addPage(); pdfHeader(doc,L('Site comparison','Comparación por sitio'),c.label,PW); y2=92; }
+    R.forEach(function(r){ if(y2+24>PH-40){ doc.addPage(); pdfHeader(doc,L('Site comparison','Comparación por sitio'),c.label,PW); y2=HBH+18; }
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(20,32,46); doc.text(doc.splitTextToSize(kname(r.k),c0-10)[0],M+6,y2+15);
       ss.concat(['']).forEach(function(s,i){ var x=M+c0+i*cwid; if(s&&kpiSites(r.k).indexOf(s)<0){ doc.setTextColor(150,160,172); doc.text('n/a',x+cwid/2,y2+15,{align:'center'}); return; }
         var v=agg(r.k,s?[s]:ss,c.months).v, st=status(r.k,v,c.months,s?1:nsOf(r.k,ss)); doc.setFillColor.apply(doc,BG[st]); doc.rect(x+1,y2+1,cwid-2,22,'F'); doc.setTextColor.apply(doc,RGB[st]); doc.setFont('helvetica','bold'); doc.text(fmt(r.k,v),x+cwid/2,y2+15,{align:'center'}); doc.setFont('helvetica','normal'); });
@@ -1487,7 +1492,7 @@ function buildPpt(){ var c=rCtx(), R=rows(c);
       s.addText(title,{x:tx0,y:0.12,w:13-tx0,h:0.45,fontSize:22,bold:true,color:'FFFFFF',fontFace:'Arial'}); if(sub) s.addText(sub,{x:tx0,y:0.52,w:13-tx0,h:0.35,fontSize:13,color:YEL,fontFace:'Arial'});
       s.addText('Grimmway Produce Group EHS  |  '+App.today(),{x:0.45,y:7.08,w:8,h:0.3,fontSize:9,color:'8A96A3',fontFace:'Arial'}); }
     // title slide
-    var s0=p.addSlide(); s0.background={color:NAVY}; if(LG&&LG.src){ var lh0=1.0, lw0=Math.min(4,lh0*LG.w/LG.h); s0.addShape(p.ShapeType.roundRect,{x:0.7,y:0.7,w:lw0+0.4,h:lh0+0.3,fill:{color:'FFFFFF'},rectRadius:0.08}); s0.addImage({data:LG.src,x:0.9,y:0.85,w:lw0,h:lh0}); }
+    var s0=p.addSlide(); s0.background={color:NAVY}; if(LG&&LG.src){ var lh0=1.0, lw0=Math.min(4,lh0*LG.w/LG.h); var cx0=(window.GRPT&&GRPT.get().logopos==='left')?0.7:(13.333-lw0-0.4)/2; s0.addShape(p.ShapeType.roundRect,{x:cx0,y:0.7,w:lw0+0.4,h:lh0+0.3,fill:{color:'FFFFFF'},rectRadius:0.08}); s0.addImage({data:LG.src,x:cx0+0.2,y:0.85,w:lw0,h:lh0}); }
     s0.addText(L('EHS KPI Scorecard','Tarjeta de KPI de EHS'),{x:0.7,y:2.6,w:12,h:1,fontSize:40,bold:true,color:'FFFFFF',fontFace:'Arial'});
     s0.addText(c.where+'  |  '+c.label,{x:0.7,y:3.6,w:12,h:0.6,fontSize:20,color:YEL,fontFace:'Arial'});
     var cnt={good:0,warn:0,bad:0,none:0}; R.forEach(function(r){ cnt[r.st]++; });
@@ -1713,7 +1718,7 @@ document.addEventListener('DOMContentLoaded',function(){
 /* Report style: theme, font, text size and sections for PDF / Word / preview reports. Saved on this device. */
 (function(){
   if(window.GRPT) return;
-  var KEY='g_rpt_v1', D={theme:'orig',font:'def',size:'std',logo:true,disc:true,photos:true,sig:true}, P={};
+  var KEY='g_rpt_v1', D={theme:'orig',font:'def',size:'std',logopos:'center',logo:true,disc:true,photos:true,sig:true}, P={};
   try{ P=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ P={}; }
   for(var k in D) if(!(k in P)) P[k]=D[k];
   var TH={orig:null,
@@ -1793,8 +1798,8 @@ document.addEventListener('DOMContentLoaded',function(){
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
   var root=document.documentElement, appTheme=null;
   function es(){ return (root.lang||'').toLowerCase().slice(0,2)==='es'; }
-  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray'},
-          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris'}};
+  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',rlpos:'Logo position',left:'Left',center:'Center',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray'},
+          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',rlpos:'Posición del logo',left:'Izquierda',center:'Centro',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris'}};
   function t(k){ return TX[es()?'es':'en'][k]; }
   /* does the app's own CSS know about a dark theme? */
   function hasDark(){
@@ -1848,13 +1853,13 @@ document.addEventListener('DOMContentLoaded',function(){
       return '<button type="button" data-k="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(String(P[name])===String(o[0]))+'">'+o[1]+'</button>'; }).join('')+'</div></div>';
   }
   function ck(name){ return '<label class="gui-ck"><input type="checkbox" data-k="'+name+'"'+(P[name]?' checked':'')+'>'+t(name)+'</label>'; }
-  function rseg(name,opts){ var R=window.GRPT.get(); return '<div class="gui-gr"><div class="gui-lb">'+t(name)+'</div><div class="gui-seg" role="group" aria-label="'+t(name)+'">'+opts.map(function(o){
-      return '<button type="button" data-r="'+name.slice(1)+'" data-v="'+o+'" aria-pressed="'+(String(R[name.slice(1)])===o)+'">'+t(o)+'</button>'; }).join('')+'</div></div>'; }
+  function rseg(name,opts,key){ key=key||name.slice(1); var R=window.GRPT.get(); return '<div class="gui-gr"><div class="gui-lb">'+t(name)+'</div><div class="gui-seg" role="group" aria-label="'+t(name)+'">'+opts.map(function(o){
+      return '<button type="button" data-r="'+key+'" data-v="'+o+'" aria-pressed="'+(String(R[key])===o)+'">'+t(o)+'</button>'; }).join('')+'</div></div>'; }
   function rptHtml(){ var G=window.GRPT; if(!G||!G.supported()) return ''; var R=G.get(), sec=G.sections();
     return '<h2 style="margin-top:6px;padding-top:12px;border-top:1px solid #d5dde6">'+t('rt')+'</h2>'+
       '<div class="gui-gr"><div class="gui-lb">'+t('rtheme')+'</div><div class="gui-sw" role="group" aria-label="'+t('rtheme')+'">'+G.themes.map(function(k){
         return '<button type="button" data-r="theme" data-v="'+k+'" aria-pressed="'+(R.theme===k)+'" title="'+t(k)+'"><i style="background:'+G.swatches[k]+'"></i>'+t(k)+'</button>'; }).join('')+'</div></div>'+
-      rseg('rfont',['def','sans','serif']).replace(/data-r="font"/g,'data-r="font"')+rseg('rsize',['cmp','std','lg'])+
+      rseg('rfont',['def','sans','serif'])+rseg('rsize',['cmp','std','lg'])+(sec.indexOf('logo')>=0?rseg('rlpos',['center','left'],'logopos'):'')+
       (sec.length?'<div class="gui-gr"><div class="gui-lb">'+t('rinc')+'</div>'+sec.map(function(k){ return '<label class="gui-ck"><input type="checkbox" data-rs="'+k+'"'+(R[k]?' checked':'')+'>'+t(k)+'</label>'; }).join('')+'</div>':'')+
       '<p class="gui-nt" style="margin-top:0">'+t('rnote')+'</p>'; }
   function close(){ var p=document.getElementById('gui-pan'); if(p) p.remove(); var b=document.getElementById('gui-btn'); if(b) b.setAttribute('aria-expanded','false'); }

@@ -843,7 +843,7 @@ window.__diag={setTpl(id){st=fromTemplate(id);applyLang();fillDocFields();draw()
 /* Report style: theme, font, text size and sections for PDF / Word / preview reports. Saved on this device. */
 (function(){
   if(window.GRPT) return;
-  var KEY='g_rpt_v1', D={theme:'orig',font:'def',size:'std',logo:true,disc:true,photos:true,sig:true}, P={};
+  var KEY='g_rpt_v1', D={theme:'orig',font:'def',size:'std',logopos:'center',logo:true,disc:true,photos:true,sig:true}, P={};
   try{ P=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ P={}; }
   for(var k in D) if(!(k in P)) P[k]=D[k];
   var TH={orig:null,
@@ -923,8 +923,8 @@ window.__diag={setTpl(id){st=fromTemplate(id);applyLang();fillDocFields();draw()
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
   var root=document.documentElement, appTheme=null;
   function es(){ return (root.lang||'').toLowerCase().slice(0,2)==='es'; }
-  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray'},
-          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris'}};
+  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',rlpos:'Logo position',left:'Left',center:'Center',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray'},
+          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',rlpos:'Posición del logo',left:'Izquierda',center:'Centro',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris'}};
   function t(k){ return TX[es()?'es':'en'][k]; }
   /* does the app's own CSS know about a dark theme? */
   function hasDark(){
@@ -978,13 +978,13 @@ window.__diag={setTpl(id){st=fromTemplate(id);applyLang();fillDocFields();draw()
       return '<button type="button" data-k="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(String(P[name])===String(o[0]))+'">'+o[1]+'</button>'; }).join('')+'</div></div>';
   }
   function ck(name){ return '<label class="gui-ck"><input type="checkbox" data-k="'+name+'"'+(P[name]?' checked':'')+'>'+t(name)+'</label>'; }
-  function rseg(name,opts){ var R=window.GRPT.get(); return '<div class="gui-gr"><div class="gui-lb">'+t(name)+'</div><div class="gui-seg" role="group" aria-label="'+t(name)+'">'+opts.map(function(o){
-      return '<button type="button" data-r="'+name.slice(1)+'" data-v="'+o+'" aria-pressed="'+(String(R[name.slice(1)])===o)+'">'+t(o)+'</button>'; }).join('')+'</div></div>'; }
+  function rseg(name,opts,key){ key=key||name.slice(1); var R=window.GRPT.get(); return '<div class="gui-gr"><div class="gui-lb">'+t(name)+'</div><div class="gui-seg" role="group" aria-label="'+t(name)+'">'+opts.map(function(o){
+      return '<button type="button" data-r="'+key+'" data-v="'+o+'" aria-pressed="'+(String(R[key])===o)+'">'+t(o)+'</button>'; }).join('')+'</div></div>'; }
   function rptHtml(){ var G=window.GRPT; if(!G||!G.supported()) return ''; var R=G.get(), sec=G.sections();
     return '<h2 style="margin-top:6px;padding-top:12px;border-top:1px solid #d5dde6">'+t('rt')+'</h2>'+
       '<div class="gui-gr"><div class="gui-lb">'+t('rtheme')+'</div><div class="gui-sw" role="group" aria-label="'+t('rtheme')+'">'+G.themes.map(function(k){
         return '<button type="button" data-r="theme" data-v="'+k+'" aria-pressed="'+(R.theme===k)+'" title="'+t(k)+'"><i style="background:'+G.swatches[k]+'"></i>'+t(k)+'</button>'; }).join('')+'</div></div>'+
-      rseg('rfont',['def','sans','serif']).replace(/data-r="font"/g,'data-r="font"')+rseg('rsize',['cmp','std','lg'])+
+      rseg('rfont',['def','sans','serif'])+rseg('rsize',['cmp','std','lg'])+(sec.indexOf('logo')>=0?rseg('rlpos',['center','left'],'logopos'):'')+
       (sec.length?'<div class="gui-gr"><div class="gui-lb">'+t('rinc')+'</div>'+sec.map(function(k){ return '<label class="gui-ck"><input type="checkbox" data-rs="'+k+'"'+(R[k]?' checked':'')+'>'+t(k)+'</label>'; }).join('')+'</div>':'')+
       '<p class="gui-nt" style="margin-top:0">'+t('rnote')+'</p>'; }
   function close(){ var p=document.getElementById('gui-pan'); if(p) p.remove(); var b=document.getElementById('gui-btn'); if(b) b.setAttribute('aria-expanded','false'); }

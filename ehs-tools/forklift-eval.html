@@ -800,8 +800,9 @@ function buildPdf(st,INI){INI=INI||{};
  function hline(x1,yy,x2,col,w){doc.setDrawColor.apply(doc,col||LINE);doc.setLineWidth(w||.5);doc.line(x1,yy,x2,yy);}
  function clip(txt,w){return doc.splitTextToSize(String(txt||"—"),w)[0];}
  // header band
- doc.setFillColor(232,238,245);doc.rect(0,0,W,52,"F");doc.setFillColor.apply(doc,ORANGE);doc.rect(0,52,W,2.5,"F");
- try{var _lf=(window.GLogo&&GLogo.current())?GLogo.fit(73,40.9):{width:73,height:40.9};doc.addImage(LOGO,"PNG",M,6+(40.9-_lf.height)/2,_lf.width,_lf.height);}catch(e){}
+ var CENF=!(window.GRPT&&GRPT.get().logopos==='left')&&!(window.GRPT&&GRPT.get().logo===false), HB=CENF?82:52;
+ doc.setFillColor(232,238,245);doc.rect(0,0,W,HB,"F");doc.setFillColor.apply(doc,ORANGE);doc.rect(0,HB,W,2.5,"F");
+ if(!(window.GRPT&&GRPT.get().logo===false)){ try{var _lf=(window.GLogo&&GLogo.current())?GLogo.fit(CENF?60:73,CENF?30:40.9):{width:CENF?53.5:73,height:CENF?30:40.9};doc.addImage(LOGO,"PNG",CENF?(W-_lf.width)/2:M,CENF?5:6+(40.9-_lf.height)/2,_lf.width,_lf.height);}catch(e){} }
  var CX=W-M,certL=CX;
  if(st.cert&&c.status==="pass"){font(6.5,"bold");var w1=doc.getTextWidth(T.certNo.toUpperCase());font(11,"bold");var w2=doc.getTextWidth(st.cert.no);font(7,"bold");var w3=doc.getTextWidth(T.due+": "+fmtDate(st.cert.due));certL=CX-Math.max(w1,w2,w3);}
  var half=Math.min(W/2-(M+80),certL-W/2)-8,tsz=16;font(tsz,"bold");while(doc.getTextWidth(T.title)/2>half&&tsz>10){tsz-=0.5;font(tsz,"bold");}
@@ -809,7 +810,7 @@ function buildPdf(st,INI){INI=INI||{};
  font(12.5,"bold",[30,42,56]);doc.text(String((st.info&&st.info.location)||""),W/2,42,{align:"center"});
  if(st.cert&&c.status==="pass"){font(6.5,"bold",[112,36,6]);doc.text(T.certNo.toUpperCase(),CX,17,{align:"right"});font(11,"bold",NAVY);doc.text(st.cert.no,CX,30,{align:"right"});
   font(7,"bold",[30,42,56]);doc.text(T.due+": "+fmtDate(st.cert.due),CX,42,{align:"right"});}
- y=68;
+ y=CENF?98:68;
  // info grid: 3 x 3
  var cw3=CW/4,info=[[T.operator,st.info.operator],[T.empNo,st.info.empNo],[T.badge,st.info.badge],[T.date,fmtDate(st.info.date)],
   [T.agency,st.info.agency],[T.evaluator,st.info.evaluator],[T.location,st.info.location],[T.area,st.info.area],
@@ -1143,7 +1144,7 @@ fillInfo();applyI18n();
 /* Report style: theme, font, text size and sections for PDF / Word / preview reports. Saved on this device. */
 (function(){
   if(window.GRPT) return;
-  var KEY='g_rpt_v1', D={theme:'orig',font:'def',size:'std',logo:true,disc:true,photos:true,sig:true}, P={};
+  var KEY='g_rpt_v1', D={theme:'orig',font:'def',size:'std',logopos:'center',logo:true,disc:true,photos:true,sig:true}, P={};
   try{ P=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ P={}; }
   for(var k in D) if(!(k in P)) P[k]=D[k];
   var TH={orig:null,
@@ -1223,8 +1224,8 @@ fillInfo();applyI18n();
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
   var root=document.documentElement, appTheme=null;
   function es(){ return (root.lang||'').toLowerCase().slice(0,2)==='es'; }
-  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray'},
-          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris'}};
+  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',rlpos:'Logo position',left:'Left',center:'Center',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray'},
+          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',rlpos:'Posición del logo',left:'Izquierda',center:'Centro',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris'}};
   function t(k){ return TX[es()?'es':'en'][k]; }
   /* does the app's own CSS know about a dark theme? */
   function hasDark(){
@@ -1278,13 +1279,13 @@ fillInfo();applyI18n();
       return '<button type="button" data-k="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(String(P[name])===String(o[0]))+'">'+o[1]+'</button>'; }).join('')+'</div></div>';
   }
   function ck(name){ return '<label class="gui-ck"><input type="checkbox" data-k="'+name+'"'+(P[name]?' checked':'')+'>'+t(name)+'</label>'; }
-  function rseg(name,opts){ var R=window.GRPT.get(); return '<div class="gui-gr"><div class="gui-lb">'+t(name)+'</div><div class="gui-seg" role="group" aria-label="'+t(name)+'">'+opts.map(function(o){
-      return '<button type="button" data-r="'+name.slice(1)+'" data-v="'+o+'" aria-pressed="'+(String(R[name.slice(1)])===o)+'">'+t(o)+'</button>'; }).join('')+'</div></div>'; }
+  function rseg(name,opts,key){ key=key||name.slice(1); var R=window.GRPT.get(); return '<div class="gui-gr"><div class="gui-lb">'+t(name)+'</div><div class="gui-seg" role="group" aria-label="'+t(name)+'">'+opts.map(function(o){
+      return '<button type="button" data-r="'+key+'" data-v="'+o+'" aria-pressed="'+(String(R[key])===o)+'">'+t(o)+'</button>'; }).join('')+'</div></div>'; }
   function rptHtml(){ var G=window.GRPT; if(!G||!G.supported()) return ''; var R=G.get(), sec=G.sections();
     return '<h2 style="margin-top:6px;padding-top:12px;border-top:1px solid #d5dde6">'+t('rt')+'</h2>'+
       '<div class="gui-gr"><div class="gui-lb">'+t('rtheme')+'</div><div class="gui-sw" role="group" aria-label="'+t('rtheme')+'">'+G.themes.map(function(k){
         return '<button type="button" data-r="theme" data-v="'+k+'" aria-pressed="'+(R.theme===k)+'" title="'+t(k)+'"><i style="background:'+G.swatches[k]+'"></i>'+t(k)+'</button>'; }).join('')+'</div></div>'+
-      rseg('rfont',['def','sans','serif']).replace(/data-r="font"/g,'data-r="font"')+rseg('rsize',['cmp','std','lg'])+
+      rseg('rfont',['def','sans','serif'])+rseg('rsize',['cmp','std','lg'])+(sec.indexOf('logo')>=0?rseg('rlpos',['center','left'],'logopos'):'')+
       (sec.length?'<div class="gui-gr"><div class="gui-lb">'+t('rinc')+'</div>'+sec.map(function(k){ return '<label class="gui-ck"><input type="checkbox" data-rs="'+k+'"'+(R[k]?' checked':'')+'>'+t(k)+'</label>'; }).join('')+'</div>':'')+
       '<p class="gui-nt" style="margin-top:0">'+t('rnote')+'</p>'; }
   function close(){ var p=document.getElementById('gui-pan'); if(p) p.remove(); var b=document.getElementById('gui-btn'); if(b) b.setAttribute('aria-expanded','false'); }
