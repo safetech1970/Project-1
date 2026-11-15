@@ -806,8 +806,8 @@ function buildPdf(st,INI){INI=INI||{};
  var CX=W-M,certL=CX;
  if(st.cert&&c.status==="pass"){font(6.5,"bold");var w1=doc.getTextWidth(T.certNo.toUpperCase());font(11,"bold");var w2=doc.getTextWidth(st.cert.no);font(7,"bold");var w3=doc.getTextWidth(T.due+": "+fmtDate(st.cert.due));certL=CX-Math.max(w1,w2,w3);}
  var half=Math.min(W/2-(M+80),certL-W/2)-8,tsz=16;font(tsz,"bold");while(doc.getTextWidth(T.title)/2>half&&tsz>10){tsz-=0.5;font(tsz,"bold");}
- font(tsz,"bold",NAVY);doc.text(T.title,W/2,24,{align:"center"});
- font(12.5,"bold",[30,42,56]);doc.text(String((st.info&&st.info.location)||""),W/2,42,{align:"center"});
+ font(tsz,"bold",NAVY);doc.text(T.title,W/2,CENF?54:24,{align:"center"});
+ font(12.5,"bold",[30,42,56]);doc.text(String((st.info&&st.info.location)||""),W/2,CENF?72:42,{align:"center"});
  if(st.cert&&c.status==="pass"){font(6.5,"bold",[112,36,6]);doc.text(T.certNo.toUpperCase(),CX,17,{align:"right"});font(11,"bold",NAVY);doc.text(st.cert.no,CX,30,{align:"right"});
   font(7,"bold",[30,42,56]);doc.text(T.due+": "+fmtDate(st.cert.due),CX,42,{align:"right"});}
  y=CENF?98:68;

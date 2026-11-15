@@ -1588,12 +1588,22 @@ function makePDF(r){
     function ensure(h){ if(y+h>H-56){ doc.addPage(); y=M; } }
     function label(txt,x,yy){ doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor.apply(doc,muted); doc.text(pdfSafe(txt).toUpperCase(),x,yy); }
     // header band
+    var CEN=!!window.GEI_LOGO&&!(window.GRPT&&GRPT.get().logopos==='left');
+    if(CEN){ var LGo=window.GEI_LOGO, lh=34, lw=LGo.w*lh/LGo.h; if(lw>170){ lw=170; lh=lw*LGo.h/LGo.w; }
+      doc.setFillColor(232,238,245); doc.rect(0,0,W,120,'F'); doc.setFillColor.apply(doc,navy); doc.rect(0,117,W,3,'F');
+      if(LGo.plate){ doc.setFillColor(255,255,255); doc.roundedRect((W-lw)/2-6,8,lw+12,lh+8,5,5,'F'); } try{ doc.addImage(LGo.src,'PNG',(W-lw)/2,12,lw,lh); }catch(e){}
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(180,83,9); doc.text('EHS FIELD TOOLS',W/2,62,{align:'center'});
+      GEI_FIT(doc,pdfSafe(L('Hazard Report','Reporte de Peligro')+'  '+r.id),18,CW-20); doc.setTextColor(15,41,66); doc.text(pdfSafe(L('Hazard Report','Reporte de Peligro')+'  '+r.id),W/2,84,{align:'center'});
+      var sv0=pdfSafe(sevLabel(r.sev).toUpperCase()); doc.setFont('helvetica','bold'); doc.setFontSize(9); var sw0=doc.getTextWidth(sv0)+20;
+      doc.setFillColor.apply(doc,sev); doc.roundedRect(W/2-sw0/2,92,sw0,18,9,9,'F'); doc.setTextColor(255,255,255); doc.text(sv0,W/2,104,{align:'center'});
+      y=144;
+    } else {
     doc.setFillColor(232,238,245); doc.rect(0,0,W,74,'F'); doc.setFillColor.apply(doc,navy); doc.rect(0,71,W,3,'F'); var TX=GEI_HDR(doc,M);
     doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(242,183,5); doc.text('EHS FIELD TOOLS',TX,28);
     GEI_FIT(doc,pdfSafe(L('Hazard Report','Reporte de Peligro')+'  '+r.id),18,W-M-TX-125); doc.setTextColor(255,255,255); doc.text(pdfSafe(L('Hazard Report','Reporte de Peligro')+'  '+r.id),TX,52);
     var sv=pdfSafe(sevLabel(r.sev).toUpperCase()); doc.setFont('helvetica','bold'); doc.setFontSize(9); var sw=doc.getTextWidth(sv)+20;
     doc.setFillColor.apply(doc,sev); doc.roundedRect(W-M-sw,36,sw,20,10,10,'F'); doc.setTextColor(255,255,255); doc.text(sv,W-M-sw/2,49.5,{align:'center'});
-    y=98;
+    y=98; }
     // info grid, 3 columns x 2 rows
     var pairs=infoPairs(r), colW=CW/3;
     for(var i=0;i<pairs.length;i+=3){ var rowH=0;
