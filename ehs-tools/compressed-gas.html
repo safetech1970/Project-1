@@ -695,8 +695,16 @@ render();
     blue:{a:[24,78,140],b:[217,83,30],f:[224,236,248]},
     green:{a:[22,84,52],b:[184,134,11],f:[224,240,230]},
     orange:{a:[150,52,14],b:[15,41,66],f:[252,232,220]},
-    gray:{a:[45,45,45],b:[95,95,95],f:[236,236,236]}};
-  var SW={orig:'#ffffff',navy:'#0f2942',blue:'#184e8c',green:'#165434',orange:'#96340e',gray:'#2d2d2d'};
+    gray:{a:[45,45,45],b:[95,95,95],f:[236,236,236]},
+    sred:{a:[175,20,40],b:[60,60,60],f:[251,226,228]},
+    sorange:{a:[200,75,10],b:[30,30,30],f:[255,231,212]},
+    syellow:{a:[35,31,32],b:[230,175,0],f:[255,242,190]},
+    sgreen:{a:[0,110,55],b:[230,175,0],f:[218,240,226]},
+    sblue:{a:[0,80,150],b:[230,175,0],f:[220,233,247]},
+    spurple:{a:[100,40,125],b:[230,175,0],f:[238,228,245]},
+    hivis:{a:[60,95,0],b:[255,103,31],f:[236,252,196]},
+    hazard:{a:[20,20,20],b:[245,190,0],f:[255,236,150]}};
+  var SW={orig:'#ffffff',navy:'#0f2942',blue:'#184e8c',green:'#165434',orange:'#96340e',gray:'#2d2d2d',sred:'#c8102e',sorange:'#ff671f',syellow:'#ffcd00',sgreen:'#007a3d',sblue:'#0057a3',spurple:'#6e2882',hivis:'#ccff00',hazard:'linear-gradient(135deg,#141414 25%,#f5be00 25%,#f5be00 50%,#141414 50%,#141414 75%,#f5be00 75%)'};
   var SIZE={cmp:0.92,std:1,lg:1.08};
   var ACC=[[15,41,66]], ACC2=[[217,83,30]], FILL=[[238,242,246],[232,238,245],[231,231,231],[231,236,242],[231,236,243],[230,236,242],[232,238,245]];
   function eq(a,b){ return a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2]; }
@@ -767,8 +775,8 @@ render();
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
   var root=document.documentElement, appTheme=null;
   function es(){ return (root.lang||'').toLowerCase().slice(0,2)==='es'; }
-  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',rlpos:'Logo position',left:'Left',center:'Center',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray'},
-          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',rlpos:'Posición del logo',left:'Izquierda',center:'Centro',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris'}};
+  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',rlpos:'Logo position',left:'Left',center:'Center',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray',sred:'Safety Red',sorange:'Safety Orange',syellow:'Safety Yellow',sgreen:'Safety Green',sblue:'Safety Blue',spurple:'Safety Purple',hivis:'Hi-Vis',hazard:'Hazard Stripe',rstyle:'Report style',rgroup1:'Standard',rgroup2:'Safety colors (ANSI Z535 style)'},
+          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',rlpos:'Posición del logo',left:'Izquierda',center:'Centro',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris',sred:'Rojo de seguridad',sorange:'Naranja de seguridad',syellow:'Amarillo de seguridad',sgreen:'Verde de seguridad',sblue:'Azul de seguridad',spurple:'Morado de seguridad',hivis:'Alta visibilidad',hazard:'Franjas de peligro',rstyle:'Estilo de reporte',rgroup1:'Estándar',rgroup2:'Colores de seguridad (estilo ANSI Z535)'}};
   function t(k){ return TX[es()?'es':'en'][k]; }
   /* does the app's own CSS know about a dark theme? */
   function hasDark(){
@@ -799,7 +807,7 @@ render();
         'html.gui-touch input[type=checkbox],html.gui-touch input[type=radio]{width:24px;height:24px}'+
         'html.gui-motion *,html.gui-motion *::before,html.gui-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}'+
       '}'+
-      '@media print{#gui-btn,#gui-hot,#gui-pan{display:none!important}html{zoom:1!important;filter:none!important}}';
+      '@media print{#gui-btn,#gui-hot,#gui-pan,.grpt-btn{display:none!important}html{zoom:1!important;filter:none!important}}';
     (document.head||root).appendChild(st);
   }
   function apply(){
@@ -826,8 +834,9 @@ render();
       return '<button type="button" data-r="'+key+'" data-v="'+o+'" aria-pressed="'+(String(R[key])===o)+'">'+t(o)+'</button>'; }).join('')+'</div></div>'; }
   function rptHtml(){ var G=window.GRPT; if(!G||!G.supported()) return ''; var R=G.get(), sec=G.sections();
     return '<h2 style="margin-top:6px;padding-top:12px;border-top:1px solid #d5dde6">'+t('rt')+'</h2>'+
-      '<div class="gui-gr"><div class="gui-lb">'+t('rtheme')+'</div><div class="gui-sw" role="group" aria-label="'+t('rtheme')+'">'+G.themes.map(function(k){
-        return '<button type="button" data-r="theme" data-v="'+k+'" aria-pressed="'+(R.theme===k)+'" title="'+t(k)+'"><i style="background:'+G.swatches[k]+'"></i>'+t(k)+'</button>'; }).join('')+'</div></div>'+
+      '<div class="gui-gr"><div class="gui-lb">'+t('rtheme')+'</div>'+[[t('rgroup1'),function(k){ return k.charAt(0)!=='s'&&k!=='hivis'&&k!=='hazard'; }],[t('rgroup2'),function(k){ return k.charAt(0)==='s'||k==='hivis'||k==='hazard'; }]].map(function(g){
+        return '<div style="font-size:12px;color:#566476;margin:6px 0 4px">'+g[0]+'</div><div class="gui-sw" role="group" aria-label="'+g[0]+'">'+G.themes.filter(g[1]).map(function(k){
+        return '<button type="button" data-r="theme" data-v="'+k+'" aria-pressed="'+(R.theme===k)+'" title="'+t(k)+'"><i style="background:'+G.swatches[k]+'"></i>'+t(k)+'</button>'; }).join('')+'</div>'; }).join('')+'</div>'+
       rseg('rfont',['def','sans','serif'])+rseg('rsize',['cmp','std','lg'])+(sec.indexOf('logo')>=0?rseg('rlpos',['center','left'],'logopos'):'')+
       (sec.length?'<div class="gui-gr"><div class="gui-lb">'+t('rinc')+'</div>'+sec.map(function(k){ return '<label class="gui-ck"><input type="checkbox" data-rs="'+k+'"'+(R[k]?' checked':'')+'>'+t(k)+'</label>'; }).join('')+'</div>':'')+
       '<p class="gui-nt" style="margin-top:0">'+t('rnote')+'</p>'; }
@@ -874,6 +883,21 @@ render();
   }
   function posPan(p){ p.style.left=spot.side==='left'?'calc(10px + env(safe-area-inset-left,0px))':'auto'; p.style.right=spot.side==='right'?'calc(10px + env(safe-area-inset-right,0px))':'auto';
     p.style.bottom='calc('+(spot.bottom+48)+'px + env(safe-area-inset-bottom,0px))'; p.style.maxHeight='calc(100vh - '+(spot.bottom+70)+'px)'; }
+  /* a Report style button next to the main PDF / Word download buttons (buttons with an id), so colors can be picked while making reports */
+  function addRptBtns(){
+    if(!window.GRPT||!window.GRPT.supported()) return; var n=document.querySelectorAll('.grpt-btn').length; if(n>=3) return;
+    [].forEach.call(document.querySelectorAll('button[id]'),function(b){
+      if(n>=3||b.closest('#gui-pan')||b.id.indexOf('gui')===0) return; var tx=(b.textContent||'').trim();
+      if(!/\b(PDF|Word|docx)\b/i.test(tx)||/\b(load|import|upload|cargar|importar)\b/i.test(tx)) return;
+      var par=b.parentNode; if(!par||par.querySelector(':scope > .grpt-btn')) return;
+      var last=b; [].forEach.call(par.children,function(c){ if(c.tagName==='BUTTON'&&/\b(PDF|Word|docx|PowerPoint|Excel|CSV)\b/i.test(c.textContent||'')) last=c; });
+      var x=document.createElement('button'); x.type='button'; x.className='grpt-btn'; x.innerHTML='🎨 <span>'+t('rstyle')+'</span>';
+      x.style.cssText='display:inline-flex;align-items:center;gap:6px;font:600 14px system-ui,-apple-system,sans-serif;border:1px solid #c9d3de;background:#fff;color:#0f2942;border-radius:9px;padding:8px 12px;min-height:40px;cursor:pointer;margin:0 4px';
+      x.addEventListener('click',function(e){ e.preventDefault(); window.GUI_open('report'); });
+      last.insertAdjacentElement('afterend',x); n++; });
+    [].forEach.call(document.querySelectorAll('.grpt-btn span'),function(sp){ if(sp.textContent!==t('rstyle')) sp.textContent=t('rstyle'); }); }
+  var rbT; new MutationObserver(function(){ clearTimeout(rbT); rbT=setTimeout(addRptBtns,400); }).observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(addRptBtns,800);
   window.GUI_open=function(sec){ open(); if(sec==='report'){ var h=[].slice.call(document.querySelectorAll('#gui-pan h2'))[1]; if(h) h.scrollIntoView({block:'start'}); } };
   function toggle(){ if(document.getElementById('gui-pan')) close(); else open(); }
   function start(){
