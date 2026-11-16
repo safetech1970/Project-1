@@ -431,7 +431,7 @@ details.more[open] summary{margin-bottom:8px}
     ov.innerHTML='<div style="background:#eef2f6;border-radius:16px;max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:16px;display:grid;gap:12px;color:#14202e">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;font-size:18px">'+L('Logo on this app and its reports','Logo de esta app y sus reportes')+'</h2><button type="button" data-x style="border:0;background:#0f2942;color:#fff;border-radius:9px;padding:8px 12px;font:700 13px system-ui;cursor:pointer">'+L('Close','Cerrar')+'</button></div>'+
       '<div data-g style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">'+card('default',L('Built-in logo','Logo original'),null)+PRE.map(function(p){ return card(p.id,p.name,p.src); }).join('')+card('custom',up?L('Your logo','Su logo'):L('Upload a logo…','Subir un logo…'),up?up.src:null)+'</div>'+
-      '<input type="file" accept="image/*" hidden>'+
+      '<input type="file" accept="image/*" data-no-markup hidden>'+
       '<p style="margin:0;color:#566476;font-size:13px">'+L('Logos are placed on reports with a transparent background; a plain white or solid background on an uploaded logo is removed automatically. The choice is shared with everyone who uses this app.','Los logos se colocan en los reportes con fondo transparente; el fondo blanco o de un solo color de un logo subido se quita automáticamente. La elección se comparte con todos los que usan esta app.')+'</p></div>';
     document.body.appendChild(ov);
     var fi=ov.querySelector('input[type=file]');
@@ -1315,8 +1315,8 @@ fillFields();applyLang();renderSig();
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
   var root=document.documentElement, appTheme=null;
   function es(){ return (root.lang||'').toLowerCase().slice(0,2)==='es'; }
-  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',rlpos:'Logo position',left:'Left',center:'Center',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray',sred:'Safety Red',sorange:'Safety Orange',syellow:'Safety Yellow',sgreen:'Safety Green',sblue:'Safety Blue',spurple:'Safety Purple',hivis:'Hi-Vis',hazard:'Hazard Stripe',rstyle:'Report style',rgroup1:'Standard',rgroup2:'Safety colors (ANSI Z535 style)'},
-          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',rlpos:'Posición del logo',left:'Izquierda',center:'Centro',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris',sred:'Rojo de seguridad',sorange:'Naranja de seguridad',syellow:'Amarillo de seguridad',sgreen:'Verde de seguridad',sblue:'Azul de seguridad',spurple:'Morado de seguridad',hivis:'Alta visibilidad',hazard:'Franjas de peligro',rstyle:'Estilo de reporte',rgroup1:'Estándar',rgroup2:'Colores de seguridad (estilo ANSI Z535)'}};
+  var TX={en:{t:'Display options',theme:'Theme',auto:'Auto',light:'Light',dark:'Dark',size:'Text size',contrast:'High contrast',touch:'Bigger buttons (gloves)',bold:'Bold text',motion:'Reduce motion',reset:'Reset',close:'Close',note:'Saved on this device for this app.',hide:'Hide the gear button (open again with the corner tap or Alt+D)',rt:'Report options',rtheme:'Report color',rfont:'Font',rsize:'Text size',rinc:'Include',def:'Default',sans:'Sans-serif',serif:'Serif',cmp:'Compact',std:'Standard',lg:'Large',logo:'Logo',disc:'Disclaimer',photos:'Photos',sig:'Signatures',rnote:'Applies to new PDF and Word reports and the report preview.',rlpos:'Logo position',left:'Left',center:'Center',orig:'Original',navy:'Navy',blue:'Blue',green:'Green',orange:'Orange',gray:'Gray',sred:'Safety Red',sorange:'Safety Orange',syellow:'Safety Yellow',sgreen:'Safety Green',sblue:'Safety Blue',spurple:'Safety Purple',hivis:'Hi-Vis',hazard:'Hazard Stripe',rstyle:'Report style',rgroup1:'Standard',rgroup2:'Safety colors (ANSI Z535 style)',mk:'Mark up photos when adding (arrow, circle, box)'},
+          es:{t:'Opciones de pantalla',theme:'Tema',auto:'Auto',light:'Claro',dark:'Oscuro',size:'Tamaño de texto',contrast:'Alto contraste',touch:'Botones grandes (guantes)',bold:'Texto en negrita',motion:'Reducir animación',reset:'Restablecer',close:'Cerrar',note:'Se guarda en este dispositivo para esta app.',hide:'Ocultar el botón (ábralo de nuevo tocando la esquina o con Alt+D)',rt:'Opciones de reporte',rtheme:'Color del reporte',rfont:'Letra',rsize:'Tamaño de texto',rinc:'Incluir',def:'Predeterminada',sans:'Sans serif',serif:'Serif',cmp:'Compacto',std:'Estándar',lg:'Grande',logo:'Logo',disc:'Aviso legal',photos:'Fotos',sig:'Firmas',rnote:'Se aplica a los nuevos reportes PDF y Word y a la vista previa.',rlpos:'Posición del logo',left:'Izquierda',center:'Centro',orig:'Original',navy:'Azul marino',blue:'Azul',green:'Verde',orange:'Naranja',gray:'Gris',sred:'Rojo de seguridad',sorange:'Naranja de seguridad',syellow:'Amarillo de seguridad',sgreen:'Verde de seguridad',sblue:'Azul de seguridad',spurple:'Morado de seguridad',hivis:'Alta visibilidad',hazard:'Franjas de peligro',rstyle:'Estilo de reporte',rgroup1:'Estándar',rgroup2:'Colores de seguridad (estilo ANSI Z535)',mk:'Marcar fotos al agregarlas (flecha, círculo, cuadro)'}};
   function t(k){ return TX[es()?'es':'en'][k]; }
   /* does the app's own CSS know about a dark theme? */
   function hasDark(){
@@ -1387,7 +1387,7 @@ fillFields();applyLang();renderSig();
     p.innerHTML='<h2>'+t('t')+'</h2>'+
       seg('theme',[['auto',t('auto')],['light',t('light')],['dark',t('dark')]])+
       seg('size',[[90,'A−'],[100,'A'],[115,'A+'],[130,'A++']])+
-      '<div class="gui-gr">'+ck('contrast')+ck('touch')+ck('bold')+ck('motion')+ck('hide')+'</div>'+rptHtml()+
+      '<div class="gui-gr">'+ck('contrast')+ck('touch')+ck('bold')+ck('motion')+ck('hide')+(window.GMARK?'<label class="gui-ck"><input type="checkbox" data-mk="1"'+(window.GMARK.enabled()?' checked':'')+'>'+t('mk')+'</label>':'')+'</div>'+rptHtml()+
       '<div class="gui-ft"><button type="button" class="gui-r">'+t('reset')+'</button><button type="button" class="gui-x">'+t('close')+'</button></div>'+
       '<p class="gui-nt">'+t('note')+'</p>';
     document.body.appendChild(p); posPan(p);
@@ -1395,10 +1395,10 @@ fillFields();applyLang();renderSig();
       var b=e.target.closest('button'); if(!b) return;
       if(b.dataset.r){ window.GRPT.set(b.dataset.r,b.dataset.v); open(); var f2=document.querySelector('#gui-pan button[data-r="'+b.dataset.r+'"][data-v="'+b.dataset.v+'"]'); if(f2) f2.focus(); return; }
       if(b.dataset.k){ var v=b.dataset.v; P[b.dataset.k]=b.dataset.k==='size'?Number(v):v; save(); apply(); open(); var f=document.querySelector('#gui-pan button[data-k="'+b.dataset.k+'"][data-v="'+v+'"]'); if(f) f.focus(); }
-      else if(b.classList.contains('gui-r')){ for(var k in D) P[k]=D[k]; save(); apply(); if(window.GRPT) window.GRPT.reset(); open(); }
+      else if(b.classList.contains('gui-r')){ for(var k in D) P[k]=D[k]; save(); apply(); if(window.GRPT) window.GRPT.reset(); if(window.GMARK) window.GMARK.set(true); open(); }
       else if(b.classList.contains('gui-x')){ close(); var g=document.getElementById('gui-btn'); if(g&&!P.hide) g.focus(); }
     });
-    p.addEventListener('change',function(e){ var i=e.target; if(i.dataset&&i.dataset.rs){ window.GRPT.set(i.dataset.rs,!!i.checked); return; } if(i.dataset&&i.dataset.k){ P[i.dataset.k]=!!i.checked; save(); apply(); } });
+    p.addEventListener('change',function(e){ var i=e.target; if(i.dataset&&i.dataset.mk){ window.GMARK.set(!!i.checked); return; } if(i.dataset&&i.dataset.rs){ window.GRPT.set(i.dataset.rs,!!i.checked); return; } if(i.dataset&&i.dataset.k){ P[i.dataset.k]=!!i.checked; save(); apply(); } });
     p.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
     var b=document.getElementById('gui-btn'); if(b) b.setAttribute('aria-expanded','true');
     var first=p.querySelector('button[aria-pressed=true]'); if(first) first.focus();
@@ -1456,4 +1456,115 @@ fillFields();applyLang();renderSig();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
 })();
+/* Photo markup: when a photo is chosen, offer to point out the hazard with an arrow, circle, box, pen or label
+   before the app receives it. Works for every photo file picker; window.GMARK.edit(dataURL) is also available to apps. */
+(function(){
+  if (window.GMARK) return;
+  var KEY = 'g_markup_v1', on = true;
+  try { var v = localStorage.getItem(KEY); if (v === '0') on = false; } catch(e){}
+  function es(){ return (document.documentElement.lang || '').toLowerCase().slice(0,2) === 'es'; }
+  function T(en, sp){ return es() ? sp : en; }
+  var COLORS = [['#e11d2a','Red','Rojo'],['#ffd400','Yellow','Amarillo'],['#ffffff','White','Blanco'],['#111111','Black','Negro']];
+  var TOOLS = [['arrow','➚','Arrow','Flecha'],['circle','◯','Circle','Círculo'],['box','▢','Box','Cuadro'],['pen','✎','Pen','Lápiz'],['text','T','Label','Texto']];
+  function css(){
+    if (document.getElementById('gmk-css')) return; var st = document.createElement('style'); st.id = 'gmk-css';
+    st.textContent = '#gmk{position:fixed;inset:0;z-index:10050;background:rgba(8,14,22,.94);display:flex;flex-direction:column;color:#fff;font:15px system-ui,-apple-system,"Segoe UI",sans-serif;zoom:1}'+
+      '#gmk .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;background:#0f2942}#gmk .bar .sp{flex:1}'+
+      '#gmk button{font:600 14px system-ui,-apple-system,sans-serif;border-radius:9px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;min-height:40px;min-width:40px;padding:0 10px;cursor:pointer}'+
+      '#gmk button[aria-pressed=true]{background:#fff;color:#0f2942}#gmk .sw{width:30px;height:30px;min-width:30px;min-height:30px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.6)}#gmk .sw[aria-pressed=true]{outline:3px solid #f2b705;outline-offset:2px}'+
+      '#gmk .go{background:#d9531e;border-color:#d9531e}#gmk .stage{flex:1;position:relative;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center}'+
+      '#gmk canvas{max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;background:#fff}#gmk .hint{font-size:13px;color:#c9d6e5;padding:6px 12px;text-align:center}'+
+      '#gmk .txt{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:6px;background:#0f2942;padding:8px;border-radius:10px;width:min(460px,calc(100% - 20px))}#gmk .txt input{flex:1;font:16px system-ui;padding:8px;border-radius:8px;border:0;min-width:0;color:#111}';
+    document.head.appendChild(st);
+  }
+  function loadImg(src){ return new Promise(function(res, rej){ var i = new Image(); i.onload = function(){ res(i); }; i.onerror = rej; i.src = src; }); }
+  function fileURL(f){ return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = rej; r.readAsDataURL(f); }); }
+  /* editor: resolves to a JPEG data URL, or null when skipped/cancelled */
+  function edit(src, opts){
+    opts = opts || {}; css();
+    return loadImg(src).then(function(img){ return new Promise(function(done){
+      var MAX = 2400, sc = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight)), W = Math.round(img.naturalWidth * sc), H = Math.round(img.naturalHeight * sc);
+      var lw = Math.max(4, Math.round(Math.max(W, H) / 160)), tool = 'arrow', color = COLORS[0][0], shapes = [], cur = null;
+      var box = document.createElement('div'); box.id = 'gmk'; box.setAttribute('role','dialog'); box.setAttribute('aria-label', T('Mark up photo','Marcar foto'));
+      box.innerHTML = '<div class="bar">'+TOOLS.map(function(t){ return '<button type="button" data-t="'+t[0]+'" aria-pressed="'+(t[0]===tool)+'" title="'+T(t[2],t[3])+'">'+t[1]+' <span>'+T(t[2],t[3])+'</span></button>'; }).join('')+
+        '<span style="width:6px"></span>'+COLORS.map(function(c){ return '<button type="button" class="sw" data-c="'+c[0]+'" aria-pressed="'+(c[0]===color)+'" title="'+T(c[1],c[2])+'" style="background:'+c[0]+'"></button>'; }).join('')+
+        '<span class="sp"></span><button type="button" data-a="undo">↶ '+T('Undo','Deshacer')+'</button><button type="button" data-a="clear">'+T('Clear','Borrar')+'</button></div>'+
+        '<div class="stage"><canvas></canvas></div><div class="hint">'+T('Drag on the photo to point out the hazard.','Arrastre sobre la foto para señalar el peligro.')+(opts.count?' '+opts.count:'')+'</div>'+
+        '<div class="bar"><button type="button" data-a="skip">'+(opts.skipLabel || T('Use without marks','Usar sin marcas'))+'</button><span class="sp"></span><button type="button" data-a="cancel">'+T('Cancel','Cancelar')+'</button><button type="button" class="go" data-a="ok">✓ '+T('Use photo','Usar foto')+'</button></div>';
+      document.body.appendChild(box);
+      var cv = box.querySelector('canvas'), ctx = cv.getContext('2d'); cv.width = W; cv.height = H;
+      function fit(){ var st = box.querySelector('.stage'), r = st.getBoundingClientRect(), k = Math.min((r.width - 16) / W, (r.height - 16) / H, 1e9); cv.style.width = Math.max(50, W * k) + 'px'; cv.style.height = Math.max(50, H * k) + 'px'; }
+      fit(); var ro = function(){ fit(); }; window.addEventListener('resize', ro);
+      function arrow(s){ var a = Math.atan2(s.y2 - s.y1, s.x2 - s.x1), hl = s.w * 4.5; ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2 - Math.cos(a) * hl * 0.6, s.y2 - Math.sin(a) * hl * 0.6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s.x2, s.y2); ctx.lineTo(s.x2 - hl * Math.cos(a - 0.45), s.y2 - hl * Math.sin(a - 0.45)); ctx.lineTo(s.x2 - hl * Math.cos(a + 0.45), s.y2 - hl * Math.sin(a + 0.45)); ctx.closePath(); ctx.fill(); }
+      function drawShape(s, shadow){
+        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = shadow ? 'rgba(0,0,0,.45)' : s.c; ctx.fillStyle = ctx.strokeStyle; ctx.lineWidth = s.w + (shadow ? s.w * 0.6 : 0);
+        if (shadow) ctx.translate(s.w * 0.25, s.w * 0.25);
+        if (s.t === 'arrow') arrow(s);
+        else if (s.t === 'box'){ ctx.strokeRect(Math.min(s.x1,s.x2), Math.min(s.y1,s.y2), Math.abs(s.x2-s.x1), Math.abs(s.y2-s.y1)); }
+        else if (s.t === 'circle'){ ctx.beginPath(); ctx.ellipse((s.x1+s.x2)/2, (s.y1+s.y2)/2, Math.max(1,Math.abs(s.x2-s.x1)/2), Math.max(1,Math.abs(s.y2-s.y1)/2), 0, 0, Math.PI*2); ctx.stroke(); }
+        else if (s.t === 'pen'){ ctx.beginPath(); s.pts.forEach(function(p, i){ if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.stroke(); }
+        else if (s.t === 'text'){ var fs = Math.max(18, s.w * 6); ctx.font = '800 ' + fs + 'px system-ui,-apple-system,sans-serif'; ctx.textBaseline = 'top'; var tw = ctx.measureText(s.s).width, pad = fs * 0.3;
+          if (!shadow){ ctx.fillStyle = s.c === '#ffffff' || s.c === '#ffd400' ? 'rgba(0,0,0,.72)' : 'rgba(255,255,255,.88)'; ctx.fillRect(s.x1 - pad, s.y1 - pad, tw + pad * 2, fs + pad * 2); ctx.fillStyle = s.c; ctx.fillText(s.s, s.x1, s.y1); } }
+        ctx.restore(); }
+      function redraw(){ ctx.clearRect(0, 0, W, H); ctx.drawImage(img, 0, 0, W, H); shapes.concat(cur ? [cur] : []).forEach(function(s){ if (s.t !== 'text') drawShape(s, true); drawShape(s, false); }); }
+      redraw();
+      function pt(e){ var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; }
+      cv.addEventListener('pointerdown', function(e){ e.preventDefault(); var p = pt(e);
+        if (tool === 'text'){ askText(p); return; }
+        try { cv.setPointerCapture(e.pointerId); } catch(_){}
+        cur = {t: tool, c: color, w: lw, x1: p[0], y1: p[1], x2: p[0], y2: p[1], pts: [p]}; redraw(); });
+      cv.addEventListener('pointermove', function(e){ if (!cur) return; e.preventDefault(); var p = pt(e); cur.x2 = p[0]; cur.y2 = p[1]; if (cur.t === 'pen') cur.pts.push(p); redraw(); });
+      function end(){ if (!cur) return; var big = Math.abs(cur.x2 - cur.x1) + Math.abs(cur.y2 - cur.y1) > lw * 3 || (cur.t === 'pen' && cur.pts.length > 2);
+        if (!big && cur.t === 'circle'){ cur.x1 -= lw * 10; cur.y1 -= lw * 10; cur.x2 += lw * 10; cur.y2 += lw * 10; big = true; }
+        if (!big && cur.t === 'box'){ cur.x1 -= lw * 10; cur.y1 -= lw * 10; cur.x2 += lw * 10; cur.y2 += lw * 10; big = true; }
+        if (big) shapes.push(cur); cur = null; redraw(); }
+      cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+      function askText(p){ var old = box.querySelector('.txt'); if (old) old.remove();
+        var t = document.createElement('div'); t.className = 'txt'; t.innerHTML = '<input type="text" maxlength="60" placeholder="'+T('e.g. Trip hazard','p. ej. Riesgo de tropiezo')+'"><button type="button" class="go">'+T('Add','Agregar')+'</button><button type="button">✕</button>';
+        box.querySelector('.stage').appendChild(t); var inp = t.querySelector('input'); setTimeout(function(){ inp.focus(); }, 30);
+        function add(){ var s = inp.value.trim(); if (s){ shapes.push({t:'text', c:color, w:lw, x1:p[0], y1:p[1], s:s}); redraw(); } t.remove(); }
+        t.querySelector('.go').addEventListener('click', add); t.querySelectorAll('button')[1].addEventListener('click', function(){ t.remove(); });
+        inp.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); add(); } else if (e.key === 'Escape') t.remove(); }); }
+      function finish(v){ window.removeEventListener('resize', ro); document.removeEventListener('keydown', key, true); box.remove(); done(v); }
+      function key(e){ if (e.key === 'Escape' && !box.querySelector('.txt')){ e.preventDefault(); finish(undefined); } if ((e.ctrlKey || e.metaKey) && e.key === 'z'){ e.preventDefault(); shapes.pop(); redraw(); } }
+      document.addEventListener('keydown', key, true);
+      box.addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b || b.closest('.txt')) return;
+        if (b.dataset.t){ tool = b.dataset.t; box.querySelectorAll('[data-t]').forEach(function(x){ x.setAttribute('aria-pressed', x.dataset.t === tool); }); return; }
+        if (b.dataset.c){ color = b.dataset.c; box.querySelectorAll('[data-c]').forEach(function(x){ x.setAttribute('aria-pressed', x.dataset.c === color); }); return; }
+        var a = b.dataset.a;
+        if (a === 'undo'){ shapes.pop(); redraw(); }
+        else if (a === 'clear'){ shapes = []; redraw(); }
+        else if (a === 'skip') finish(null);
+        else if (a === 'cancel') finish(undefined);
+        else if (a === 'ok'){ if (!shapes.length){ finish(null); return; } redraw(); finish(cv.toDataURL('image/jpeg', 0.9)); } });
+    }); });
+  }
+  function toFile(dataURL, name){ var b = atob(dataURL.split(',')[1]), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i);
+    return new File([a], (name || 'photo').replace(/\.[^.]+$/, '') + '-marked.jpg', {type:'image/jpeg', lastModified: Date.now()}); }
+  /* Intercept photo pickers: mark up each chosen photo, then hand the (marked) files to the app */
+  function photoInput(el){ if (!el || el.tagName !== 'INPUT' || el.type !== 'file') return false; var acc = (el.getAttribute('accept') || '').toLowerCase();
+    if (acc && acc.indexOf('image') < 0) return false; if (!acc && !el.hasAttribute('capture')) return false;
+    if (el.hasAttribute('data-no-markup') || el.closest('[data-no-markup]')) return false;
+    var idc = ((el.id || '') + ' ' + (el.name || '') + ' ' + (el.className || '')).toLowerCase(); if (/logo|sig|avatar|import|load|json/.test(idc)) return false;
+    if (el.closest('#glogo-modal,[data-g],.glogo,#gmk')) return false; var par = el.parentElement; if (par && par.querySelector(':scope > [data-g]')) return false; return true; }
+  var passing = false;
+  document.addEventListener('change', function(e){
+    var el = e.target; if (passing || !on || !photoInput(el) || !el.files || !el.files.length || typeof DataTransfer === 'undefined') return;
+    var files = [].slice.call(el.files).filter(function(f){ return /^image\//.test(f.type) && !/gif|svg/.test(f.type); }); if (!files.length) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    var out = [], all = [].slice.call(el.files);
+    (function next(i){
+      if (i >= all.length){ var dt = new DataTransfer(); out.forEach(function(f){ dt.items.add(f); }); try { el.files = dt.files; } catch(_){}
+        passing = true; try { el.dispatchEvent(new Event('input', {bubbles:true})); el.dispatchEvent(new Event('change', {bubbles:true})); } finally { passing = false; } return; }
+      var f = all[i]; if (files.indexOf(f) < 0){ out.push(f); next(i + 1); return; }
+      fileURL(f).then(function(u){ return edit(u, {count: all.length > 1 ? '(' + (i + 1) + ' / ' + all.length + ')' : ''}); }).then(function(r){
+        if (r === undefined){ if (!out.length && i === 0){ try { el.value = ''; } catch(_){} return; } }   // cancelled: drop the remaining photos
+        out.push(r ? toFile(r, f.name) : f); if (r === undefined){ i = all.length; } next(i + 1); }, function(){ out.push(f); next(i + 1); });
+    })(0);
+  }, true);
+  window.GMARK = { edit: function(src){ return edit(src).then(function(r){ return r || null; }); }, enabled: function(){ return on; },
+    set: function(v){ on = !!v; try { localStorage.setItem(KEY, on ? '1' : '0'); } catch(e){} } };
+})();
+
 /*/GUI*/</script>
