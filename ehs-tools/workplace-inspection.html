@@ -2466,6 +2466,7 @@ function renderPhotos(id){
       renderPhotos(id);
       renderCorrectiveSummary();
     });
+    if (window.GMK) GMK(thumb, n => { state[currentMode].items[id].photos[idx] = n; renderPhotos(id); renderCorrectiveSummary(); });
     row.insertBefore(thumb, addBtn);
   });
 }
@@ -3485,7 +3486,7 @@ if (restored){
     if (el.closest('#glogo-modal,[data-g],.glogo,#gmk')) return false; var par = el.parentElement; if (par && par.querySelector(':scope > [data-g]')) return false; return true; }
   var passing = false;
   document.addEventListener('change', function(e){
-    var el = e.target; if (passing || !on || !photoInput(el) || !el.files || !el.files.length || typeof DataTransfer === 'undefined') return;
+    var el = e.target; if (passing || !on || typeof window.openMarkup === 'function' || !photoInput(el) || !el.files || !el.files.length || typeof DataTransfer === 'undefined') return;
     var files = [].slice.call(el.files).filter(function(f){ return /^image\//.test(f.type) && !/gif|svg/.test(f.type); }); if (!files.length) return;
     e.stopImmediatePropagation(); e.preventDefault();
     var out = [], all = [].slice.call(el.files);
@@ -3498,6 +3499,17 @@ if (restored){
         out.push(r ? toFile(r, f.name) : f); if (r === undefined){ i = all.length; } next(i + 1); }, function(){ out.push(f); next(i + 1); });
     })(0);
   }, true);
+  /* ✏️ Mark up button on a photo that is already added: GMK(wrapper, function(newDataURL){ ...store it... }) */
+  function btnCss(){ if (document.getElementById('gmk-bcss')) return; var st = document.createElement('style'); st.id = 'gmk-bcss';
+    st.textContent = 'button.gmk-ed.gmk-ed{position:absolute!important;left:4px!important;bottom:4px!important;top:auto!important;right:auto!important;z-index:3;min-width:28px!important;width:auto!important;height:28px!important;padding:0 6px!important;margin:0!important;border-radius:14px!important;border:0!important;background:rgba(15,41,66,.9)!important;color:#fff!important;font:700 12px/1 system-ui,-apple-system,sans-serif!important;cursor:pointer;display:inline-flex!important;align-items:center;justify-content:center;gap:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.35)!important;opacity:1!important;transform:none!important}button.gmk-ed.gmk-ed:hover,button.gmk-ed.gmk-ed:focus-visible{background:#d9531e!important;outline:2px solid #fff}@media print{button.gmk-ed{display:none!important}}';
+    document.head.appendChild(st); }
+  window.GMK = function(wrap, set){ if (!wrap || wrap.querySelector(':scope > .gmk-ed')) return; var img = wrap.querySelector('img'); if (!img) return; btnCss();
+    if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'gmk-ed'; b.title = T('Mark up this photo (arrow, circle, box)','Marcar esta foto (flecha, círculo, cuadro)'); b.setAttribute('aria-label', b.title);
+    b.innerHTML = '✏️'; setTimeout(function(){ if (wrap.offsetWidth > 150) b.innerHTML = '✏️<span>' + T('Mark up','Marcar') + '</span>'; }, 0);
+    b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var src = img.getAttribute('src'); if (!src) return;
+      edit(src, {skipLabel: T('Keep as is','Dejar igual')}).then(function(r){ if (r) set(r); }); });
+    wrap.appendChild(b); };
   window.GMARK = { edit: function(src){ return edit(src).then(function(r){ return r || null; }); }, enabled: function(){ return on; },
     set: function(v){ on = !!v; try { localStorage.setItem(KEY, on ? '1' : '0'); } catch(e){} } };
 })();
@@ -3535,7 +3547,7 @@ if (restored){
       '#recs-card .rc-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}#recs-card .rc-n{font-weight:800;color:#0f2942}#recs-card .rc-acts{display:flex;gap:6px;flex-wrap:wrap}'+
       '#recs-card .rc-btn{border:1px solid #cfd6dc;background:#fff;border-radius:8px;padding:7px 12px;font:600 13px inherit;font-family:inherit;cursor:pointer;min-height:36px;color:#0f2942}#recs-card .rc-del{color:#c0392b;border-color:#e3b3ad}#recs-card .rc-del.arm{background:#c0392b;color:#fff}'+
       '#recs-card .rc-add{background:#0f2942;color:#fff;border:0;border-radius:8px;padding:10px 16px;font:700 14px inherit;font-family:inherit;cursor:pointer;min-height:44px}'+
-      '#recs-card .rc-ph{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}#recs-card .rc-ph img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #d9dde2}#recs-card .rc-ph .x{position:relative}#recs-card .rc-ph .x button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#c0392b;color:#fff;font-weight:800;cursor:pointer;line-height:22px;padding:0}'+
+      '#recs-card .rc-ph{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}#recs-card .rc-ph img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #d9dde2}#recs-card .rc-ph .x{position:relative}#recs-card .rc-ph .x button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#c0392b;color:#fff;font-weight:800;cursor:pointer;line-height:22px;padding:0}#recs-card .rc-ph .x button.gmk-ed{top:auto;right:auto;left:3px;bottom:3px;width:26px;height:26px;line-height:26px;font-size:12px;border-radius:13px;background:rgba(15,41,66,.9)}'+
       '#recs-card .rc-empty{color:#8a94a3;font-size:14px;margin:4px 0 10px}'+
       '@media print{#recs-card .rc-quick,#recs-card .rc-acts,#recs-card .rc-add,#recs-card .rc-ph input{display:none!important}}';
     document.head.appendChild(st);
@@ -3561,7 +3573,7 @@ if (restored){
       '<label>Follow-up by (optional)<input data-f="owner" value="'+esc(r.owner)+'"></label></div>'+
       '<label>What was observed<textarea data-f="obs" rows="2" placeholder="e.g., Employees not using 3-point contact when going upstairs">'+esc(r.obs)+'</textarea></label>'+
       '<div style="height:8px"></div><label>Recommendation<textarea data-f="rec" rows="2" placeholder="e.g., Coach on the spot, cover at the next tailgate meeting, post a reminder sign">'+esc(r.rec)+'</textarea></label>'+
-      '<div class="rc-ph">'+(r.photos||[]).map(function(p, j){ return '<span class="x"><img src="'+p+'" alt="Photo '+(j+1)+'"><button type="button" data-a="rmph" data-j="'+j+'" aria-label="Remove photo">×</button></span>'; }).join('')+
+      '<div class="rc-ph">'+(r.photos||[]).map(function(p, j){ return '<span class="x"><img src="'+p+'" alt="Photo '+(j+1)+'"><button type="button" data-a="rmph" data-j="'+j+'" aria-label="Remove photo">×</button>'+(window.GMK?'<button type="button" class="gmk-ed" data-a="mkph" data-j="'+j+'" title="Mark up this photo" aria-label="Mark up photo '+(j+1)+'">✏️</button>':'')+'</span>'; }).join('')+
       ((r.photos||[]).length<3?'<label class="rc-btn" style="display:inline-flex;align-items:center;text-transform:none;letter-spacing:0;font-size:13px">📷 Add photo<input type="file" accept="image/*" data-a="ph" hidden></label>':'')+'</div></div>';
   }
   window.renderRecs = function(){
@@ -3577,6 +3589,7 @@ if (restored){
     if (b.dataset.a === 'del'){ if (!b.classList.contains('arm')){ b.classList.add('arm'); b.textContent = 'Tap again'; setTimeout(function(){ if (b.isConnected){ b.classList.remove('arm'); b.textContent = 'Remove'; } }, 3000); return; }
       list.splice(k, 1); renderRecs(); touch(); return; }
     if (b.dataset.a === 'rmph'){ list[k].photos.splice(+b.dataset.j, 1); renderRecs(); touch(); return; }
+    if (b.dataset.a === 'mkph' && window.GMARK){ var jj = +b.dataset.j, it = list[k]; GMARK.edit(it.photos[jj]).then(function(n){ if (n){ it.photos[jj] = n; renderRecs(); touch(); } }); return; }
   }
   function focusLast(f){ var all = document.querySelectorAll('#recs-card [data-f="'+f+'"]'); var el = all[all.length-1]; if (el){ el.focus(); el.scrollIntoView({block:'center'}); } }
   function onInput(e){

@@ -2041,7 +2041,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if (el.closest('#glogo-modal,[data-g],.glogo,#gmk')) return false; var par = el.parentElement; if (par && par.querySelector(':scope > [data-g]')) return false; return true; }
   var passing = false;
   document.addEventListener('change', function(e){
-    var el = e.target; if (passing || !on || !photoInput(el) || !el.files || !el.files.length || typeof DataTransfer === 'undefined') return;
+    var el = e.target; if (passing || !on || typeof window.openMarkup === 'function' || !photoInput(el) || !el.files || !el.files.length || typeof DataTransfer === 'undefined') return;
     var files = [].slice.call(el.files).filter(function(f){ return /^image\//.test(f.type) && !/gif|svg/.test(f.type); }); if (!files.length) return;
     e.stopImmediatePropagation(); e.preventDefault();
     var out = [], all = [].slice.call(el.files);
@@ -2054,6 +2054,17 @@ document.addEventListener('DOMContentLoaded',function(){
         out.push(r ? toFile(r, f.name) : f); if (r === undefined){ i = all.length; } next(i + 1); }, function(){ out.push(f); next(i + 1); });
     })(0);
   }, true);
+  /* ✏️ Mark up button on a photo that is already added: GMK(wrapper, function(newDataURL){ ...store it... }) */
+  function btnCss(){ if (document.getElementById('gmk-bcss')) return; var st = document.createElement('style'); st.id = 'gmk-bcss';
+    st.textContent = 'button.gmk-ed.gmk-ed{position:absolute!important;left:4px!important;bottom:4px!important;top:auto!important;right:auto!important;z-index:3;min-width:28px!important;width:auto!important;height:28px!important;padding:0 6px!important;margin:0!important;border-radius:14px!important;border:0!important;background:rgba(15,41,66,.9)!important;color:#fff!important;font:700 12px/1 system-ui,-apple-system,sans-serif!important;cursor:pointer;display:inline-flex!important;align-items:center;justify-content:center;gap:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.35)!important;opacity:1!important;transform:none!important}button.gmk-ed.gmk-ed:hover,button.gmk-ed.gmk-ed:focus-visible{background:#d9531e!important;outline:2px solid #fff}@media print{button.gmk-ed{display:none!important}}';
+    document.head.appendChild(st); }
+  window.GMK = function(wrap, set){ if (!wrap || wrap.querySelector(':scope > .gmk-ed')) return; var img = wrap.querySelector('img'); if (!img) return; btnCss();
+    if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'gmk-ed'; b.title = T('Mark up this photo (arrow, circle, box)','Marcar esta foto (flecha, círculo, cuadro)'); b.setAttribute('aria-label', b.title);
+    b.innerHTML = '✏️'; setTimeout(function(){ if (wrap.offsetWidth > 150) b.innerHTML = '✏️<span>' + T('Mark up','Marcar') + '</span>'; }, 0);
+    b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var src = img.getAttribute('src'); if (!src) return;
+      edit(src, {skipLabel: T('Keep as is','Dejar igual')}).then(function(r){ if (r) set(r); }); });
+    wrap.appendChild(b); };
   window.GMARK = { edit: function(src){ return edit(src).then(function(r){ return r || null; }); }, enabled: function(){ return on; },
     set: function(v){ on = !!v; try { localStorage.setItem(KEY, on ? '1' : '0'); } catch(e){} } };
 })();
