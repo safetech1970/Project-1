@@ -1508,7 +1508,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     captureMetaToState(currentMode); saveSignatureToState(currentMode);
     var mode = currentMode, cl = CHECKLISTS[mode], m = state[mode].meta, items = state[mode].items;
     var logo = document.getElementById('brand-logo').src;
-    var photoSrcs = []; cl.sections.forEach(function(sec, si){ sec.items.forEach(function(q, ii){ var it = items[itemId(si,ii)]; if (it && it.answer === 'no' && sectionOn(mode, si)) (it.photos||[]).forEach(function(p){ photoSrcs.push(p); }); }); });
+    var photoSrcs = []; cl.sections.forEach(function(sec, si){ sec.items.forEach(function(q, ii){ var it = items[itemId(si,ii)]; if (it && it.answer === 'no' && sectionOn(mode, si)) (it.photos||[]).forEach(function(p){ photoSrcs.push(p); }); }); }); (m.recs || []).forEach(function(r){ (r && r.photos || []).forEach(function(p){ if (photoSrcs.indexOf(p) < 0) photoSrcs.push(p); }); });
     return Promise.all([dims(logo), dims(m.signature || '')].concat(photoSrcs.map(dims))).then(function(res){
       var logoD = res[0], sigD = m.signature ? res[1] : null, pd = {}; photoSrcs.forEach(function(s, k){ pd[s] = res[k+2]; });
       var doc = new window.jspdf.jsPDF({unit:'pt', format:'letter'}); var W = 612, H = 792, M = 40, CW = W - 2*M, y;
@@ -1563,6 +1563,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           if (cl2.length){ doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor.apply(doc, muted); doc.text(cl2, M + 14, y + 9 + ql.length * 11.5); }
           y += h; doc.setDrawColor.apply(doc, line); doc.line(M, y - 2, W - M, y - 2); });
         y += 10; });
+      // recommendations & observations
+      var RL = (m.recs || []).filter(function(r){ return r && ((r.obs||'').trim() || (r.rec||'').trim()); });
+      if (RL.length){
+        ensure(60); doc.setFillColor(238,242,246); doc.rect(M, y, CW, 20, 'F'); doc.setFillColor(31,95,153); doc.rect(M, y, 3, 20, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor.apply(doc, navy); doc.text('Recommendations & Observations', M + 10, y + 13.5);
+        doc.setFontSize(8.5); doc.setTextColor.apply(doc, muted); doc.text(RL.length + (RL.length === 1 ? ' item' : ' items'), W - M - 6, y + 13.5, {align:'right'}); y += 28;
+        RL.forEach(function(r, n){
+          var pc = r.pri === 'high' ? red : r.pri === 'medium' ? [183,121,31] : r.type === 'Good practice' ? green : grey;
+          doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+          var ob = doc.splitTextToSize(safe(r.obs || '-'), CW - 110), rc = doc.splitTextToSize(safe(r.rec || '-'), CW - 110);
+          var ps = (r.photos || []).map(function(s){ return pd[s]; }).filter(Boolean);
+          ensure(34 + (ob.length + rc.length) * 11.5 + (ps.length ? 96 : 0));
+          var top = y;
+          doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor.apply(doc, ink); doc.text((n + 1) + '. ' + safe(r.type || 'Observation'), M + 10, y + 9);
+          var pl = safe((r.pri ? r.pri.charAt(0).toUpperCase() + r.pri.slice(1) : '') + ' priority'); doc.setFontSize(7.5); var pw = doc.getTextWidth(pl.toUpperCase()) + 16;
+          doc.setFillColor.apply(doc, pc); doc.roundedRect(W - M - pw - 2, y, pw, 13, 6, 6, 'F'); doc.setTextColor(255,255,255); doc.text(pl.toUpperCase(), W - M - 2 - pw/2, y + 9.2, {align:'center'});
+          y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc, muted);
+          var sub = [r.area ? 'Area: ' + r.area : '', r.owner ? 'Follow-up by: ' + r.owner : ''].filter(Boolean).join('     '); if (sub){ doc.text(safe(sub), M + 10, y + 8); y += 12; }
+          y += 4; label('Observed', M + 10, y + 7); doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor.apply(doc, ink); doc.text(ob, M + 96, y + 7); y += ob.length * 11.5 + 4;
+          label('Recommendation', M + 10, y + 7); doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor.apply(doc, ink); doc.text(rc, M + 96, y + 7); y += rc.length * 11.5 + 4;
+          if (ps.length){ var bw = (CW - 106 - 20) / 3, bh = 86; ps.slice(0,3).forEach(function(p, q){ var s = Math.min(bw / p.w, bh / p.h), w = p.w * s, hh = p.h * s; try { doc.addImage(p.src, 'JPEG', M + 96 + q * (bw + 10), y + 2, w, hh); } catch(e){} }); y += bh + 6; }
+          doc.setFillColor.apply(doc, pc); doc.rect(M, top, 3, y - top, 'F');
+          y += 8; doc.setDrawColor.apply(doc, line); doc.line(M, y - 4, W - M, y - 4); y += 4; });
+        y += 6; }
       // corrective action summary
       var findings = []; cl.sections.forEach(function(sec, si){ sec.items.forEach(function(q, ii){ var id = itemId(si, ii), it = items[id]; if (it && it.answer === 'no' && sectionOn(mode, si)) findings.push({sec:sec, q:q, it:it, c:ensureCorrective(items, id)}); }); });
       if (findings.length){
@@ -2780,6 +2804,7 @@ function collectMeta(){
   };
 }
 function applyMeta(m){
+  if (window.renderRecs) setTimeout(window.renderRecs, 0);
   m = m || freshMeta();
   document.getElementById('f-date').value = m.date || '';
   document.getElementById('f-time').value = m.time || '';
@@ -2805,7 +2830,9 @@ function applyMeta(m){
 }
 
 function captureMetaToState(mode){
+  const keepRecs = state[mode].meta && state[mode].meta.recs;
   state[mode].meta = collectMeta();
+  if (keepRecs) state[mode].meta.recs = keepRecs;
 }
 function loadMetaFromState(mode){
   applyMeta(state[mode].meta);
@@ -3341,3 +3368,88 @@ if (restored){
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
 })();
 /*/GUI*/</script>
+<script>/*T8RECS*/
+/* Recommendations & observations: things seen during the inspection that are not checklist failures
+   (for example people not using 3-point contact on stairs). Saved with the inspection (meta.recs),
+   in the autosave, the Save file, completed inspections and the PDF. */
+(function(){
+  if (window.__t8recs) return; window.__t8recs = 1;
+  var TYPES = ['Unsafe behavior','Unsafe condition','Housekeeping','PPE','Ergonomics','Training need','Procedure / SOP','Equipment','Good practice'];
+  var PRI = [['low','Low'],['medium','Medium'],['high','High']];
+  var QUICK = [
+    ['3-point contact', 'Unsafe behavior', 'Employees not maintaining 3-point contact when going up or down the stairs.', 'Coach employees on the spot to keep one hand on the handrail (3 points of contact). Cover stair and ladder safety at the next tailgate meeting and post a reminder sign at the stairway.'],
+    ['Phone while walking', 'Unsafe behavior', 'Employee using a phone while walking through the work area / on the stairs.', 'Remind employees to stop and stand in a safe spot before using a phone. Reinforce at the next shift huddle.'],
+    ['PPE not worn correctly', 'PPE', 'Required PPE not worn or not worn correctly (e.g., safety glasses on the head, hearing protection not inserted).', 'Coach the employees involved, confirm PPE requirements are posted at the area entrance and that PPE is available at the point of use.'],
+    ['Lifting technique', 'Ergonomics', 'Employees lifting/twisting with poor body mechanics.', 'Coach on safe lifting (keep load close, no twisting, use team lifts or aids). Evaluate whether a lift aid or work height change is needed.'],
+    ['Forklift / pedestrian', 'Unsafe behavior', 'Pedestrians walking in forklift aisles outside the marked walkway.', 'Remind employees to use marked walkways and make eye contact with operators. Review floor markings and barriers at the crossing.'],
+    ['Walkway obstructed', 'Housekeeping', 'Materials staged in the walkway or in front of emergency equipment.', 'Clear the walkway now and define a designated staging area. Add to the area 6S checklist.'],
+    ['Good catch / positive', 'Good practice', 'Employees observed working safely (e.g., using handrails, correct PPE, good housekeeping).', 'Recognize the crew at the next huddle and share as a positive example.']
+  ];
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function recs(){ var m = state[currentMode].meta; if (!Array.isArray(m.recs)) m.recs = []; return m.recs; }
+  function touch(){ if (window.queuePersist) window.queuePersist(); }
+  function dept(){ var s = document.getElementById('f-department'); if (!s) return ''; if (s.value === '__other__'){ var o = document.getElementById('f-department-other'); return o ? o.value : ''; } return s.value || ''; }
+  function css(){
+    if (document.getElementById('t8recs-css')) return;
+    var st = document.createElement('style'); st.id = 't8recs-css';
+    st.textContent = '#recs-card h2{margin:0 0 4px;font-size:17px;color:#0f2942}#recs-card .rc-hint{margin:0 0 10px;color:#5c6b7a;font-size:13px}'+
+      '#recs-card .rc-quick{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}#recs-card .rc-quick button{border:1px solid #c9d3de;background:#f6f8fb;border-radius:999px;padding:7px 12px;font:600 13px inherit;font-family:inherit;cursor:pointer;color:#0f2942;min-height:36px}'+
+      '#recs-card .rc-item{border:1px solid #d9dde2;border-left:5px solid #1f5f99;border-radius:10px;padding:12px;margin:0 0 10px;background:#fff}#recs-card .rc-item.p-high{border-left-color:#c0392b}#recs-card .rc-item.p-medium{border-left-color:#d9a400}#recs-card .rc-item.t-good{border-left-color:#1f7a4d}'+
+      '#recs-card .rc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:8px}#recs-card label{display:grid;gap:4px;font-size:12px;font-weight:700;color:#5c6b7a;text-transform:uppercase;letter-spacing:.3px}'+
+      '#recs-card input,#recs-card select,#recs-card textarea{font:16px inherit;font-family:inherit;padding:9px 10px;border:1px solid #cfd6dc;border-radius:8px;width:100%;box-sizing:border-box;background:#fff;color:#1c2733;text-transform:none;letter-spacing:0;font-weight:400}#recs-card textarea{min-height:60px;resize:vertical}'+
+      '#recs-card .rc-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}#recs-card .rc-n{font-weight:800;color:#0f2942}#recs-card .rc-acts{display:flex;gap:6px;flex-wrap:wrap}'+
+      '#recs-card .rc-btn{border:1px solid #cfd6dc;background:#fff;border-radius:8px;padding:7px 12px;font:600 13px inherit;font-family:inherit;cursor:pointer;min-height:36px;color:#0f2942}#recs-card .rc-del{color:#c0392b;border-color:#e3b3ad}#recs-card .rc-del.arm{background:#c0392b;color:#fff}'+
+      '#recs-card .rc-add{background:#0f2942;color:#fff;border:0;border-radius:8px;padding:10px 16px;font:700 14px inherit;font-family:inherit;cursor:pointer;min-height:44px}'+
+      '#recs-card .rc-ph{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}#recs-card .rc-ph img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #d9dde2}#recs-card .rc-ph .x{position:relative}#recs-card .rc-ph .x button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#c0392b;color:#fff;font-weight:800;cursor:pointer;line-height:22px;padding:0}'+
+      '#recs-card .rc-empty{color:#8a94a3;font-size:14px;margin:4px 0 10px}'+
+      '@media print{#recs-card .rc-quick,#recs-card .rc-acts,#recs-card .rc-add,#recs-card .rc-ph input{display:none!important}}';
+    document.head.appendChild(st);
+  }
+  function card(){
+    var c = document.getElementById('recs-card'); if (c) return c;
+    var sec = document.getElementById('sections'); if (!sec) return null;
+    c = document.createElement('div'); c.className = 'card'; c.id = 'recs-card';
+    c.innerHTML = '<h2>Recommendations &amp; Observations</h2><p class="rc-hint">Things you saw that are not checklist failures, such as unsafe behaviors, coaching moments or good practices. They print on the PDF after the checklist.</p>'+
+      '<div class="rc-quick" aria-label="Quick examples">'+QUICK.map(function(q, k){ return '<button type="button" data-q="'+k+'">+ '+esc(q[0])+'</button>'; }).join('')+'</div>'+
+      '<div class="rc-list"></div><button type="button" class="rc-add">+ Add recommendation</button>';
+    sec.parentNode.insertBefore(c, sec.nextSibling);
+    c.addEventListener('click', onClick); c.addEventListener('input', onInput); c.addEventListener('change', onInput);
+    return c;
+  }
+  function blank(){ return {id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), type:'Unsafe behavior', obs:'', rec:'', area: dept(), pri:'medium', owner:'', photos:[]}; }
+  function itemHtml(r, k){
+    return '<div class="rc-item p-'+esc(r.pri)+(r.type==='Good practice'?' t-good':'')+'" data-i="'+k+'">'+
+      '<div class="rc-head"><span class="rc-n">#'+(k+1)+'</span><div class="rc-acts"><button type="button" class="rc-btn" data-a="up"'+(k?'':' disabled')+' aria-label="Move up">↑</button><button type="button" class="rc-btn rc-del" data-a="del">Remove</button></div></div>'+
+      '<div class="rc-row"><label>Type<select data-f="type">'+TYPES.map(function(t){ return '<option'+(t===r.type?' selected':'')+'>'+esc(t)+'</option>'; }).join('')+(TYPES.indexOf(r.type)<0&&r.type?'<option selected>'+esc(r.type)+'</option>':'')+'</select></label>'+
+      '<label>Area / location<input data-f="area" value="'+esc(r.area)+'"></label>'+
+      '<label>Priority<select data-f="pri" data-no-other>'+PRI.map(function(p){ return '<option value="'+p[0]+'"'+(p[0]===r.pri?' selected':'')+'>'+p[1]+'</option>'; }).join('')+'</select></label>'+
+      '<label>Follow-up by (optional)<input data-f="owner" value="'+esc(r.owner)+'"></label></div>'+
+      '<label>What was observed<textarea data-f="obs" rows="2" placeholder="e.g., Employees not using 3-point contact when going upstairs">'+esc(r.obs)+'</textarea></label>'+
+      '<div style="height:8px"></div><label>Recommendation<textarea data-f="rec" rows="2" placeholder="e.g., Coach on the spot, cover at the next tailgate meeting, post a reminder sign">'+esc(r.rec)+'</textarea></label>'+
+      '<div class="rc-ph">'+(r.photos||[]).map(function(p, j){ return '<span class="x"><img src="'+p+'" alt="Photo '+(j+1)+'"><button type="button" data-a="rmph" data-j="'+j+'" aria-label="Remove photo">×</button></span>'; }).join('')+
+      ((r.photos||[]).length<3?'<label class="rc-btn" style="display:inline-flex;align-items:center;text-transform:none;letter-spacing:0;font-size:13px">📷 Add photo<input type="file" accept="image/*" data-a="ph" hidden></label>':'')+'</div></div>';
+  }
+  window.renderRecs = function(){
+    css(); var c = card(); if (!c) return; var list = recs();
+    c.querySelector('.rc-list').innerHTML = list.length ? list.map(itemHtml).join('') : '<p class="rc-empty">No recommendations yet. Use a quick example or Add recommendation.</p>';
+  };
+  function idx(el){ var it = el.closest('.rc-item'); return it ? +it.dataset.i : -1; }
+  function onClick(e){
+    var b = e.target.closest('button'); if (!b) return; var list = recs(), k = idx(b);
+    if (b.dataset.q != null){ var q = QUICK[+b.dataset.q], r = blank(); r.type = q[1]; r.obs = q[2]; r.rec = q[3]; if (q[1]==='Good practice') r.pri = 'low'; list.push(r); renderRecs(); touch(); focusLast('obs'); return; }
+    if (b.classList.contains('rc-add')){ list.push(blank()); renderRecs(); touch(); focusLast('obs'); return; }
+    if (b.dataset.a === 'up' && k > 0){ var t = list[k-1]; list[k-1] = list[k]; list[k] = t; renderRecs(); touch(); return; }
+    if (b.dataset.a === 'del'){ if (!b.classList.contains('arm')){ b.classList.add('arm'); b.textContent = 'Tap again'; setTimeout(function(){ if (b.isConnected){ b.classList.remove('arm'); b.textContent = 'Remove'; } }, 3000); return; }
+      list.splice(k, 1); renderRecs(); touch(); return; }
+    if (b.dataset.a === 'rmph'){ list[k].photos.splice(+b.dataset.j, 1); renderRecs(); touch(); return; }
+  }
+  function focusLast(f){ var all = document.querySelectorAll('#recs-card [data-f="'+f+'"]'); var el = all[all.length-1]; if (el){ el.focus(); el.scrollIntoView({block:'center'}); } }
+  function onInput(e){
+    var el = e.target, k = idx(el); if (k < 0) return; var r = recs()[k]; if (!r) return;
+    if (el.dataset.a === 'ph' && e.type === 'change'){ var f = el.files && el.files[0]; if (!f) return; shrink(f, function(u){ if (u){ r.photos = r.photos || []; r.photos.push(u); renderRecs(); touch(); } }); return; }
+    if (el.dataset.f){ r[el.dataset.f] = el.value; if (el.dataset.f === 'pri' || el.dataset.f === 'type'){ var it = el.closest('.rc-item'); it.className = 'rc-item p-' + r.pri + (r.type==='Good practice'?' t-good':''); } touch(); }
+  }
+  function shrink(file, cb){ var rd = new FileReader(); rd.onload = function(){ var im = new Image(); im.onload = function(){ var s = Math.min(1, 1000 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width*s); c.height = Math.round(im.height*s); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', 0.72)); }; im.onerror = function(){ cb(null); }; im.src = rd.result; }; rd.onerror = function(){ cb(null); }; rd.readAsDataURL(file); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderRecs, 0); }); else setTimeout(renderRecs, 0);
+})();
+/*/T8RECS*/</script>
