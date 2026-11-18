@@ -2357,55 +2357,87 @@ document.addEventListener('DOMContentLoaded',function(){
   function list(items){ return (items || []).filter(function(it){ return it && it.after; }).map(function(it){ var s = it.src || {};
     return Object.assign({}, it, {done: it.done || s.proofDone || '', ver: it.ver || s.proofVer || '', by: s.proofBy || it.by || ''}); }); }
   function notes(it){ return [[T('What was done','Qué se hizo'), it.done], [T('How it was verified','Cómo se verificó'), it.ver]].filter(function(x){ return x[1] && String(x[1]).trim(); }); }
+  /* ---- report layout: formal close-out record ---- */
+  function split(it){ var m = /^\s*(\d+(?:\.\d+)*)[.)]?\s+([\s\S]*)$/.exec(it.title || ''); return m ? {no: m[1], text: m[2]} : {no: '', text: it.title || ''}; }
+  function meta(it){ var r = [[T('Date corrected','Fecha de corrección'), it.at], [T('Verified by','Verificado por'), it.by]];
+    if (it.note){ var i = it.note.indexOf(': '); r.push(i > 0 ? [it.note.slice(0, i), it.note.slice(i + 2)] : [T('Note','Nota'), it.note]); }
+    return r.filter(function(x){ return x[1] && String(x[1]).trim(); }); }
+  function rows(it){ return [[T('Corrective action taken','Acción correctiva realizada'), it.done], [T('Verification method','Método de verificación'), it.ver]].filter(function(x){ return x[1] && String(x[1]).trim(); }); }
+  function status(it){ return (it.ver || it.by) ? T('VERIFIED CLOSED','CERRADO Y VERIFICADO') : T('CORRECTED','CORREGIDO'); }
   function pdf(doc, items, o){
     items = list(items); if (!items.length) return o.y;
-    var M = o.M || 40, W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), CW = W - 2*M, bot = o.bottom || 56, top = o.top || M, y = o.y, gap = 14, cw = (CW - gap) / 2, bh = 170, maxH = Math.min(o.maxH || 470, H - bot - top - 80);
-    /* box height follows the photos: tall enough to show each photo at full column width (portrait photos get tall boxes) */
-    function fitH(it){ var need = 0; [it.before, it.after].forEach(function(src){ if (!src) return; var d = dims(src); need = Math.max(need, (cw - 8) * d.h / d.w + 8); }); return Math.max(150, Math.min(maxH, need || 170)); }
-    function brk(h){ if (y + h > H - bot){ doc.addPage(); y = top; if (o.onPage) y = o.onPage(y) || y; } }
-    brk(30 + fitH(items[0]) + 40);
-    doc.setFont('helvetica','bold'); doc.setFontSize(o.labelSize || 9); doc.setTextColor(15,41,66); doc.text(safe(o.label || T('Proof of correction - before / after','Prueba de corrección - antes / después')).toUpperCase(), M, y); y += 8;
+    var M = o.M || 40, W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), CW = W - 2*M, bot = o.bottom || 56, top = o.top || M, y = o.y, gap = 12, cw = (CW - gap)/2;
+    var NAVY = [15,41,66], INK = [20,32,46], MUTED = [86,100,118], LINE = [200,208,218], SHADE = [238,242,246], RED = [180,35,24], GRN = [46,125,50];
+    function brk(h){ if (y + h > H - bot){ doc.addPage(); y = top; if (o.onPage) y = o.onPage(y) || y; return true; } return false; }
+    function fill(c){ doc.setFillColor(c[0], c[1], c[2]); } function ink(c){ doc.setTextColor(c[0], c[1], c[2]); } function draw(c){ doc.setDrawColor(c[0], c[1], c[2]); }
+    /* section heading */
+    function heading(){ doc.setFont('helvetica','bold'); doc.setFontSize(o.labelSize || 11); ink(NAVY); doc.text(safe(o.label || T('Proof of correction','Prueba de corrección')).toUpperCase(), M, y + 4);
+      draw(NAVY); doc.setLineWidth(1.2); doc.line(M, y + 9, M + CW, y + 9); doc.setLineWidth(0.6); y += 22; }
     items.forEach(function(it, k){
-      bh = fitH(it); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); var tl = it.title ? doc.splitTextToSize(safe((items.length > 1 ? (k+1) + '. ' : '') + it.title), CW) : [];
-      doc.setFont('helvetica','normal'); doc.setFontSize(9.5); var nt = notes(it).map(function(x){ return [x[0], doc.splitTextToSize(safe(x[1]), CW - 120)]; }), nh = nt.reduce(function(a, x){ return a + x[1].length*11.5 + 4; }, 0);
-      doc.setFont('helvetica','bold'); brk(tl.length*11.5 + bh + 34 + nh); if (tl.length){ y += 4; doc.setTextColor(20,32,46); doc.text(tl, M, y + 9); y += tl.length*11.5 + 2; }
-      (it.before ? [[it.before, T('BEFORE','ANTES'), [180,35,24]], [it.after, T('AFTER','DESPUÉS'), [46,125,50]]] : [[it.after, T('AFTER','DESPUÉS'), [46,125,50]]]).forEach(function(p, j){
-        var x = M + j*(cw + gap); doc.setDrawColor(213,221,230); doc.setLineWidth(0.8); doc.rect(x, y + 4, cw, bh);
-        if (p[0]){ var dd = dims(p[0]), s = Math.min((cw-8)/dd.w, (bh-8)/dd.h), w = dd.w*s, h = dd.h*s; try { doc.addImage(p[0], fmt(p[0]), x + (cw-w)/2, y + 4 + (bh-h)/2, w, h); } catch(err){} }
-        else { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(120,130,145); doc.text(safe(T('No before photo','Sin foto de antes')), x + cw/2, y + 4 + bh/2, {align:'center'}); }
-        doc.setFillColor(p[2][0], p[2][1], p[2][2]); doc.rect(x, y + 4, 58, 15, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255); doc.text(safe(p[1]), x + 29, y + 14.5, {align:'center'}); });
-      y += bh + 6; var cap = capOf(it); if (it.note) cap = (cap ? cap + '  ·  ' : '') + it.note;
-      if (cap){ doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(86,100,118); var cl = doc.splitTextToSize(safe(cap), CW); doc.text(cl, M, y + 8); y += cl.length*10 + 4; }
-      nt.forEach(function(x){ y += 4; doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(29,107,42); doc.text(safe(x[0]).toUpperCase(), M, y + 8);
-        doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(20,32,46); doc.text(x[1], M + 120, y + 8); y += x[1].length*11.5; });
-      y += 14; });
-    return y + 4; }
+      var sp = split(it), mt = meta(it), rw = rows(it);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); var tl = sp.text ? doc.splitTextToSize(safe(sp.text), CW - 22) : [];
+      var findH = tl.length ? tl.length*12.5 + 22 : 0;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9.5); var LW = 132, rl = rw.map(function(x){ return doc.splitTextToSize(safe(x[1]), CW - LW - 16); });
+      var metaH = mt.length ? 34 : 0, rowsH = rl.reduce(function(a, l){ return a + Math.max(22, l.length*12 + 10); }, 0);
+      var fixed = (k ? 0 : 22) + 22 + findH + 10 + 18 + 10 + metaH + rowsH + 18, room = H - bot - top - fixed;
+      var need = 0; [it.before, it.after].forEach(function(src){ if (!src) return; var d = dims(src); need = Math.max(need, (cw - 12)*d.h/d.w); });
+      var imgH = Math.max(140, Math.min(o.maxH || 400, room, need || 200)), boxH = imgH + 18 + 12;
+      brk(fixed + boxH); if (!k) heading();
+      /* header band */
+      fill(NAVY); doc.rect(M, y, CW, 22, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(9); ink([255,255,255]);
+      doc.text(safe(T('CORRECTIVE ACTION CLOSE-OUT','CIERRE DE ACCIÓN CORRECTIVA') + (sp.no ? '  ·  ' + T('ITEM ','PUNTO ') + sp.no : (items.length > 1 ? '  ·  ' + (k+1) : ''))), M + 10, y + 14.5);
+      var st = safe(status(it)); doc.setFontSize(8); var sw = doc.getTextWidth(st) + 18; fill(GRN); doc.roundedRect(M + CW - sw - 6, y + 4, sw, 14, 7, 7, 'F'); ink([255,255,255]); doc.text(st, M + CW - 6 - sw/2, y + 13.5, {align:'center'});
+      y += 22;
+      /* finding */
+      if (tl.length){ fill([246,248,251]); doc.rect(M, y, CW, findH, 'F'); fill(RED); doc.rect(M, y, 3, findH, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(7.5); ink(MUTED); doc.text(safe(T('FINDING','HALLAZGO')), M + 12, y + 11);
+        doc.setFont('helvetica','bold'); doc.setFontSize(10); ink(INK); doc.text(tl, M + 12, y + 23); y += findH; }
+      y += 10;
+      /* photos */
+      var pics = it.before ? [[it.before, T('BEFORE  ·  AS FOUND','ANTES  ·  COMO SE ENCONTRÓ'), RED], [it.after, T('AFTER  ·  CORRECTED','DESPUÉS  ·  CORREGIDO'), GRN]] : [[it.after, T('AFTER  ·  CORRECTED','DESPUÉS  ·  CORREGIDO'), GRN]];
+      pics.forEach(function(p, j){ var x = pics.length < 2 ? M + (CW - cw)/2 : M + j*(cw + gap); draw(LINE); doc.setLineWidth(0.8); doc.rect(x, y, cw, boxH);
+        fill(p[2]); doc.rect(x, y, cw, 18, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); ink([255,255,255]); doc.text(safe(p[1]), x + cw/2, y + 12.5, {align:'center'});
+        var d = dims(p[0]), s = Math.min((cw - 12)/d.w, imgH/d.h), w = d.w*s, h = d.h*s; try { doc.addImage(p[0], fmt(p[0]), x + (cw - w)/2, y + 18 + 6 + (imgH - h)/2, w, h); } catch(err){} });
+      y += boxH + 10;
+      /* details */
+      if (mt.length){ var mw = CW / mt.length; mt.forEach(function(m, j){ var x = M + j*mw; fill(SHADE); doc.rect(x, y, mw, 34, 'F'); draw(LINE); doc.rect(x, y, mw, 34);
+          doc.setFont('helvetica','bold'); doc.setFontSize(7); ink(MUTED); doc.text(safe(m[0]).toUpperCase(), x + 8, y + 12);
+          doc.setFont('helvetica','normal'); doc.setFontSize(9.5); ink(INK); doc.text(doc.splitTextToSize(safe(m[1]), mw - 16)[0] || '', x + 8, y + 26); }); y += 34; }
+      rw.forEach(function(x, j){ var hh = Math.max(22, rl[j].length*12 + 10); fill(SHADE); doc.rect(M, y, LW, hh, 'F'); draw(LINE); doc.rect(M, y, LW, hh); doc.rect(M + LW, y, CW - LW, hh);
+        doc.setFont('helvetica','bold'); doc.setFontSize(7.5); ink(NAVY); doc.text(doc.splitTextToSize(safe(x[0]).toUpperCase(), LW - 14), M + 8, y + 13);
+        doc.setFont('helvetica','normal'); doc.setFontSize(9.5); ink(INK); doc.text(rl[j], M + LW + 8, y + 14); y += hh; });
+      y += 18; });
+    return y; }
   function html(items, label){ items = list(items); if (!items.length) return '';
-    var L = 'font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#566476';
-    return '<div style="margin:12px 0"><div style="' + L + '">' + e(label || T('Proof of correction - before / after','Prueba de corrección - antes / después')) + '</div>' + items.map(function(it, k){
-      return '<div style="margin:8px 0 12px">' + (it.title ? '<div style="font-weight:700;margin-bottom:4px">' + e((items.length > 1 ? (k+1) + '. ' : '') + it.title) + '</div>' : '') +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + (it.before ? [[it.before, T('BEFORE','ANTES'), '#b42318'], [it.after, T('AFTER','DESPUÉS'), '#2e7d32']] : [[it.after, T('AFTER','DESPUÉS'), '#2e7d32']]).map(function(p){
-          return '<figure style="margin:0;position:relative;border:1px solid #d5dde6;border-radius:8px;overflow:hidden;background:#fff;min-height:120px;display:flex;align-items:center;justify-content:center">' +
-            (p[0] ? '<img alt="" src="' + p[0] + '" style="width:100%;height:auto;display:block;max-height:560px;object-fit:contain">' : '<span style="color:#8a96a6;font-size:13px">' + e(T('No before photo','Sin foto de antes')) + '</span>') +
-            '<span style="position:absolute;left:0;top:0;background:' + p[2] + ';color:#fff;font:800 11px system-ui,sans-serif;padding:3px 8px">' + p[1] + '</span></figure>'; }).join('') + '</div>' +
-        ((capOf(it) || it.note) ? '<div style="font-size:12px;color:#566476;margin-top:4px">' + e([capOf(it), it.note].filter(Boolean).join(' · ')) + '</div>' : '') +
-        notes(it).map(function(x){ return '<div style="margin-top:4px;font-size:14px"><b style="color:#1d6b2a">' + e(x[0]) + ':</b> <span style="white-space:pre-wrap">' + e(x[1]) + '</span></div>'; }).join('') + '</div>'; }).join('') + '</div>'; }
+    var th = 'font:800 10px system-ui,sans-serif;letter-spacing:.5px;text-transform:uppercase;color:#566476', bd = '1px solid #c8d0da';
+    return '<div style="margin:16px 0"><div style="font:800 13px system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#0f2942;border-bottom:2px solid #0f2942;padding-bottom:4px;margin-bottom:10px">' + e(label || T('Proof of correction','Prueba de corrección')) + '</div>' + items.map(function(it, k){
+      var sp = split(it), mt = meta(it), rw = rows(it), pics = it.before ? [[it.before, T('Before · As found','Antes · Como se encontró'), '#b42318'], [it.after, T('After · Corrected','Después · Corregido'), '#2e7d32']] : [[it.after, T('After · Corrected','Después · Corregido'), '#2e7d32']];
+      return '<div style="border:' + bd + ';margin-bottom:16px;background:#fff">' +
+        '<div style="background:#0f2942;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font:800 12px system-ui,sans-serif;letter-spacing:.4px"><span>' + e(T('CORRECTIVE ACTION CLOSE-OUT','CIERRE DE ACCIÓN CORRECTIVA') + (sp.no ? ' · ' + T('ITEM ','PUNTO ') + sp.no : '')) + '</span><span style="background:#2e7d32;border-radius:99px;padding:2px 10px;font-size:10px">' + e(status(it)) + '</span></div>' +
+        (sp.text ? '<div style="background:#f6f8fb;border-left:3px solid #b42318;padding:8px 12px"><div style="' + th + '">' + e(T('Finding','Hallazgo')) + '</div><div style="font-weight:700;margin-top:2px">' + e(sp.text) + '</div></div>' : '') +
+        '<div style="display:grid;grid-template-columns:' + (it.before ? '1fr 1fr' : 'minmax(0,50%)') + ';justify-content:center;gap:10px;padding:10px">' + pics.map(function(p){
+          return '<figure style="margin:0;border:' + bd + '"><figcaption style="background:' + p[2] + ';color:#fff;text-align:center;font:800 11px system-ui,sans-serif;letter-spacing:.5px;text-transform:uppercase;padding:4px">' + e(p[1]) + '</figcaption><img alt="" src="' + p[0] + '" style="display:block;width:100%;max-height:560px;object-fit:contain;background:#fff;padding:6px;box-sizing:border-box"></figure>'; }).join('') + '</div>' +
+        (mt.length ? '<div style="display:grid;grid-template-columns:repeat(' + mt.length + ',1fr);border-top:' + bd + '">' + mt.map(function(m, j){ return '<div style="background:#eef2f6;padding:6px 10px;' + (j ? 'border-left:' + bd : '') + '"><div style="' + th + '">' + e(m[0]) + '</div><div>' + e(m[1]) + '</div></div>'; }).join('') + '</div>' : '') +
+        rw.map(function(x){ return '<div style="display:grid;grid-template-columns:150px 1fr;border-top:' + bd + '"><div style="background:#eef2f6;padding:6px 10px;' + th + ';color:#0f2942">' + e(x[0]) + '</div><div style="padding:6px 10px;white-space:pre-wrap">' + e(x[1]) + '</div></div>'; }).join('') + '</div>'; }).join('') + '</div>'; }
   /* report kit Word: k = {para, run, lbl, cell, table, imgRun, bytes, media, rels, TW} */
   function rkDocx(items, k, label){ items = list(items); if (!items.length) return '';
-    var out = k.para(k.lbl(label || T('Proof of correction - before / after','Prueba de corrección - antes / después')), {before:120, after:60}), cw = Math.floor(k.TW/2), mW = (cw - 260)/1440*914400, mH = 4.6*914400, n = 0;
+    var TW = k.TW, out = k.para(k.run((label || T('Proof of correction','Prueba de corrección')).toUpperCase(), {b:true, sz:22, color:'0F2942'}), {before:160, after:80}), cw = Math.floor(TW/2), mW = (cw - 300)/1440*914400, mH = 4.4*914400, n = 0; out = out.replace('<w:pPr>', '<w:pPr><w:keepNext/>');
     items.forEach(function(it, i){
-      if (it.title) out += k.para(k.run((items.length > 1 ? (i+1) + '. ' : '') + it.title, {b:true, sz:19}), {after:40});
-      var cells = (it.before ? [[it.before, T('BEFORE','ANTES'), 'B42318'], [it.after, T('AFTER','DESPUÉS'), '2E7D32']] : [[it.after, T('AFTER','DESPUÉS'), '2E7D32'], ['', '', '']]).map(function(p){
-        if (!p[1]) return k.cell(cw, k.para('', {after:0}));
-        var inner = k.para(k.run(p[1], {b:true, sz:16, color:p[2]}), {after:40});
-        if (p[0]){ n++; var dd = dims(p[0]), s = Math.min(mW/dd.w, mH/dd.h), ext = fmt(p[0]) === 'PNG' ? 'png' : 'jpeg', rid = 'rIdPf' + n;
-          k.media.push({name:'word/media/proof' + n + '.' + ext, data:k.bytes(p[0])}); k.rels.push('<Relationship Id="' + rid + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/proof' + n + '.' + ext + '"/>');
-          inner += k.para(k.imgRun(rid, 400 + n, Math.round(dd.w*s), Math.round(dd.h*s)), {align:'center', after:0}); }
-        else inner += k.para(k.run(T('No before photo','Sin foto de antes'), {sz:17, color:'8A96A6'}), {align:'center', after:0});
-        return k.cell(cw, inner); }).join('');
-      out += k.table([cw, cw], ['<w:trPr><w:cantSplit/></w:trPr>' + cells]);
-      var cap = [capOf(it), it.note].filter(Boolean).join(' · '), nt = notes(it); out += cap ? k.para(k.run(cap, {sz:16, color:'566476'}), {after: nt.length ? 40 : 120}) : (nt.length ? '' : k.para('', {after:120}));
-      nt.forEach(function(x, j){ out += k.para(k.run(x[0] + ': ', {b:true, sz:19, color:'1D6B2A'}) + k.run(x[1], {sz:19}), {after: j === nt.length - 1 ? 160 : 40}); }); });
+      var sp = split(it), mt = meta(it), rw = rows(it);
+      function kn(x){ return x.replace(/<w:pPr>/g, '<w:pPr><w:keepNext/>'); }
+      out += kn(k.table([TW - 2600, 2600], ['<w:trPr><w:cantSplit/></w:trPr>' + k.cell(TW - 2600, k.para(k.run(T('CORRECTIVE ACTION CLOSE-OUT','CIERRE DE ACCIÓN CORRECTIVA') + (sp.no ? '  ·  ' + T('ITEM ','PUNTO ') + sp.no : ''), {b:true, sz:18, color:'FFFFFF'}), {after:0}), {fill:'0F2942', vc:true}) +
+        k.cell(2600, k.para(k.run(status(it), {b:true, sz:16, color:'FFFFFF'}), {align:'center', after:0}), {fill:'2E7D32', vc:true})]));
+      if (sp.text) out += kn(k.table([TW], [k.cell(TW, k.para(k.run(T('FINDING','HALLAZGO'), {b:true, sz:14, color:'566476'}), {after:20}) + k.para(k.run(sp.text, {b:true, sz:20}), {after:0}), {fill:'F6F8FB'})]));
+      var pics = it.before ? [[it.before, T('BEFORE  ·  AS FOUND','ANTES  ·  COMO SE ENCONTRÓ'), 'B42318'], [it.after, T('AFTER  ·  CORRECTED','DESPUÉS  ·  CORREGIDO'), '2E7D32']] : [[it.after, T('AFTER  ·  CORRECTED','DESPUÉS  ·  CORREGIDO'), '2E7D32']];
+      var one = pics.length < 2, pw = one ? TW : cw; if (one){ mW = (TW/2 - 300)/1440*914400; }
+      var head = kn(pics.map(function(p){ return k.cell(pw, k.para(k.run(p[1], {b:true, sz:16, color:'FFFFFF'}), {align:'center', after:0}), {fill:p[2]}); }).join(''));
+      var imgs = pics.map(function(p){ n++; var dd = dims(p[0]), s = Math.min(mW/dd.w, mH/dd.h), ext = fmt(p[0]) === 'PNG' ? 'png' : 'jpeg', rid = 'rIdPf' + n;
+        k.media.push({name:'word/media/proof' + n + '.' + ext, data:k.bytes(p[0])}); k.rels.push('<Relationship Id="' + rid + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/proof' + n + '.' + ext + '"/>');
+        return k.cell(pw, k.para(k.imgRun(rid, 400 + n, Math.round(dd.w*s), Math.round(dd.h*s)), {align:'center', before:60, after:60})); }).join('');
+      out += k.table(one ? [TW] : [cw, cw], ['<w:trPr><w:cantSplit/></w:trPr>' + head, '<w:trPr><w:cantSplit/></w:trPr>' + imgs]); mW = (cw - 300)/1440*914400;
+      if (mt.length){ var mw = Math.floor(TW/mt.length); out += k.table(mt.map(function(){ return mw; }), [mt.map(function(m){ return k.cell(mw, k.para(k.run(m[0].toUpperCase(), {b:true, sz:13, color:'566476'}), {after:20}) + k.para(k.run(m[1], {sz:19}), {after:0}), {fill:'EEF2F6'}); }).join('')]); }
+      if (rw.length) out += k.table([2700, TW - 2700], rw.map(function(x){ return k.cell(2700, k.para(k.run(x[0].toUpperCase(), {b:true, sz:14, color:'0F2942'}), {after:0}), {fill:'EEF2F6'}) + k.cell(TW - 2700, k.para(k.run(x[1], {sz:19}), {after:0})); }));
+      out += k.para('', {after:200}); });
     return out; }
   window.GPROOF = {box: box, pdf: pdf, html: html, rkDocx: rkDocx, dims: dims, list: list, today: today};
   /* lists drawn before this script loaded: draw them again so the proof boxes appear */
