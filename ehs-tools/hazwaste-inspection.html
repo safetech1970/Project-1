@@ -2275,12 +2275,14 @@ document.addEventListener('DOMContentLoaded',function(){
   function list(items){ return (items || []).filter(function(it){ return it && it.after; }); }
   function pdf(doc, items, o){
     items = list(items); if (!items.length) return o.y;
-    var M = o.M || 40, W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), CW = W - 2*M, bot = o.bottom || 56, top = o.top || M, y = o.y, gap = 14, cw = (CW - gap) / 2, bh = o.boxH || 170;
+    var M = o.M || 40, W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), CW = W - 2*M, bot = o.bottom || 56, top = o.top || M, y = o.y, gap = 14, cw = (CW - gap) / 2, bh = 170, maxH = Math.min(o.maxH || 470, H - bot - top - 80);
+    /* box height follows the photos: tall enough to show each photo at full column width (portrait photos get tall boxes) */
+    function fitH(it){ var need = 0; [it.before, it.after].forEach(function(src){ if (!src) return; var d = dims(src); need = Math.max(need, (cw - 8) * d.h / d.w + 8); }); return Math.max(150, Math.min(maxH, need || 170)); }
     function brk(h){ if (y + h > H - bot){ doc.addPage(); y = top; if (o.onPage) y = o.onPage(y) || y; } }
-    brk(30 + bh + 40);
+    brk(30 + fitH(items[0]) + 40);
     doc.setFont('helvetica','bold'); doc.setFontSize(o.labelSize || 9); doc.setTextColor(15,41,66); doc.text(safe(o.label || T('Proof of correction - before / after','Prueba de corrección - antes / después')).toUpperCase(), M, y); y += 8;
     items.forEach(function(it, k){
-      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); var tl = it.title ? doc.splitTextToSize(safe((items.length > 1 ? (k+1) + '. ' : '') + it.title), CW) : [];
+      bh = fitH(it); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); var tl = it.title ? doc.splitTextToSize(safe((items.length > 1 ? (k+1) + '. ' : '') + it.title), CW) : [];
       brk(tl.length*11.5 + bh + 34); if (tl.length){ y += 4; doc.setTextColor(20,32,46); doc.text(tl, M, y + 9); y += tl.length*11.5 + 2; }
       (it.before ? [[it.before, T('BEFORE','ANTES'), [180,35,24]], [it.after, T('AFTER','DESPUÉS'), [46,125,50]]] : [[it.after, T('AFTER','DESPUÉS'), [46,125,50]]]).forEach(function(p, j){
         var x = M + j*(cw + gap); doc.setDrawColor(213,221,230); doc.setLineWidth(0.8); doc.rect(x, y + 4, cw, bh);
@@ -2297,12 +2299,12 @@ document.addEventListener('DOMContentLoaded',function(){
       return '<div style="margin:8px 0 12px">' + (it.title ? '<div style="font-weight:700;margin-bottom:4px">' + e((items.length > 1 ? (k+1) + '. ' : '') + it.title) + '</div>' : '') +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + (it.before ? [[it.before, T('BEFORE','ANTES'), '#b42318'], [it.after, T('AFTER','DESPUÉS'), '#2e7d32']] : [[it.after, T('AFTER','DESPUÉS'), '#2e7d32']]).map(function(p){
           return '<figure style="margin:0;position:relative;border:1px solid #d5dde6;border-radius:8px;overflow:hidden;background:#fff;min-height:120px;display:flex;align-items:center;justify-content:center">' +
-            (p[0] ? '<img alt="" src="' + p[0] + '" style="width:100%;height:auto;display:block;max-height:340px;object-fit:contain">' : '<span style="color:#8a96a6;font-size:13px">' + e(T('No before photo','Sin foto de antes')) + '</span>') +
+            (p[0] ? '<img alt="" src="' + p[0] + '" style="width:100%;height:auto;display:block;max-height:560px;object-fit:contain">' : '<span style="color:#8a96a6;font-size:13px">' + e(T('No before photo','Sin foto de antes')) + '</span>') +
             '<span style="position:absolute;left:0;top:0;background:' + p[2] + ';color:#fff;font:800 11px system-ui,sans-serif;padding:3px 8px">' + p[1] + '</span></figure>'; }).join('') + '</div>' +
         ((capOf(it) || it.note) ? '<div style="font-size:12px;color:#566476;margin-top:4px">' + e([capOf(it), it.note].filter(Boolean).join(' · ')) + '</div>' : '') + '</div>'; }).join('') + '</div>'; }
   /* report kit Word: k = {para, run, lbl, cell, table, imgRun, bytes, media, rels, TW} */
   function rkDocx(items, k, label){ items = list(items); if (!items.length) return '';
-    var out = k.para(k.lbl(label || T('Proof of correction - before / after','Prueba de corrección - antes / después')), {before:120, after:60}), cw = Math.floor(k.TW/2), mW = (cw - 260)/1440*914400, mH = 2.6*914400, n = 0;
+    var out = k.para(k.lbl(label || T('Proof of correction - before / after','Prueba de corrección - antes / después')), {before:120, after:60}), cw = Math.floor(k.TW/2), mW = (cw - 260)/1440*914400, mH = 4.6*914400, n = 0;
     items.forEach(function(it, i){
       if (it.title) out += k.para(k.run((items.length > 1 ? (i+1) + '. ' : '') + it.title, {b:true, sz:19}), {after:40});
       var cells = (it.before ? [[it.before, T('BEFORE','ANTES'), 'B42318'], [it.after, T('AFTER','DESPUÉS'), '2E7D32']] : [[it.after, T('AFTER','DESPUÉS'), '2E7D32'], ['', '', '']]).map(function(p){
