@@ -1362,7 +1362,7 @@ function model(r){
     tables:[{label:L('Risk assessment','Evaluación de riesgo'), cols:[[L('Severity','Severidad'),.3],[L('Likelihood','Probabilidad'),.3],[L('Score','Puntaje'),.15],[L('Risk level','Nivel'),.25]],
       rows:[[r.sev+' · '+tx(SEV[r.sev-1]), r.lik+' · '+tx(LIK[r.lik-1]), {t:String(s),b:true}, {t:tx(b),b:true,hex:BANDHEX[b.k]}]]}],
     photos:r.photos||[], photoLabel:L('Photos','Fotos'),
-    proof:r.proof?[{before:(r.photos||[])[0]||'',after:r.proof,title:r.ca,at:r.proofAt,by:r.verified}]:null,
+    proof:r.proof?[{before:(r.photos||[])[0]||'',after:r.proof,src:r,title:r.ca,at:r.proofAt,by:r.verified}]:null,
     sections:[[L('Alerts','Alertas'),flags.join('\n')],[L('What happened','Qué pasó'),r.desc],[L('What could have happened','Qué pudo haber pasado'),outs],[L('Immediate action taken','Acción inmediata tomada'),r.action],
       [L('Corrective action','Acción correctiva'),r.ca],[L('Closure note','Nota de cierre'),r.closeNote],[L('Verified by','Verificado por'),r.verified]],
     signoff:{label:L('Review and sign-off','Revisión y firmas'), slots:[L('Supervisor - name and signature','Supervisor - nombre y firma'),L('EHS - name and signature','EHS - nombre y firma')], dateLabel:L('Date','Fecha'), signed:(r.sigs||[]), signedWord:L('Signed electronically','Firmado electrónicamente')},
@@ -1966,8 +1966,9 @@ document.addEventListener('DOMContentLoaded',function(){
       '.gpf-th{position:relative;width:96px;height:96px;border-radius:8px;overflow:hidden;border:2px solid #2e7d32;flex:0 0 auto;background:#fff}.gpf-th img{width:100%;height:100%;object-fit:cover;display:block}'+
       '.gpf-b{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 12px;border-radius:9px;border:1px solid #2e7d32;background:#fff;color:#1d6b2a;font:700 14px system-ui,-apple-system,sans-serif;cursor:pointer}'+
       '.gpf-b.x{border-color:#b42318;color:#b42318}.gpf-b input{display:none}.gpf input[type=date]{min-height:36px;padding:2px 8px;border-radius:8px;border:1px solid #c5ced8;font:14px system-ui,sans-serif}'+
-      '.gpf-n{font-size:12px;color:#566476}@media print{.gpf .gpf-b,.gpf-n{display:none!important}.gpf{border-style:solid}}';
+      '.gpf-n{font-size:12px;color:#566476}.gpf-f{display:grid;gap:3px;font-size:12px;font-weight:700;color:#1d6b2a}.gpf-f textarea,.gpf-f input{font:14px system-ui,-apple-system,sans-serif;font-weight:400;color:#14202e;border:1px solid #c5ced8;border-radius:8px;padding:6px 8px;min-height:38px;width:100%;box-sizing:border-box;background:#fff}.gpf-f textarea{min-height:52px;resize:vertical}.gpf-c{display:flex;flex-wrap:wrap;gap:5px}.gpf-c button{font:600 12px system-ui,sans-serif;border:1px solid #9fc5a5;background:#fff;color:#1d6b2a;border-radius:99px;padding:4px 9px;cursor:pointer;min-height:28px}@media print{.gpf .gpf-b,.gpf-n,.gpf-c{display:none!important}.gpf{border-style:solid}}';
     document.head.appendChild(st); }
+  function VER(){ return es() ? ['Inspección visual','Probado en operación','Medido / revisado con herramienta','Revisado con el supervisor del área','Se confirmó acceso o espacio libre'] : ['Visual inspection','Tested during operation','Measured / gauged','Reviewed with area supervisor','Confirmed clearance / access']; }
   function shrink(file){ return new Promise(function(res){ var r = new FileReader(); r.onload = function(){ var i = new Image(); i.onload = function(){
         var s = Math.min(1, 1200 / Math.max(i.naturalWidth, i.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(i.naturalWidth*s); c.height = Math.round(i.naturalHeight*s);
         var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(i,0,0,c.width,c.height); res(c.toDataURL('image/jpeg', 0.82)); };
@@ -1981,7 +1982,14 @@ document.addEventListener('DOMContentLoaded',function(){
         '<div style="display:grid;gap:6px"><label class="gpf-n" style="display:grid;gap:2px">' + e(T('Date corrected','Fecha de corrección')) + '<input type="date" value="' + e(obj.proofAt || '') + '"></label>' +
         '<div class="gpf-r"><label class="gpf-b">🔄 ' + e(T('Replace','Cambiar')) + '<input type="file" accept="image/*"></label><button type="button" class="gpf-b x">' + e(T('Remove','Quitar')) + '</button></div></div></div>'
         : '<div class="gpf-r"><label class="gpf-b">📷 ' + e(T('Take photo','Tomar foto')) + '<input type="file" accept="image/*" capture="environment"></label><label class="gpf-b">🖼 ' + e(T('Choose photo','Elegir foto')) + '<input type="file" accept="image/*"></label></div>' +
-          '<div class="gpf-n">' + e(T('After the fix is done, add a photo of the corrected condition. It prints next to the original photo on the report.','Cuando se termine la corrección, agregue una foto de la condición corregida. Se imprime junto a la foto original en el reporte.')) + '</div>');
+          '<div class="gpf-n">' + e(T('After the fix is done, add a photo of the corrected condition. It prints next to the original photo on the report.','Cuando se termine la corrección, agregue una foto de la condición corregida. Se imprime junto a la foto original en el reporte.')) + '</div>') +
+        '<label class="gpf-f">' + e(T('What was done','Qué se hizo')) + '<textarea data-k="proofDone" rows="2" placeholder="' + e(T('e.g. Installed a fixed guard over the chain and sprocket drive','p. ej. Se instaló una guarda fija sobre la transmisión de cadena y catarina')) + '">' + e(obj.proofDone || '') + '</textarea></label>' +
+        '<label class="gpf-f">' + e(T('How it was verified','Cómo se verificó')) + '<textarea data-k="proofVer" rows="2" placeholder="' + e(T('e.g. Guard secured with fasteners; ran the conveyor and confirmed no access to the nip point','p. ej. Guarda asegurada con tornillos; se operó el transportador y se confirmó que no hay acceso al punto de atrapamiento')) + '">' + e(obj.proofVer || '') + '</textarea></label>' +
+        '<div class="gpf-c">' + VER().map(function(v){ return '<button type="button" data-v="' + e(v) + '">+ ' + e(v) + '</button>'; }).join('') + '</div>' +
+        '<label class="gpf-f">' + e(T('Verified by','Verificado por')) + '<input data-k="proofBy" value="' + e(obj.proofBy || '') + '" placeholder="' + e(T('Name and title','Nombre y puesto')) + '"></label>';
+      var tmr = null; function soft(){ clearTimeout(tmr); tmr = setTimeout(function(){ onChange && onChange(obj, true); }, 500); }
+      d.querySelectorAll('[data-k]').forEach(function(f){ f.addEventListener('input', function(){ obj[f.dataset.k] = f.value; soft(); }); });
+      d.querySelectorAll('.gpf-c button').forEach(function(b){ b.addEventListener('click', function(){ var ta = d.querySelector('[data-k=proofVer]'), v = b.dataset.v; ta.value = ta.value.trim() ? ta.value.trim().replace(/[.;]?$/, '; ') + v.toLowerCase() : v; obj.proofVer = ta.value; soft(); }); });
       d.querySelectorAll('input[type=file]').forEach(function(inp){ inp.addEventListener('change', function(){ var f = inp.files && inp.files[0]; if (!f) return;
         shrink(f).then(function(u){ if (!u) return; obj.proof = u; if (!obj.proofAt) obj.proofAt = today(); paint(); onChange && onChange(obj); }); }); });
       var dt = d.querySelector('input[type=date]'); if (dt) dt.addEventListener('change', function(){ obj.proofAt = dt.value; onChange && onChange(obj); });
@@ -2000,7 +2008,9 @@ document.addEventListener('DOMContentLoaded',function(){
   function fmt(src){ return /^data:image\/png/i.test(src) ? 'PNG' : 'JPEG'; }
   function safe(s){ return String(s == null ? '' : s).replace(/[–—]/g,'-').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,'...').replace(/[^\u0000-ÿ]/g,''); }
   function capOf(it){ return [it.at ? T('Corrected ','Corregido ') + it.at : '', it.by ? T('Verified by ','Verificado por ') + it.by : ''].filter(Boolean).join('  ·  '); }
-  function list(items){ return (items || []).filter(function(it){ return it && it.after; }); }
+  function list(items){ return (items || []).filter(function(it){ return it && it.after; }).map(function(it){ var s = it.src || {};
+    return Object.assign({}, it, {done: it.done || s.proofDone || '', ver: it.ver || s.proofVer || '', by: s.proofBy || it.by || ''}); }); }
+  function notes(it){ return [[T('What was done','Qué se hizo'), it.done], [T('How it was verified','Cómo se verificó'), it.ver]].filter(function(x){ return x[1] && String(x[1]).trim(); }); }
   function pdf(doc, items, o){
     items = list(items); if (!items.length) return o.y;
     var M = o.M || 40, W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), CW = W - 2*M, bot = o.bottom || 56, top = o.top || M, y = o.y, gap = 14, cw = (CW - gap) / 2, bh = 170, maxH = Math.min(o.maxH || 470, H - bot - top - 80);
@@ -2011,15 +2021,18 @@ document.addEventListener('DOMContentLoaded',function(){
     doc.setFont('helvetica','bold'); doc.setFontSize(o.labelSize || 9); doc.setTextColor(15,41,66); doc.text(safe(o.label || T('Proof of correction - before / after','Prueba de corrección - antes / después')).toUpperCase(), M, y); y += 8;
     items.forEach(function(it, k){
       bh = fitH(it); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); var tl = it.title ? doc.splitTextToSize(safe((items.length > 1 ? (k+1) + '. ' : '') + it.title), CW) : [];
-      brk(tl.length*11.5 + bh + 34); if (tl.length){ y += 4; doc.setTextColor(20,32,46); doc.text(tl, M, y + 9); y += tl.length*11.5 + 2; }
+      doc.setFont('helvetica','normal'); doc.setFontSize(9.5); var nt = notes(it).map(function(x){ return [x[0], doc.splitTextToSize(safe(x[1]), CW - 120)]; }), nh = nt.reduce(function(a, x){ return a + x[1].length*11.5 + 4; }, 0);
+      doc.setFont('helvetica','bold'); brk(tl.length*11.5 + bh + 34 + nh); if (tl.length){ y += 4; doc.setTextColor(20,32,46); doc.text(tl, M, y + 9); y += tl.length*11.5 + 2; }
       (it.before ? [[it.before, T('BEFORE','ANTES'), [180,35,24]], [it.after, T('AFTER','DESPUÉS'), [46,125,50]]] : [[it.after, T('AFTER','DESPUÉS'), [46,125,50]]]).forEach(function(p, j){
         var x = M + j*(cw + gap); doc.setDrawColor(213,221,230); doc.setLineWidth(0.8); doc.rect(x, y + 4, cw, bh);
         if (p[0]){ var dd = dims(p[0]), s = Math.min((cw-8)/dd.w, (bh-8)/dd.h), w = dd.w*s, h = dd.h*s; try { doc.addImage(p[0], fmt(p[0]), x + (cw-w)/2, y + 4 + (bh-h)/2, w, h); } catch(err){} }
         else { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(120,130,145); doc.text(safe(T('No before photo','Sin foto de antes')), x + cw/2, y + 4 + bh/2, {align:'center'}); }
         doc.setFillColor(p[2][0], p[2][1], p[2][2]); doc.rect(x, y + 4, 58, 15, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255); doc.text(safe(p[1]), x + 29, y + 14.5, {align:'center'}); });
       y += bh + 6; var cap = capOf(it); if (it.note) cap = (cap ? cap + '  ·  ' : '') + it.note;
-      if (cap){ doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(86,100,118); var cl = doc.splitTextToSize(safe(cap), cw); doc.text(cl, it.before ? M + cw + gap : M, y + 8); y += cl.length*10 + 4; }
-      y += 12; });
+      if (cap){ doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(86,100,118); var cl = doc.splitTextToSize(safe(cap), CW); doc.text(cl, M, y + 8); y += cl.length*10 + 4; }
+      nt.forEach(function(x){ y += 4; doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(29,107,42); doc.text(safe(x[0]).toUpperCase(), M, y + 8);
+        doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(20,32,46); doc.text(x[1], M + 120, y + 8); y += x[1].length*11.5; });
+      y += 14; });
     return y + 4; }
   function html(items, label){ items = list(items); if (!items.length) return '';
     var L = 'font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#566476';
@@ -2029,7 +2042,8 @@ document.addEventListener('DOMContentLoaded',function(){
           return '<figure style="margin:0;position:relative;border:1px solid #d5dde6;border-radius:8px;overflow:hidden;background:#fff;min-height:120px;display:flex;align-items:center;justify-content:center">' +
             (p[0] ? '<img alt="" src="' + p[0] + '" style="width:100%;height:auto;display:block;max-height:560px;object-fit:contain">' : '<span style="color:#8a96a6;font-size:13px">' + e(T('No before photo','Sin foto de antes')) + '</span>') +
             '<span style="position:absolute;left:0;top:0;background:' + p[2] + ';color:#fff;font:800 11px system-ui,sans-serif;padding:3px 8px">' + p[1] + '</span></figure>'; }).join('') + '</div>' +
-        ((capOf(it) || it.note) ? '<div style="font-size:12px;color:#566476;margin-top:4px">' + e([capOf(it), it.note].filter(Boolean).join(' · ')) + '</div>' : '') + '</div>'; }).join('') + '</div>'; }
+        ((capOf(it) || it.note) ? '<div style="font-size:12px;color:#566476;margin-top:4px">' + e([capOf(it), it.note].filter(Boolean).join(' · ')) + '</div>' : '') +
+        notes(it).map(function(x){ return '<div style="margin-top:4px;font-size:14px"><b style="color:#1d6b2a">' + e(x[0]) + ':</b> <span style="white-space:pre-wrap">' + e(x[1]) + '</span></div>'; }).join('') + '</div>'; }).join('') + '</div>'; }
   /* report kit Word: k = {para, run, lbl, cell, table, imgRun, bytes, media, rels, TW} */
   function rkDocx(items, k, label){ items = list(items); if (!items.length) return '';
     var out = k.para(k.lbl(label || T('Proof of correction - before / after','Prueba de corrección - antes / después')), {before:120, after:60}), cw = Math.floor(k.TW/2), mW = (cw - 260)/1440*914400, mH = 4.6*914400, n = 0;
@@ -2044,7 +2058,8 @@ document.addEventListener('DOMContentLoaded',function(){
         else inner += k.para(k.run(T('No before photo','Sin foto de antes'), {sz:17, color:'8A96A6'}), {align:'center', after:0});
         return k.cell(cw, inner); }).join('');
       out += k.table([cw, cw], ['<w:trPr><w:cantSplit/></w:trPr>' + cells]);
-      var cap = [capOf(it), it.note].filter(Boolean).join(' · '); out += cap ? k.para(k.run(cap, {sz:16, color:'566476'}), {after:120}) : k.para('', {after:120}); });
+      var cap = [capOf(it), it.note].filter(Boolean).join(' · '), nt = notes(it); out += cap ? k.para(k.run(cap, {sz:16, color:'566476'}), {after: nt.length ? 40 : 120}) : (nt.length ? '' : k.para('', {after:120}));
+      nt.forEach(function(x, j){ out += k.para(k.run(x[0] + ': ', {b:true, sz:19, color:'1D6B2A'}) + k.run(x[1], {sz:19}), {after: j === nt.length - 1 ? 160 : 40}); }); });
     return out; }
   window.GPROOF = {box: box, pdf: pdf, html: html, rkDocx: rkDocx, dims: dims, list: list, today: today};
   /* lists drawn before this script loaded: draw them again so the proof boxes appear */
