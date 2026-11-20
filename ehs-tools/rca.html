@@ -2218,7 +2218,7 @@ function drawOpl(cv,r){ var o=r.opl||oplBlank(r); cv.width=1275; cv.height=1650;
       /* identification strip: logo + document title */
       if(!dry){ c.fillStyle='#fff'; c.fillRect(0,0,W,1650); }
       var top=B+14, lx=M; if(im[0]){ var lh=84, lw=im[0].width*lh/im[0].height; if(lw>240){ lw=240; lh=lw*im[0].height/im[0].width; } if(!dry) c.drawImage(im[0],M,top+50-lh/2,lw,lh); lx=M+lw+30; }
-      if(!dry){ c.fillStyle=INK; c.font='900 50px Arial'; c.fillText(fitTxt(c,'ONE POINT LESSON',W-M-lx-230),lx,top+48); c.font='700 28px Arial'; c.fillStyle=ES; c.fillText('LECCIÓN DE UN PUNTO',lx,top+86);
+      if(!dry){ c.fillStyle=INK; c.font='900 50px Arial'; var tt=fitTxt(c,'ONE POINT LESSON',W-M-lx-230), tw=c.measureText(tt).width, rgt=W-M-230, cx=W/2; if(cx-tw/2<lx||cx+tw/2>rgt) cx=(lx+rgt)/2; c.textAlign='center'; c.fillText(tt,cx,top+48); c.font='700 28px Arial'; c.fillStyle=ES; c.fillText('LECCIÓN DE UN PUNTO',cx,top+86); c.textAlign='left';
         c.textAlign='right'; c.fillStyle=INK; c.font='800 26px Arial'; c.fillText(o.no||L('DRAFT','BORRADOR'),W-M,top+34); c.font='600 19px Arial'; c.fillText(o.issued||o.date||'',W-M,top+62); c.fillText(r.facility||'',W-M,top+87); c.textAlign='left'; }
       y=top+108;
       /* ANSI Z535 signal word panel */
