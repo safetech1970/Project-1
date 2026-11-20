@@ -2234,9 +2234,9 @@ function drawOpl(cv,r){ var o=r.opl||oplBlank(r); cv.width=1275; cv.height=1650;
       bil(o.head,50,36,M,CW,true); y+=10*s;
       if(en(o.what)||es(o.what)){ var y0=y, inner0=function(){ y+=16*s; lbl('WHAT HAPPENED · QUÉ PASÓ'); y+=4*s; bil(o.what,24,21,M+0,CW); y+=12*s; };
         var d0=dry; dry=true; inner0(); var h0=y-y0; dry=d0; y=y0; if(!dry){ c.fillStyle=INK; c.fillRect(M,y0+8*s,CW,2); } inner0(); y=y0+h0+8*s; }
-      if(im[1]||im[2]||en(o.doCap)||en(o.dontCap)||es(o.doCap)||es(o.dontCap)){ var pw=(CW-30)/2, ph=380*s, tp=y+8*s;
+      if(im[1]||im[2]||en(o.doCap)||en(o.dontCap)||es(o.doCap)||es(o.dontCap)){ var pw=(CW-30)/2, ar=Math.max.apply(null,[im[1],im[2]].filter(Boolean).map(function(i){ return i.height/i.width; }).concat([0])), ph=ar?Math.min(560*s,Math.max(300*s,pw*ar)):380*s, tp=y+8*s;
         [[im[1],o.dontCap,'DON\'T · NO','#C8102E',M,true],[im[2],o.doCap,'DO · SÍ','#007A53',M+pw+30,false]].forEach(function(z){ var yy=tp; if(!dry){ c.fillStyle=z[3]; c.fillRect(z[4],yy,pw,54*s); c.fillStyle='#fff'; c.font='900 '+Math.round(32*s)+'px Arial'; c.fillText(z[2],z[4]+18,yy+39*s); }
-          yy+=54*s; if(!dry){ c.save(); c.beginPath(); c.rect(z[4],yy,pw,ph); c.clip(); if(z[0]){ var sc=Math.max(pw/z[0].width,ph/z[0].height), iw=z[0].width*sc, ih=z[0].height*sc; c.drawImage(z[0],z[4]+(pw-iw)/2,yy+(ph-ih)/2,iw,ih); } else { c.fillStyle='#f2f2f2'; c.fillRect(z[4],yy,pw,ph); } c.restore();
+          yy+=54*s; if(!dry){ c.save(); c.beginPath(); c.rect(z[4],yy,pw,ph); c.clip(); if(z[0]){ c.fillStyle='#fff'; c.fillRect(z[4],yy,pw,ph); var sc=Math.min(pw/z[0].width,ph/z[0].height), iw=z[0].width*sc, ih=z[0].height*sc; c.drawImage(z[0],z[4]+(pw-iw)/2,yy+(ph-ih)/2,iw,ih); } else { c.fillStyle='#f2f2f2'; c.fillRect(z[4],yy,pw,ph); } c.restore();
             c.strokeStyle=z[3]; c.lineWidth=6; c.strokeRect(z[4]+3,yy-3,pw-6,ph+0); var rad=46*s; if(z[5]) noSym(c,z[4]+pw-rad-16,yy+rad+16,rad); else okSym(c,z[4]+pw-rad-16,yy+rad+16,rad); } });
         var bilAt=function(o2,x,w){ if(en(o2)) T(en(o2),'700 '+Math.round(23*s)+'px Arial',INK,x,w,28*s); if(es(o2)) T(es(o2),'italic 600 '+Math.round(20*s)+'px Arial',ES,x,w,25*s); };
         y=tp+54*s+ph+10*s; var yA=y, yB=y; y=yA; bilAt(o.dontCap,M,pw); yA=y; y=yB; bilAt(o.doCap,M+pw+30,pw); y=Math.max(yA,y)+16*s; }
