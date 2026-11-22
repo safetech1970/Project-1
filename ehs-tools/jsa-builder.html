@@ -1044,61 +1044,123 @@ async function buildXlsx(){
     zip.file("xl/drawings/drawing1.xml",dr); zip.file("xl/drawings/_rels/drawing1.xml.rels",drr);
   }
   if(window.GLogo&&GLogo.current()){ const _png=await GLogo.fitPng(598,169); if(_png) zip.file("xl/media/image3.png",_png.split(",")[1],{base64:true}); }
-  /* 8. Training tab: the one-page training JSA + roster. Every value is a formula linked to the JSA tab
-        (which itself reads the worksheet tab), so edits there flow through. */
+  /* 8. Training tab: laid out like the training PDF (one training page + roster page) for print.
+        Every value is a formula linked to the JSA tab (which reads the worksheet tab), so edits flow through. */
   {
-    const xe=t=>String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    const rowsOf=xml=>{ const m={}; xml.replace(/<row r="(\d+)"[^>]*?(?:\/>|>[\s\S]*?<\/row>)/g,(all,r)=>{ m[+r]=all; return all; }); return m; };
-    const R1=rowsOf(s1);
+    const xe=t=>String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    /* ---- styles appended to styles.xml ---- */
+    let sx=await rd("xl/styles.xml");
+    const addTo=(tag,xml)=>{ const m=new RegExp("<"+tag+' count="(\\d+)"').exec(sx); const n=+m[1]; sx=sx.replace(new RegExp("<"+tag+' count="\\d+"'),"<"+tag+' count="'+(n+1)+'"').replace("</"+tag+">",xml+"</"+tag+">"); return n; };
+    const FM={}, FL={}, XF={};
+    const font=(sz,b,i,rgb)=>{ const k=[sz,b,i,rgb].join("|"); if(FM[k]==null) FM[k]=addTo("fonts",`<font>${b?"<b/>":""}${i?"<i/>":""}<sz val="${sz}"/><color rgb="FF${rgb||"000000"}"/><name val="Arial"/><family val="2"/></font>`); return FM[k]; };
+    const fill=rgb=>{ if(!rgb) return 0; if(FL[rgb]==null) FL[rgb]=addTo("fills",`<fill><patternFill patternType="solid"><fgColor rgb="FF${rgb}"/><bgColor indexed="64"/></patternFill></fill>`); return FL[rgb]; };
+    const BD=addTo("borders",'<border><left style="thin"><color rgb="FF000000"/></left><right style="thin"><color rgb="FF000000"/></right><top style="thin"><color rgb="FF000000"/></top><bottom style="thin"><color rgb="FF000000"/></bottom><diagonal/></border>');
+    /* o: {sz,b,i,c (text rgb),bg,bd,h,v,wrap,shrink,fmt,ind} */
+    const st=o=>{ const k=JSON.stringify(o); if(XF[k]!=null) return XF[k];
+      const al=`<alignment horizontal="${o.h||"left"}" vertical="${o.v||"center"}"${o.wrap?' wrapText="1"':""}${o.shrink?' shrinkToFit="1"':""}${o.ind?' indent="'+o.ind+'"':""}/>`;
+      return XF[k]=addTo("cellXfs",`<xf numFmtId="${o.fmt||0}" fontId="${font(o.sz||8,o.b,o.i,o.c)}" fillId="${fill(o.bg)}" borderId="${o.bd?BD:0}" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">${al}</xf>`); };
+    const OR="E86A1C", RD="C00000", YL="FFC000", DK="263238", GR="D9D9D9", LT="F2F2F2", PK="FDECEA", WH="FFFFFF";
+    const S_={
+      band:st({bg:OR}), title:st({sz:16,b:1,bg:OR,h:"center",v:"bottom"}), sub:st({sz:7.5,i:1,bg:OR,h:"center",v:"top"}), form:st({sz:7,b:1,bg:OR,h:"right",v:"top"}),
+      lab:st({sz:7,b:1,bg:GR,bd:1,h:"right",shrink:1,ind:1}), val:st({sz:8,bd:1,shrink:1,ind:1}), dval:st({sz:8,bd:1,fmt:164,h:"left",ind:1}),
+      hzL:st({sz:7.5,b:1,c:WH,bg:RD,bd:1,ind:1}), ppL:st({sz:7.5,b:1,bg:YL,bd:1,ind:1}), strip:st({sz:7.5,b:1,bg:LT,bd:1,wrap:1,ind:1}),
+      th:st({sz:6.5,b:1,c:WH,bg:DK,bd:1,h:"center",wrap:1}), num:st({sz:10,b:1,bg:LT,bd:1,h:"center"}),
+      step:st({sz:7.6,b:1,bd:1,v:"top",wrap:1}), cell:st({sz:7.6,bd:1,v:"top",wrap:1}),
+      crL:st({sz:8.5,b:1,c:WH,bg:RD,bd:1,h:"center",wrap:1}), crV:st({sz:7.6,b:1,c:"960000",bg:PK,bd:1,wrap:1,ind:1}),
+      stop:st({sz:7,b:1,i:1,c:RD,h:"center"}), ack:st({sz:8.5}),
+      rh:st({sz:7.5,b:1,c:WH,bg:DK,bd:1,ind:1}), rn:st({sz:8,bg:LT,bd:1,h:"center"}), rv:st({sz:8,bd:1,ind:1}), rd:st({sz:7,bd:1,shrink:1,ind:1}), gap:0 };
+    zip.file("xl/styles.xml",sx);
+    /* ---- columns (points, same grid as the PDF: header 72|206|70|158|78|164, steps 24|146|178|260|140, roster 24|254|108|250|112) ---- */
+    const CWpt=[24,48,28,70,108,70,38,120,78,24,28,112], CL="ABCDEFGHIJKL";
+    const colsXml="<cols>"+CWpt.map((p,i)=>`<col min="${i+1}" max="${i+1}" width="${(Math.max(1,(p/0.75-5)/7)).toFixed(4)}" customWidth="1"/>`).join("")+"</cols>";
+    const span=(a,b)=>CWpt.slice(CL.indexOf(a),CL.indexOf(b)+1).reduce((x,y)=>x+y,0);
+    /* ---- text helpers ---- */
+    const T={jsa:es?"ANÁLISIS DE SEGURIDAD DEL TRABAJO":"JOB SAFETY ANALYSIS", sub:es?"Revise este JSA con cada miembro del equipo antes de iniciar la tarea":"Review this JSA with every team member before starting the task",
+      loc:es?"UBICACIÓN":"LOCATION", no:"JSA NO.", date:es?"FECHA":"DATE", task:es?"TAREA / PUESTO":"TASK / JOB", st:es?"ESTADO":"STATUS", due:es?"REVISIÓN":"REVIEW DUE",
+      sup:"SUPERVISOR", by:es?"ANALIZADO POR":"ANALYSIS BY", ap:es?"APROBADO POR":"APPROVED BY", hz:es?"PELIGROS":"HAZARDS", ppe:es?"EPP REQUERIDO":"PPE REQUIRED",
+      cols:es?["#","SECUENCIA DE PASOS BÁSICOS","POSIBLES INCIDENTES / PELIGROS","RECOMENDACIONES PARA ELIMINAR / REDUCIR PELIGROS","EPP REQUERIDO"]:["#","SEQUENCE OF BASIC JOB STEPS","POTENTIAL INCIDENTS / HAZARDS","RECOMMENDATIONS TO ELIMINATE / REDUCE HAZARDS","PPE REQUIRED"],
+      crit:es?"CONTROLES CRÍTICOS":"CRITICAL CONTROLS", roster:es?"REGISTRO DE CAPACITACIÓN":"TRAINING ROSTER", rsub:es?"Todos los miembros del equipo deben revisar el JSA y firmar antes de realizar la tarea":"All team members must review the JSA and sign before performing the task",
+      ins:"INSTRUCTOR", tdate:es?"FECHA DE CAPACITACIÓN":"TRAINING DATE",
+      ack:es?"Al firmar, confirmo que este JSA se revisó conmigo y que entiendo los pasos, peligros y controles.":"By signing, I confirm this JSA was reviewed with me and I understand the steps, hazards and controls.",
+      name:es?"NOMBRE":"NAME", emp:es?"NO. DE EMPLEADO":"EMPLOYEE #", sig:es?"FIRMA":"SIGNATURE", stop:es?"Detenga el trabajo si las condiciones cambian o encuentra un peligro nuevo.":"Stop work if conditions change or a new hazard is found."};
+    const lines=(t,wpt,sz,bold)=>{ const cw=sz*(bold?0.54:0.47); return String(t||"").split("\n").reduce((n,p)=>n+Math.max(1,Math.ceil(p.length*cw/Math.max(10,wpt-8))),0); };
+    const hFor=(n,sz)=>n*sz*1.2+5;
+    /* ---- cell writer ---- */
+    const rows=[], merges=[], heights={}; let cur=null, R=0, total1=0, onPage1=true;
+    const row=(ht)=>{ R++; heights[R]=ht; cur=[]; rows.push({r:R,ht,cells:cur}); if(onPage1) total1+=ht; return R; };
+    const lnk=ref=>`IF(JSA!${ref}="","",JSA!${ref})`;
+    /* put(c1,c2,style,content): content {s:static text} | {f:formula,v:cached,n:numeric} | null */
+    const put=(c1,c2,s,ct)=>{ const a=c1+R;
+      let x;
+      if(!ct) x=`<c r="${a}" s="${s}"/>`;
+      else if(ct.s!=null) x=`<c r="${a}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xe(ct.s)}</t></is></c>`;
+      else if(ct.n) x=`<c r="${a}" s="${s}"><f>${xe(ct.f)}</f>${ct.v===""||ct.v==null?"":"<v>"+ct.v+"</v>"}</c>`;
+      else x=`<c r="${a}" s="${s}" t="str"><f>${xe(ct.f)}</f><v>${xe(ct.v)}</v></c>`;
+      cur.push(x);
+      for(let i=CL.indexOf(c1)+1;i<=CL.indexOf(c2);i++) cur.push(`<c r="${CL[i]}${R}" s="${s}"/>`);
+      if(c2!==c1) merges.push(`${c1}${R}:${c2}${R}`); };
+    const band=(ttl,sub)=>{ row(22); put("A","C",S_.band,null); put("D","K",S_.title,{s:ttl}); put("L","L",S_.form,{s:"Form: EHS-JSA"});
+      row(18); put("A","C",S_.band,null); put("D","K",S_.sub,{s:sub}); put("L","L",S_.band,null); return R-1; };
+    const gap=h=>{ row(h); };
+    const fmtNum=v=>v===""||v==null?"":v;
+    /* ===== page 1: training JSA ===== */
+    const status=UI[L].statuses[S.status]||"";
+    const logoRows=[band(T.jsa,T.sub)];
+    const hdr=[[T.loc,"C5",S.loc,T.no,"G5",cache.G5,T.date,"K5",serial(S.date),1],[T.task,"C6",title,T.st,"G6",status,T.due,"K6",plusYear(S.date),1],[T.sup,"C7",S.sup||"",T.by,"G7",S.by||"",T.ap,"K7",S.appr||"",0]];
+    hdr.forEach(h=>{ row(15); put("A","B",S_.lab,{s:h[0]}); put("C","E",S_.val,{f:lnk(h[1]),v:h[2]}); put("F","F",S_.lab,{s:h[3]}); put("G","H",S_.val,{f:lnk(h[4]),v:h[5]});
+      put("I","I",S_.lab,{s:h[6]}); if(h[9]) put("J","L",S_.dval,{f:lnk(h[7]),v:fmtNum(h[8]),n:1}); else put("J","L",S_.val,{f:lnk(h[7]),v:h[8]}); });
+    gap(4);
     const nextCol=c=>{ const m=/^([A-Z]+)(\d+)$/.exec(c); let n=colNum(m[1])+1, s=""; while(n>0){ const d=(n-1)%26; s=String.fromCharCode(65+d)+s; n=Math.floor((n-1)/26); } return s+m[2]; };
-    function remap(from,to,link){
-      const src=R1[from]; if(!src) return `<row r="${to}"/>`;
-      let x=src.replace(/^<row r="\d+"/,`<row r="${to}"`).replace(/\sspans="[^"]*"/,"");
-      return x.replace(/<c r="([A-Z]+)\d+"([^>]*?)(\/>|>([\s\S]*?)<\/c>)/g,(all,col,attrs,end,inner)=>{
-        const ref=col+to, st=(/\ss="\d+"/.exec(attrs)||[""])[0];
-        if(!inner) return link?`<c r="${ref}"${st} t="str"><f>${xe(`IF(JSA!${col}${from}="","",JSA!${col}${from})`)}</f><v></v></c>`:`<c r="${ref}"${st}/>`;
-        if(/\st="s"/.test(attrs)||!link) return `<c r="${ref}"${attrs}>${inner}</c>`;
-        const is=/<is>([\s\S]*?)<\/is>/.exec(inner), vv=/<v>([\s\S]*?)<\/v>/.exec(inner);
-        const v=is?unesc([...is[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(m=>m[1]).join("")):(vv?unesc(vv[1]):"");
-        const num=!is&&!/\st="(str|inlineStr|b|e)"/.test(attrs)&&v!==""&&!isNaN(+v);
-        const f=`IF(JSA!${col}${from}="","",JSA!${col}${from})`;
-        return num?`<c r="${ref}"${st}><f>${xe(f)}</f><v>${v}</v></c>`:`<c r="${ref}"${st} t="str"><f>${xe(f)}</f><v>${xe(v)}</v></c>`;
-      });
-    }
-    const MAP=[[1,1,0],[2,2,0],[3,3,0],[4,4,0],[5,5,1],[6,6,1],[7,7,1]];
-    for(let r=35;r<=44;r++) MAP.push([r,r-23,1]); MAP.push([45,22,0]);
-    for(let r=47;r<=53;r++) MAP.push([r,r-24,1]);
-    for(let r=66;r<=87;r++) MAP.push([r,r-36,1]);
-    const shift=r=>{ for(const m of MAP) if(m[0]===r) return m[1]; return null; };
-    /* hazards and PPE that apply, joined from the JSA checkboxes */
-    const chkd=sec=>KW.filter(k=>k[1]===sec);
-    const join=(list,extra)=>"_xlfn.TEXTJOIN(\"  ·  \",TRUE,"+list.map(k=>`IF(JSA!${k[3]}="✔",JSA!${nextCol(k[3])},"")`).concat(extra||[]).join(",")+")";
-    const hzF=join(chkd("h"),[`IF(JSA!G18="✔",JSA!H18,"")`]), ppF=join(chkd("p"));
+    const tj=(list,extra)=>"_xlfn.TEXTJOIN(\"  ·  \",TRUE,"+list.map(k=>`IF(JSA!${k[3]}="✔",JSA!${nextCol(k[3])},"")`).concat(extra||[]).join(",")+")";
     const hzV=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(k=>lab(k[3])).concat(C.otherHazard?[OTHER+" "+C.otherHazard]:[]).join("  ·  ");
     const ppV=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(k=>lab(k[3])).join("  ·  ");
-    const strip=(r,label,st,f,v)=>{ const ht=Math.max(18,Math.ceil(String(v).length/150)*12+6);
-      return `<row r="${r}" ht="${ht.toFixed(1)}" customHeight="1"><c r="A${r}" s="${st}" t="inlineStr"><is><t>${xe(label)}</t></is></c><c r="B${r}" s="${st}"/>`+
-        `<c r="C${r}" s="64" t="str"><f>${xe(f)}</f><v>${xe(v)}</v></c>`+["D","E","F","G","H","I","J","K","L"].map(c=>`<c r="${c}${r}" s="64"/>`).join("")+`</row>`; };
-    const gap=r=>remap(4,r,0);
-    let rows=[]; for(const m of MAP.slice(0,7)) rows.push(remap(m[0],m[1],m[2]));
-    rows.push(gap(8)); rows.push(strip(9,es?"PELIGROS":"HAZARDS",58,hzF,hzV)); rows.push(strip(10,es?"EPP REQUERIDO":"PPE REQUIRED",61,ppF,ppV)); rows.push(gap(11));
-    for(const m of MAP.slice(7)) rows.push(remap(m[0],m[1],m[2]));
-    let sd=rows.join("");
-    sd=sd.replace(/<c r="D3"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/,`<c r="D3" s="43" t="inlineStr"><is><t>${xe(es?"Revise este JSA con cada miembro del equipo antes de iniciar la tarea":"Review this JSA with every team member before starting the task")}</t></is></c>`);
-    /* merges: the copied ones (shifted) + the two strips */
-    const mg=[]; (s1.match(/<mergeCell ref="[A-Z]+\d+:[A-Z]+\d+"\/>/g)||[]).forEach(t=>{ const m=/ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"/.exec(t), a=shift(+m[2]), b=shift(+m[4]); if(a!==null&&b!==null&&b-a===+m[4]-+m[2]) mg.push(`<mergeCell ref="${m[1]}${a}:${m[3]}${b}"/>`); });
-    mg.push('<mergeCell ref="A9:B9"/>','<mergeCell ref="C9:L9"/>','<mergeCell ref="A10:B10"/>','<mergeCell ref="C10:L10"/>');
-    const head=s1.slice(0,s1.indexOf("<sheetData>")).replace(/<dimension ref="[^"]*"\/>/,'<dimension ref="A1:L51"/>').replace(/\stabSelected="1"/,"").replace(/<selection[^>]*\/>/,'<selection activeCell="A1" sqref="A1"/>');
-    let s5=head+"<sheetData>"+sd+"</sheetData>"+`<mergeCells count="${mg.length}">${mg.join("")}</mergeCells>`+
-      '<printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0.3" footer="0.3"/><pageSetup scale="66" orientation="landscape"/>'+
-      '<rowBreaks count="1" manualBreakCount="1"><brk id="22" max="16383" man="1"/></rowBreaks><drawing r:id="rId1"/></worksheet>';
-    s5=s5.replace(/<sheetPr[\s\S]*?(?:\/>|<\/sheetPr>)/,"");
-    /* logos (and digital signatures) on the new tab */
-    let d1=await rd("xl/drawings/drawing1.xml"), d1r=await rd("xl/drawings/_rels/drawing1.xml.rels");
-    const anchors=(d1.match(/<xdr:(oneCellAnchor|twoCellAnchor)[\s\S]*?<\/xdr:\1>/g)||[]).map(a=>{
-      let ok=true; const b=a.replace(/<xdr:row>(\d+)<\/xdr:row>/g,(m,r)=>{ const t=shift(+r+1); if(t===null){ ok=false; return m; } return `<xdr:row>${t-1}</xdr:row>`; }); return ok?b:""; }).join("");
-    const d2=d1.replace(/<xdr:wsDr([^>]*)>[\s\S]*<\/xdr:wsDr>/,(m,attrs)=>`<xdr:wsDr${attrs}>${anchors}</xdr:wsDr>`);
-    zip.file("xl/drawings/drawing2.xml",d2); zip.file("xl/drawings/_rels/drawing2.xml.rels",d1r);
+    const vw=span("D","L");
+    row(Math.max(15,hFor(lines(hzV.toUpperCase(),vw,7.5,1),7.5))); put("A","C",S_.hzL,{s:T.hz}); put("D","L",S_.strip,{f:tj(KW.filter(k=>k[1]==="h"),[`IF(JSA!G18="✔",JSA!H18,"")`]),v:hzV});
+    row(Math.max(15,hFor(lines(ppV.toUpperCase(),vw,7.5,1),7.5))); put("A","C",S_.ppL,{s:T.ppe}); put("D","L",S_.strip,{f:tj(KW.filter(k=>k[1]==="p")),v:ppV});
+    gap(4);
+    const TC=[["A","A"],["B","D"],["E","F"],["G","J"],["K","L"]];
+    row(Math.max(16,Math.max(...T.cols.map((c,j)=>lines(c,span(...TC[j]),6.5,1)))*6.5*1.2+5)); T.cols.forEach((c,j)=>put(TC[j][0],TC[j][1],S_.th,{s:c}));
+    for(let i=0;i<8;i++){ const s=C.steps[i]||{}, r0=36+i, has=String(s.step||"").trim();
+      const n=Math.max(lines(s.step,span("B","D"),7.6,1),lines(s.hazards,span("E","F"),7.6),lines(s.controls,span("G","J"),7.6),lines(s.ppe,span("K","L"),7.6));
+      row(has?Math.max(22,hFor(n,7.6)):14);
+      put("A","A",S_.num,{f:lnk("A"+r0),v:has?i+1:"",n:1}); put("B","D",S_.step,{f:lnk("B"+r0),v:s.step||""}); put("E","F",S_.cell,{f:lnk("C"+r0),v:s.hazards||""});
+      put("G","J",S_.cell,{f:lnk("E"+r0),v:s.controls||""}); put("K","L",S_.cell,{f:lnk("I"+r0),v:s.ppe||""}); }
+    row(Math.max(24,hFor(lines(critText,span("D","L"),7.6,1),7.6)+2)); put("A","C",S_.crL,{s:T.crit}); put("D","L",S_.crV,{f:lnk("C44"),v:critText});
+    row(13); put("A","L",S_.stop,{s:T.stop});
+    const brk=R; onPage1=false;
+    /* ===== page 2: training roster ===== */
+    logoRows.push(band(T.roster,T.rsub));
+    [[T.loc,"C5",S.loc,T.no,"G5",cache.G5,T.date,"K5",serial(S.date),1],[T.task,"C6",title,T.sup,"C7",S.sup||"",T.ap,"K7",S.appr||"",0]].forEach(h=>{ row(16);
+      put("A","B",S_.lab,{s:h[0]}); put("C","E",S_.val,{f:lnk(h[1]),v:h[2]}); put("F","F",S_.lab,{s:h[3]}); put("G","H",S_.val,{f:lnk(h[4]),v:h[5]}); put("I","I",S_.lab,{s:h[6]});
+      if(h[9]) put("J","L",S_.dval,{f:lnk(h[7]),v:fmtNum(h[8]),n:1}); else put("J","L",S_.val,{f:lnk(h[7]),v:h[8]}); });
+    row(16); put("A","B",S_.lab,{s:T.ins}); put("C","E",S_.val,null); put("F","F",S_.lab,{s:T.tdate}); put("G","L",S_.val,null);
+    gap(6); row(14); put("A","L",S_.ack,{s:T.ack}); gap(4);
+    const RC=[["A","A","#"],["B","E",T.name],["F","G",T.emp],["H","K",T.sig],["L","L",T.date]];
+    const nR=Math.max(20,TS.length), availPt=(612-2*0.3*72-6)*100/Math.max(40,Math.min(100,Math.floor((612-2*0.3*72-4)/total1*100))), rh2=Math.max(14,Math.min(22,Math.floor((availPt-160)/(nR+1))));
+    row(20); RC.forEach(c=>put(c[0],c[1],S_.rh,{s:c[2]}));
+    const sigRow0=R+1;
+    for(let i=0;i<nR;i++){ const q=TS[i], r0=68+i; row(rh2);
+      put("A","A",S_.rn,{s:String(i+1)});
+      if(i<20){ put("B","E",S_.rv,{f:lnk("C"+r0),v:q?q.name||"":""}); put("F","G",S_.rv,{f:lnk("B"+r0),v:""}); put("H","K",S_.rv,null); put("L","L",S_.rd,{f:`IF(JSA!I${r0}="","",TRIM(LEFT(JSA!I${r0},FIND(" ·",JSA!I${r0}&" ·")-1)))`,v:q?String(q.at||""):""}); }
+      else { put("B","E",S_.rv,{s:q?q.name||"":""}); put("F","G",S_.rv,null); put("H","K",S_.rv,null); put("L","L",S_.rd,{s:q?String(q.at||""):""}); } }
+    gap(8); row(13); put("A","L",S_.stop,{s:T.stop});
+    /* one print scale for both pages: page 1 must fit on one landscape letter page */
+    const avail=612-2*0.3*72-4, scale=Math.max(40,Math.min(100,Math.floor(avail/total1*100)));
+    const sd=rows.map(o=>`<row r="${o.r}" ht="${o.ht.toFixed(2)}" customHeight="1">${o.cells.join("")}</row>`).join("");
+    const s5='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+      `<dimension ref="A1:L${R}"/><sheetViews><sheetView showGridLines="0" workbookViewId="0" view="pageBreakPreview" zoomScaleNormal="100"><selection activeCell="C${brk+5}" sqref="C${brk+5}"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="14.5"/>`+colsXml+
+      `<sheetData>${sd}</sheetData><mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`+
+      `<printOptions horizontalCentered="1"/><pageMargins left="0.3" right="0.3" top="0.3" bottom="0.3" header="0" footer="0"/><pageSetup paperSize="1" scale="${scale}" orientation="landscape"/>`+
+      `<rowBreaks count="1" manualBreakCount="1"><brk id="${brk}" max="16383" man="1"/></rowBreaks><drawing r:id="rId1"/></worksheet>`;
+    /* ---- drawing: logo in both bands, team signatures in the roster ---- */
+    const E=12700, A_=(col,colOff,row0,rowOff,cx,cy,id,rid)=>`<xdr:oneCellAnchor><xdr:from><xdr:col>${col}</xdr:col><xdr:colOff>${Math.round(colOff)}</xdr:colOff><xdr:row>${row0}</xdr:row><xdr:rowOff>${Math.round(rowOff)}</xdr:rowOff></xdr:from><xdr:ext cx="${Math.round(cx)}" cy="${Math.round(cy)}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${id}" name="Picture ${id}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${Math.round(cx)}" cy="${Math.round(cy)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`;
+    const lh=28, lw=Math.min(120,lh*598/169);
+    let anc=logoRows.map((r,i)=>A_(0,10*E,r-1,6*E,lw*E,lh*E,2+i,"rId1")).join("");
+    let d2r=await rd("xl/drawings/_rels/drawing1.xml.rels");
+    TS.slice(0,nR).forEach((q,k)=>{ if(!q.img) return; const rid="rIdSig"+k; if(d2r.indexOf('Id="'+rid+'"')<0) return;
+      const h=rh2-2, w=Math.min(span("H","K")-8,h*600/180); anc+=A_(7,4*E,sigRow0+k-1,1*E,w*E,h*E,10+k,rid); });
+    zip.file("xl/drawings/drawing2.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'+anc+"</xdr:wsDr>");
+    zip.file("xl/drawings/_rels/drawing2.xml.rels",d2r);
     zip.file("xl/worksheets/sheet5.xml",s5);
     zip.file("xl/worksheets/_rels/sheet5.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing2.xml"/></Relationships>');
     let ct=await rd("[Content_Types].xml");
@@ -1109,7 +1171,7 @@ async function buildXlsx(){
     zip.file("xl/_rels/workbook.xml.rels",wr);
     const tn=es?"Capacitación":"Training";
     wb=wb.replace("</sheets>",`<sheet name="${tn}" sheetId="5" r:id="rIdTrain"/></sheets>`);
-    wb=wb.replace("</definedNames>",`<definedName name="_xlnm.Print_Area" localSheetId="4">'${tn}'!$A$1:$L$51</definedName></definedNames>`);
+    wb=wb.replace("</definedNames>",`<definedName name="_xlnm.Print_Area" localSheetId="4">'${tn}'!$A$1:$L$${R}</definedName></definedNames>`);
     if(!/fullCalcOnLoad/.test(wb)) wb=wb.replace(/<calcPr([^>]*?)\/>/,'<calcPr$1 fullCalcOnLoad="1"/>');
   }
   zip.file("xl/worksheets/sheet1.xml",s1); zip.file("xl/worksheets/sheet2.xml",s2); zip.file("xl/worksheets/sheet3.xml",s3); zip.file("xl/worksheets/sheet4.xml",s4);
