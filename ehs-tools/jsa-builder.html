@@ -1191,7 +1191,7 @@ async function buildTrainPdf(){
     /* title band */
     const bh=40; R(M,y,CW,bh,OR,false);
     const LG=LGS;
-    if(LG&&LG.src&&LG.w&&LG.h&&!dry){ const lh2=28, lw=Math.min(120,LG.w*lh2/LG.h); fill(WHITE); doc.roundedRect(M+6,y+4,lw+8,32,3,3,"F"); try{ doc.addImage(LG.src,"PNG",M+10,y+6+(28-lw*LG.h/LG.w>0?(28-lw*LG.h/LG.w)/2:0),lw,Math.min(28,lw*LG.h/LG.w)); }catch(e){} }
+    if(LG&&LG.src&&LG.w&&LG.h&&!dry){ const lh2=28, lw=Math.min(120,LG.w*lh2/LG.h); try{ doc.addImage(LG.src,"PNG",M+10,y+6+(28-lw*LG.h/LG.w>0?(28-lw*LG.h/LG.w)/2:0),lw,Math.min(28,lw*LG.h/LG.w)); }catch(e){} }
     ink(WHITE); font("bold",16); txt(sf(T.jsa+" - "+T.tr),W/2,y+19,{align:"center"}); font("italic",7.5); txt(sf(T.sub),W/2,y+31,{align:"center"});
     font("bold",7); txt("Form: EHS-JSA",W-M-6,y+14,{align:"right"});
     y+=bh;
@@ -1221,7 +1221,7 @@ async function buildTrainPdf(){
     const R=(x,y,w,h,f,stroke)=>{ if(f){ fill(f); doc.rect(x,y,w,h,stroke===false?"F":"FD"); } else doc.rect(x,y,w,h); };
     doc.setDrawColor(0,0,0); doc.setLineWidth(0.6); let y=M;
     R(M,y,CW,40,OR,false);
-    if(LGS&&LGS.src&&LGS.w&&LGS.h){ const lw=Math.min(120,LGS.w*28/LGS.h); fill(WHITE); doc.roundedRect(M+6,y+4,lw+8,32,3,3,"F"); try{ doc.addImage(LGS.src,"PNG",M+10,y+6+Math.max(0,(28-lw*LGS.h/LGS.w)/2),lw,Math.min(28,lw*LGS.h/LGS.w)); }catch(e){} }
+    if(LGS&&LGS.src&&LGS.w&&LGS.h){ const lw=Math.min(120,LGS.w*28/LGS.h); try{ doc.addImage(LGS.src,"PNG",M+10,y+6+Math.max(0,(28-lw*LGS.h/LGS.w)/2),lw,Math.min(28,lw*LGS.h/LGS.w)); }catch(e){} }
     ink(WHITE); font("bold",16); doc.text(sf(T.roster),W/2,y+19,{align:"center"}); font("italic",7.5); doc.text(sf(es?"Todos los miembros del equipo deben revisar el JSA y firmar antes de realizar la tarea":"All team members must review the JSA and sign before performing the task"),W/2,y+31,{align:"center"});
     font("bold",7); doc.text("Form: EHS-JSA",W-M-6,y+14,{align:"right"}); y+=40;
     const g=[[T.loc,S.loc,T.no,no,T.date,fmt(S.date)],[T.task,title,T.sup,S.sup,T.ap,S.appr],[T.ins,"",T.tdate,""]], cw=[72,206,70,158,78,CW-584], rh=16;
