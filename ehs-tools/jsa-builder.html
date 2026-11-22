@@ -1156,7 +1156,7 @@ async function buildTrainPdf(){
   const Lg=S.lang, C=S.content[Lg], es=Lg==="es";
   const J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw new Error(es?"No se cargó el creador de PDF. Recargue la página.":"The PDF writer didn't load. Reload the page.");
   const W=792, H=612, M=22, CW=W-2*M;
-  const OR=[232,106,28], RED=[192,0,0], BLUE=[0,112,192], YEL=[255,192,0], GRN=[0,122,83], DK=[38,50,56], GRY=[217,217,217], LT=[242,242,242], INK=[0,0,0], WHITE=[255,255,255];
+  const OR=[0,0,0], RED=[192,0,0], BLUE=[0,112,192], YEL=[255,192,0], GRN=[0,122,83], DK=[38,50,56], GRY=[217,217,217], LT=[242,242,242], INK=[0,0,0], WHITE=[255,255,255];
   const sf=s=>String(s==null?"":s).replace(/[–—]/g,"-").replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").replace(/[•●▪]/g,"-").replace(/✔|✓/g,"").replace(/[^\u0000-ÿ]/g,"");
   const on=new Set(S.boxes), lbl=k=>es?(ES[k[2]]||k[2]):k[2];
   const hz=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(lbl); if(C.otherHazard) hz.push((es?"OTRO: ":"OTHER: ")+C.otherHazard);
@@ -1178,6 +1178,9 @@ async function buildTrainPdf(){
   /* logo: the one chosen in the app, else the logo built into the JSA form */
   let LGS=(window.GLogo&&GLogo.current&&GLogo.current())||null;
   if(!LGS&&typeof JSZip!=="undefined"){ try{ const z=await JSZip.loadAsync(TEMPLATE_B64,{base64:true}), f=z.file("xl/media/image3.png"); if(f){ const src="data:image/png;base64,"+await f.async("base64"); const d=await new Promise(r=>{ const i=new Image(); i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight}); i.onerror=()=>r(null); i.src=src; }); if(d) LGS={src:src,w:d.w,h:d.h}; } }catch(e){} }
+  /* black title band: print a transparent logo in white so it shows */
+  if(LGS&&LGS.src){ try{ LGS=await new Promise(r=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement("canvas"); c.width=i.naturalWidth; c.height=i.naturalHeight; const x=c.getContext("2d"); x.drawImage(i,0,0); const d=x.getImageData(0,0,c.width,c.height), p=d.data;
+      if(p[3]>200&&p[p.length-1]>200){ r(LGS); return; } for(let j=0;j<p.length;j+=4){ p[j]=p[j+1]=p[j+2]=255; } x.putImageData(d,0,0); r({src:c.toDataURL("image/png"),w:c.width,h:c.height}); }; i.onerror=()=>r(LGS); i.src=LGS.src; }); }catch(e){} }
   /* draw the whole page at a text scale k; returns the height used. Shrinks k until it fits one page. */
   function page(doc,k,dry){
     const fs=n=>n*k, lh=n=>n*k*1.18;
