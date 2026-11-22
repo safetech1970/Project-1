@@ -270,6 +270,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
       <div class="head-actions">
         <div><label class="lbl" for="f-code" id="l-code">Task code</label><input id="f-code" style="width:9.5em;font-family:var(--mono)" maxlength="14"></div>
         <button class="btn btn-primary" id="dl" type="button">Download Excel</button>
+        <button class="btn btn-ghost" id="dl-train" type="button">Training sheet (PDF)</button>
       </div>
     </section>
     <p class="status" id="dl-status" role="status" aria-live="polite" style="margin:-8px 4px 0"></p>
@@ -502,7 +503,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   }
 })();
 </script><!--/GSYNC-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>/* GSig: drop-in digital signature pads. No dependencies.
    GSig.panel(mount,{rec:fn->record, slots:fn->[labels], save:fn, lang:fn->'en'|'es', names:[..], onChange:fn, title:str})
    Signatures stored on record.sigs = [{img,name,at}|null,...] */
@@ -764,7 +765,7 @@ function renderContent(){
     $("tr-btn").textContent = S.lang==="es" ? "Traducir del inglés" : "Translate from Spanish";
     $("tr-btn").disabled = !src || !sampleApi || busy;
   }
-  $("dl").disabled = missing || busy;
+  $("dl").disabled = missing || busy; { const tb=$("dl-train"); if(tb){ tb.disabled=missing||busy; tb.textContent=S.lang==="es"?"Hoja de capacitación (PDF)":"Training sheet (PDF)"; } }
   if(missing) return;
   $("o-haz").value=c.otherHazard||""; $("o-ctl").value=c.otherControl||"";
   $("steps").innerHTML=c.steps.map((s,i)=>`<div class="step"><div class="num">${i+1}</div>
@@ -1049,6 +1050,116 @@ function fileName(){
   const c=S.content[S.lang]; const t=englishTitle(c&&c.title);
   return "JSA_"+t.replace(/[\\/:*?"<>|]+/g,"").replace(/\s+/g," ").trim()+(S.lang==="es"?" (ES)":"")+".xlsx";
 }
+/* ---------- Training sheet (PDF): the job steps first, everything else once ---------- */
+async function buildTrainPdf(){
+  const Lg=S.lang, C=S.content[Lg], es=Lg==="es";
+  const J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw new Error(es?"No se cargó el creador de PDF. Recargue la página.":"The PDF writer didn't load. Reload the page.");
+  const doc=new J({unit:"pt",format:"letter"}), W=612, H=792, M=36, CW=W-2*M;
+  const NAVY=[15,41,66], INK=[20,32,46], MUTED=[86,100,118], LINE=[0,0,0], RED=[180,35,24], GRN=[29,116,70], SHADE=[238,242,246];
+  const sf=s=>String(s==null?"":s).replace(/[–—]/g,"-").replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").replace(/[•●▪]/g,"-").replace(/✔|✓/g,"").replace(/[^\u0000-ÿ]/g,"");
+  const fill=c=>doc.setFillColor(c[0],c[1],c[2]), ink=c=>doc.setTextColor(c[0],c[1],c[2]), draw=c=>doc.setDrawColor(c[0],c[1],c[2]);
+  const wrap=(t,w,sz,st)=>{ doc.setFont("helvetica",st||"normal"); doc.setFontSize(sz); return doc.splitTextToSize(sf(t),w); };
+  const title=(C.title||S.task||"").trim()||englishTitle(C.title), no=jsaNo(), when=S.date?new Date(S.date+"T12:00:00").toLocaleDateString(es?"es-MX":"en-US",{year:"numeric",month:"short",day:"numeric"}):"";
+  const lbl=(k)=>es?(ES[k[2]]||k[2]):k[2];
+  const cap=s=>{ s=String(s||"").toLowerCase(); return s.replace(/(^|[\s\/(-])([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase()); };
+  const on=new Set(S.boxes);
+  const hz=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(k=>cap(lbl(k))); if(C.otherHazard) hz.push(C.otherHazard);
+  const ppe=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(k=>cap(lbl(k)));
+  const steps=(C.steps||[]).filter(s=>s&&String(s.step||"").trim());
+  /* PPE: items worn on most steps are listed once at the top; each step shows only what it adds */
+  const norm=s=>String(s||"").toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g," ").trim();
+  const items=t=>String(t||"").split(/[,;]|\s+(?:and|y)\s+/i).map(x=>x.trim()).filter(Boolean);
+  const seen={}, cnt={}; steps.forEach(s=>{ const ks=new Set(items(s.ppe).map(x=>{ const k=norm(x); if(!seen[k]) seen[k]=x; return k; })); ks.forEach(k=>{ cnt[k]=(cnt[k]||0)+1; }); });
+  const commonSet=new Set(Object.keys(cnt).filter(k=>steps.length>1&&cnt[k]>=Math.max(2,Math.ceil(steps.length/2))));
+  const commonTxt=[...commonSet].map(k=>seen[k]).join(", ");
+  const extraOf=s=>items(s.ppe).filter(x=>!commonSet.has(norm(x)));
+  let y=0, page=1;
+  function header(first){
+    const LG=window.GLogo&&GLogo.current&&GLogo.current();
+    fill(NAVY); doc.rect(0,0,W,first?78:34,"F");
+    if(first){
+      let tx=M; if(LG&&LG.src&&LG.w&&LG.h){ const lh=34, lw=Math.min(130,LG.w*lh/LG.h); fill([255,255,255]); doc.roundedRect(M-4,18,lw+8,lh+8,4,4,"F"); try{ doc.addImage(LG.src,"PNG",M,22,lw,lw*LG.h/LG.w>lh?lh:lw*LG.h/LG.w); }catch(e){} tx=M+lw+18; }
+      doc.setFont("helvetica","bold"); doc.setFontSize(8.5); ink([242,183,5]); doc.text(sf(es?"CAPACITACIÓN · ANÁLISIS DE SEGURIDAD DEL TRABAJO (JSA)":"TRAINING · JOB SAFETY ANALYSIS (JSA)"),tx,32);
+      ink([255,255,255]); let fs=19; doc.setFontSize(fs); while(fs>12&&doc.getTextWidth(sf(title))>W-M-tx-110){ fs-=1; doc.setFontSize(fs); } doc.text(sf(title),tx,56);
+      doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.text(sf(no),W-M,30,{align:"right"}); doc.setFont("helvetica","normal"); doc.text(sf(when),W-M,44,{align:"right"});
+      y=78;
+      const meta=[[es?"Ubicación":"Location",S.loc],[es?"Supervisor":"Supervisor",S.sup],[es?"Preparado por":"Prepared by",S.by],[es?"Aprobado por":"Approved by",S.appr]].filter(x=>String(x[1]||"").trim());
+      if(meta.length){ fill(SHADE); doc.rect(0,y,W,24,"F"); doc.setFontSize(8.5); let x=M; meta.forEach(m=>{ doc.setFont("helvetica","bold"); ink(MUTED); const a=sf(m[0]).toUpperCase()+"  "; doc.text(a,x,y+15); x+=doc.getTextWidth(a); doc.setFont("helvetica","normal"); ink(INK); const b=sf(m[1]); doc.text(b,x,y+15); x+=doc.getTextWidth(b)+22; }); y+=24; }
+      y+=14;
+    } else {
+      doc.setFont("helvetica","bold"); doc.setFontSize(9); ink([255,255,255]); doc.text(sf(title),M,22); doc.setFont("helvetica","normal"); doc.text(sf(no),W-M,22,{align:"right"}); y=52;
+    }
+  }
+  function brk(h){ if(y+h>H-40){ doc.addPage(); page++; header(false); return true; } return false; }
+  function section(t,col){ brk(40); doc.setFont("helvetica","bold"); doc.setFontSize(10.5); ink(col||NAVY); doc.text(sf(t).toUpperCase(),M,y+8); draw(col||NAVY); doc.setLineWidth(1.2); doc.line(M,y+12,W-M,y+12); doc.setLineWidth(0.6); y+=24; }
+  header(true);
+  /* before you start: hazards + PPE, listed once */
+  if(hz.length||ppe.length||commonTxt){
+    section(es?"Antes de empezar":"Before you start");
+    const colW=(CW-14)/2, pp=(ppe.length?ppe.join(" · "):"")+(commonTxt?(ppe.length?"\n":"")+(es?"Se usa en todos los pasos: ":"Worn on every step: ")+commonTxt:"");
+    const a=wrap(hz.join(" · ")||"-",colW-20,9.5), b=wrap(pp||"-",colW-20,9.5), h=Math.max(a.length,b.length)*12+30;
+    brk(h);
+    [[es?"PELIGROS DE ESTE TRABAJO":"HAZARDS ON THIS JOB",a,RED],[es?"EPP REQUERIDO":"REQUIRED PPE",b,GRN]].forEach((c,i)=>{ const x=M+i*(colW+14);
+      draw(LINE); doc.setLineWidth(0.8); doc.rect(x,y,colW,h); fill(c[2]); doc.rect(x,y,4,h,"F");
+      doc.setFont("helvetica","bold"); doc.setFontSize(8); ink(c[2]); doc.text(sf(c[0]),x+12,y+14);
+      doc.setFont("helvetica","normal"); doc.setFontSize(9.5); ink(INK); doc.text(c[1],x+12,y+28); });
+    y+=h+18;
+  }
+  /* job steps: the core of the training */
+  section(es?"Pasos del trabajo":"Job steps");
+  const colW=(CW-42-12)/2;
+  steps.forEach((s,i)=>{
+    const st=wrap(s.step,CW-50,11,"bold"), hzL=wrap(s.hazards||"-",colW-12,9.5), ctL=wrap(s.controls||"-",colW-12,9.5);
+    const ex=extraOf(s), extra=ex.length?wrap((es?"EPP adicional en este paso: ":"Also wear for this step: ")+ex.join(", "),CW-56,9,"italic"):[];
+    const bodyH=Math.max(hzL.length,ctL.length)*11.8+16, h=st.length*13+4+bodyH+(extra.length?extra.length*11+4:0)+6;
+    brk(h+6);
+    draw(LINE); doc.setLineWidth(0.8); doc.rect(M,y,CW,h);
+    fill(NAVY); doc.rect(M,y,32,h,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(15); ink([255,255,255]); doc.text(String(i+1),M+16,y+20,{align:"center"});
+    let yy=y+15; doc.setFont("helvetica","bold"); doc.setFontSize(11); ink(INK); doc.text(st,M+42,yy); yy+=st.length*13-2;
+    [[es?"QUÉ PUEDE SALIR MAL":"WHAT CAN GO WRONG",hzL,RED],[es?"CÓMO HACERLO SEGURO":"HOW TO DO IT SAFELY",ctL,GRN]].forEach((c,j)=>{ const x=M+42+j*(colW+12);
+      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); ink(c[2]); doc.text(sf(c[0]),x,yy+8); doc.setFont("helvetica","normal"); doc.setFontSize(9.5); ink(INK); doc.text(c[1],x,yy+20); });
+    yy+=bodyH;
+    if(extra.length){ doc.setFont("helvetica","bolditalic"); doc.setFontSize(9); ink(GRN); doc.text(extra,M+42,yy+4); }
+    y+=h+6; });
+  /* critical controls */
+  const crit=(C.critical||[]).filter(Boolean);
+  if(crit.length){
+    y+=8; const ls=crit.map((c,i)=>wrap((i+1)+". "+c,CW-28,10,"bold")), h=ls.reduce((a,l)=>a+l.length*12.5+3,0)+30; brk(h);
+    fill([253,236,234]); doc.rect(M,y,CW,h,"F"); draw(RED); doc.setLineWidth(1.4); doc.rect(M,y,CW,h); doc.setLineWidth(0.6);
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); ink(RED); doc.text(sf(es?"CONTROLES CRÍTICOS - NUNCA LOS OMITA":"CRITICAL CONTROLS - NEVER SKIP THESE"),M+12,y+15);
+    let yy=y+30; ink(INK); ls.forEach(l=>{ doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.text(l,M+14,yy); yy+=l.length*12.5+3; }); y+=h+10;
+  }
+  brk(30); doc.setFont("helvetica","bolditalic"); doc.setFontSize(9.5); ink(NAVY);
+  doc.text(wrap(es?"Detenga el trabajo si las condiciones cambian o encuentra un peligro nuevo. Pregunte a su supervisor antes de continuar.":"Stop work if conditions change or you find a new hazard. Ask your supervisor before you continue.",CW,9.5,"bolditalic"),M,y+8); y+=30;
+  /* sign-in roster */
+  const TS=((S.team&&S.team.sigs)||[]).filter(Boolean), rows=Math.max(12,TS.length);
+  if(y+150>H-40){ doc.addPage(); page++; header(false); }
+  section(es?"Registro de capacitación":"Training sign-in");
+  doc.setFont("helvetica","bold"); doc.setFontSize(9); ink(INK);
+  [[es?"Instructor":"Trainer",M],[es?"Fecha de capacitación":"Training date",M+CW/2]].forEach(f=>{ doc.text(sf(f[0]),f[1],y+8); const w=doc.getTextWidth(sf(f[0]))+8; draw(LINE); doc.setLineWidth(0.8); doc.line(f[1]+w,y+9,f[1]+CW/2-14,y+9); }); y+=22;
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); ink(MUTED); doc.text(wrap(es?"Al firmar, confirmo que este JSA se revisó conmigo y que entiendo los pasos, peligros y controles.":"By signing, I confirm this JSA was reviewed with me and I understand the steps, hazards and controls.",CW,8.5),M,y+6); y+=18;
+  const cols=[["#",24],[es?"Nombre":"Name",200],[es?"No. de empleado":"Employee #",90],[es?"Firma":"Signature",150],[es?"Fecha":"Date",76]], rh=24;
+  const head=()=>{ fill(SHADE); draw(LINE); doc.setLineWidth(0.8); doc.rect(M,y,CW,20,"FD"); let x=M; doc.setFont("helvetica","bold"); doc.setFontSize(8.5); ink(INK); cols.forEach((c,j)=>{ if(j) doc.line(x,y,x,y+20); doc.text(sf(c[0]),x+5,y+13); x+=c[1]; }); y+=20; };
+  head();
+  for(let k=0;k<rows;k++){ if(brk(rh+4)) head(); const q=TS[k]; draw(LINE); doc.setLineWidth(0.8); doc.rect(M,y,CW,rh); let x=M; cols.forEach((c,j)=>{ if(j) doc.line(x,y,x,y+rh); x+=c[1]; });
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); ink(MUTED); doc.text(String(k+1),M+6,y+15);
+    if(q){ ink(INK); doc.text(sf(q.name||""),M+29,y+15); if(q.img){ try{ doc.addImage(q.img,"PNG",M+24+200+90+4,y+2,Math.min(140,(rh-4)*600/180),rh-4); }catch(e){} } doc.setFontSize(7.5); doc.text(sf(String(q.at||"").slice(0,16)),M+24+200+90+150+4,y+15); }
+    y+=rh; }
+  const n=doc.getNumberOfPages(); for(let p=1;p<=n;p++){ doc.setPage(p); doc.setFont("helvetica","normal"); doc.setFontSize(7.5); ink(MUTED); doc.text(sf(no+"  ·  "+title),M,H-20); doc.text((es?"Página ":"Page ")+p+(es?" de ":" of ")+n,W-M,H-20,{align:"right"}); }
+  return doc.output("blob");
+}
+function trainFileName(){ return fileName().replace(/^JSA_/,"JSA_Training_").replace(/\.xlsx$/,".pdf"); }
+$("dl-train").onclick=async()=>{
+  const out=$("dl-status"), es=S.lang==="es"; if(!S.content[S.lang]) return;
+  $("dl-train").disabled=true; out.textContent=es?"Creando la hoja de capacitación…":"Building the training sheet…"; out.className="status";
+  try{
+    const blob=await buildTrainPdf();
+    if(downloadsApi) await downloadsApi.save({filename:trainFileName(),data:blob});
+    else { const A=document.createElement("a"); A.href=URL.createObjectURL(blob); A.download=trainFileName(); document.body.appendChild(A); A.click(); setTimeout(()=>{ URL.revokeObjectURL(A.href); A.remove(); },4000); }
+    out.textContent=(es?"Guardado: ":"Saved: ")+trainFileName(); out.className="status ok";
+  }catch(e){ const code=e&&e.code; out.textContent=code==="declined"?(es?"Descarga cancelada.":"Download cancelled."):(es?"No se pudo crear el PDF: ":"Couldn't build the PDF: ")+((e&&e.message)||e); out.className=code==="declined"?"status":"status err"; }
+  finally{ $("dl-train").disabled=busy||!S.content[S.lang]; }
+};
 $("dl").onclick=async()=>{
   const out=$("dl-status"); const es=S.lang==="es";
   if(!S.content[S.lang]) return;
