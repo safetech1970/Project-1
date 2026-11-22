@@ -1192,7 +1192,7 @@ async function buildTrainPdf(){
     const bh=40; R(M,y,CW,bh,OR,false);
     const LG=LGS;
     if(LG&&LG.src&&LG.w&&LG.h&&!dry){ const lh2=28, lw=Math.min(120,LG.w*lh2/LG.h); try{ doc.addImage(LG.src,"PNG",M+10,y+6+(28-lw*LG.h/LG.w>0?(28-lw*LG.h/LG.w)/2:0),lw,Math.min(28,lw*LG.h/LG.w)); }catch(e){} }
-    ink(INK); font("bold",16); txt(sf(T.jsa+" - "+T.tr),W/2,y+19,{align:"center"}); font("italic",7.5); txt(sf(T.sub),W/2,y+31,{align:"center"});
+    ink(INK); font("bold",16); txt(sf(T.jsa),W/2,y+19,{align:"center"}); font("italic",7.5); txt(sf(T.sub),W/2,y+31,{align:"center"});
     font("bold",7); txt("Form: EHS-JSA",W-M-6,y+14,{align:"right"});
     y+=bh;
     /* header grid: 3 rows x 3 label/value pairs */
