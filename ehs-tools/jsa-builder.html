@@ -1051,7 +1051,7 @@ function fileName(){
   return "JSA_"+t.replace(/[\\/:*?"<>|]+/g,"").replace(/\s+/g," ").trim()+(S.lang==="es"?" (ES)":"")+".xlsx";
 }
 /* ---------- Training sheet (PDF): the job steps first, everything else once ---------- */
-async function buildTrainPdf(){
+async function buildTrainPdf_v1(){
   const Lg=S.lang, C=S.content[Lg], es=Lg==="es";
   const J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw new Error(es?"No se cargó el creador de PDF. Recargue la página.":"The PDF writer didn't load. Reload the page.");
   const doc=new J({unit:"pt",format:"letter"}), W=612, H=792, M=36, CW=W-2*M;
@@ -1146,6 +1146,87 @@ async function buildTrainPdf(){
     if(q){ ink(INK); doc.text(sf(q.name||""),M+29,y+15); if(q.img){ try{ doc.addImage(q.img,"PNG",M+24+200+90+4,y+2,Math.min(140,(rh-4)*600/180),rh-4); }catch(e){} } doc.setFontSize(7.5); doc.text(sf(String(q.at||"").slice(0,16)),M+24+200+90+150+4,y+15); }
     y+=rh; }
   const n=doc.getNumberOfPages(); for(let p=1;p<=n;p++){ doc.setPage(p); doc.setFont("helvetica","normal"); doc.setFontSize(7.5); ink(MUTED); doc.text(sf(no+"  ·  "+title),M,H-20); doc.text((es?"Página ":"Page ")+p+(es?" de ":" of ")+n,W-M,H-20,{align:"right"}); }
+  return doc.output("blob");
+}
+/* ---------- One-page training JSA (PDF), laid out like the JSA form ---------- */
+async function buildTrainPdf(){
+  const Lg=S.lang, C=S.content[Lg], es=Lg==="es";
+  const J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw new Error(es?"No se cargó el creador de PDF. Recargue la página.":"The PDF writer didn't load. Reload the page.");
+  const W=792, H=612, M=22, CW=W-2*M;
+  const OR=[232,106,28], RED=[192,0,0], BLUE=[0,112,192], YEL=[255,192,0], GRN=[0,122,83], DK=[38,50,56], GRY=[217,217,217], LT=[242,242,242], INK=[0,0,0], WHITE=[255,255,255];
+  const sf=s=>String(s==null?"":s).replace(/[–—]/g,"-").replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").replace(/[•●▪]/g,"-").replace(/✔|✓/g,"").replace(/[^\u0000-ÿ]/g,"");
+  const on=new Set(S.boxes), lbl=k=>es?(ES[k[2]]||k[2]):k[2];
+  const hz=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(lbl); if(C.otherHazard) hz.push((es?"OTRO: ":"OTHER: ")+C.otherHazard);
+  const ppe=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(lbl);
+  const steps=(C.steps||[]).filter(s=>s&&String(s.step||"").trim());
+  const crit=(C.critical||[]).filter(Boolean).map((c,i)=>(i+1)+") "+c).join("   ");
+  const title=englishTitle(C.title), tt=(C.title||title), no=jsaNo(), status=UI[Lg].statuses[S.status]||"";
+  const fmt=iso=>{ if(!iso) return ""; const [y,m,d]=iso.split("-").map(Number); return String(m).padStart(2,"0")+"/"+String(d).padStart(2,"0")+"/"+y; };
+  const due=(()=>{ if(!S.date) return ""; const [y,m,d]=S.date.split("-").map(Number); return fmt((y+1)+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0")); })();
+  const TS=((S.team&&S.team.sigs)||[]).filter(Boolean);
+  const T={jsa:es?"ANÁLISIS DE SEGURIDAD DEL TRABAJO":"JOB SAFETY ANALYSIS", tr:es?"CAPACITACIÓN":"TRAINING", sub:es?"Revise este JSA con cada miembro del equipo antes de iniciar la tarea":"Review this JSA with every team member before starting the task",
+    loc:es?"UBICACIÓN":"LOCATION", no:es?"JSA NO.":"JSA NO.", date:es?"FECHA":"DATE", task:es?"TAREA / PUESTO":"TASK / JOB", st:es?"ESTADO":"STATUS", due:es?"REVISIÓN":"REVIEW DUE",
+    sup:"SUPERVISOR", by:es?"ANALIZADO POR":"ANALYSIS BY", ap:es?"APROBADO POR":"APPROVED BY", hz:es?"PELIGROS":"HAZARDS", ppe:es?"EPP REQUERIDO":"PPE REQUIRED",
+    steps:(es?"PASOS DEL TRABAJO, PELIGROS Y CONTROLES":"JOB STEPS, HAZARDS & CONTROLS")+(tt?" - "+String(tt).toUpperCase():""),
+    cols:es?["#","SECUENCIA DE PASOS BÁSICOS","POSIBLES INCIDENTES / PELIGROS","RECOMENDACIONES PARA ELIMINAR / REDUCIR PELIGROS","EPP REQUERIDO"]:["#","SEQUENCE OF BASIC JOB STEPS","POTENTIAL INCIDENTS / HAZARDS","RECOMMENDATIONS TO ELIMINATE / REDUCE HAZARDS","PPE REQUIRED"],
+    crit:es?"CONTROLES CRÍTICOS":"CRITICAL CONTROLS", roster:es?"REGISTRO DE CAPACITACIÓN":"TRAINING ROSTER", ins:es?"INSTRUCTOR":"INSTRUCTOR", tdate:es?"FECHA DE CAPACITACIÓN":"TRAINING DATE",
+    ack:es?"Al firmar, confirmo que este JSA se revisó conmigo y que entiendo los pasos, peligros y controles.":"By signing, I confirm this JSA was reviewed with me and I understand the steps, hazards and controls.",
+    name:es?"NOMBRE":"NAME", sig:es?"FIRMA":"SIGNATURE", stop:es?"Detenga el trabajo si las condiciones cambian o encuentra un peligro nuevo.":"Stop work if conditions change or a new hazard is found."};
+  /* logo: the one chosen in the app, else the logo built into the JSA form */
+  let LGS=(window.GLogo&&GLogo.current&&GLogo.current())||null;
+  if(!LGS&&typeof JSZip!=="undefined"){ try{ const z=await JSZip.loadAsync(TEMPLATE_B64,{base64:true}), f=z.file("xl/media/image3.png"); if(f){ const src="data:image/png;base64,"+await f.async("base64"); const d=await new Promise(r=>{ const i=new Image(); i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight}); i.onerror=()=>r(null); i.src=src; }); if(d) LGS={src:src,w:d.w,h:d.h}; } }catch(e){} }
+  /* draw the whole page at a text scale k; returns the height used. Shrinks k until it fits one page. */
+  function page(doc,k,dry){
+    const fs=n=>n*k, lh=n=>n*k*1.18;
+    const fill=c=>doc.setFillColor(c[0],c[1],c[2]), ink=c=>doc.setTextColor(c[0],c[1],c[2]);
+    const R=(x,y,w,h,f,stroke)=>{ if(dry) return; if(f){ fill(f); doc.rect(x,y,w,h,stroke===false?"F":"FD"); } else doc.rect(x,y,w,h); };
+    const txt=(t,x,y,o)=>{ if(!dry) doc.text(t,x,y,o); };
+    const font=(st,n)=>{ doc.setFont("helvetica",st); doc.setFontSize(fs(n)); };
+    const wr=(t,w,st,n)=>{ font(st,n); return doc.splitTextToSize(sf(t),w); };
+    doc.setDrawColor(0,0,0); doc.setLineWidth(0.6);
+    let y=M;
+    /* title band */
+    const bh=40; R(M,y,CW,bh,OR,false);
+    const LG=LGS;
+    if(LG&&LG.src&&LG.w&&LG.h&&!dry){ const lh2=28, lw=Math.min(120,LG.w*lh2/LG.h); fill(WHITE); doc.roundedRect(M+6,y+4,lw+8,32,3,3,"F"); try{ doc.addImage(LG.src,"PNG",M+10,y+6+(28-lw*LG.h/LG.w>0?(28-lw*LG.h/LG.w)/2:0),lw,Math.min(28,lw*LG.h/LG.w)); }catch(e){} }
+    ink(WHITE); font("bold",16); txt(sf(T.jsa+" - "+T.tr),W/2,y+19,{align:"center"}); font("italic",7.5); txt(sf(T.sub),W/2,y+31,{align:"center"});
+    font("bold",7); txt("Form: EHS-JSA",W-M-6,y+14,{align:"right"});
+    y+=bh;
+    /* header grid: 3 rows x 3 label/value pairs */
+    const g=[[T.loc,S.loc,T.no,no,T.date,fmt(S.date)],[T.task,title,T.st,status,T.due,due],[T.sup,S.sup,T.by,S.by,T.ap,S.appr]], cw=[72,206,70,158,78,CW-584], rh=15;
+    g.forEach(row=>{ let x=M; row.forEach((c,j)=>{ const lab=j%2===0; R(x,y,cw[j],rh,lab?GRY:WHITE); ink(INK); font(lab?"bold":"normal",lab?7:8); const t=doc.splitTextToSize(sf(c||""),cw[j]-6)[0]||""; txt(t,lab?x+cw[j]-4:x+4,y+10.5,lab?{align:"right"}:undefined); x+=cw[j]; }); y+=rh; });
+    y+=4;
+    /* hazards + PPE: only what applies, one strip each */
+    [[T.hz,hz.join("  ·  "),RED,WHITE],[T.ppe,ppe.join("  ·  "),YEL,INK]].forEach(b=>{ if(!b[1]) return; const lw=90, ls=wr(b[1],CW-lw-10,"bold",7.5), h=Math.max(14,ls.length*lh(7.5)+5);
+      R(M,y,lw,h,b[2]); ink(b[3]); font("bold",7.5); txt(sf(b[0]),M+5,y+h/2+2.6); R(M+lw,y,CW-lw,h,LT); ink(INK); font("bold",7.5); txt(ls,M+lw+5,y+lh(7.5)); y+=h; });
+    y+=4;
+    /* job steps table */
+    R(M,y,CW,14,GRN,false); ink(WHITE); font("bold",8.5); txt(sf("4.  "+T.steps).slice(0,160),M+6,y+10); y+=14;
+    const tw=[20,150,175,CW-20-150-175-140,140];
+    const hdr=T.cols.map((c,j)=>wr(c,tw[j]-6,"bold",6.5)), hh=Math.max(...hdr.map(l=>l.length))*lh(6.5)+5; let x=M;
+    T.cols.forEach((c,j)=>{ R(x,y,tw[j],hh,DK); ink(WHITE); font("bold",6.5); txt(hdr[j],x+tw[j]/2,y+lh(6.5)+1,{align:"center"}); x+=tw[j]; }); y+=hh;
+    steps.forEach((s,i)=>{ const cells=[String(i+1),s.step,s.hazards,s.controls,s.ppe], ls=cells.map((c,j)=>j===0?[c]:wr(c||"",tw[j]-6,j===1?"bold":"normal",7.6));
+      const h=Math.max(...ls.map(l=>l.length))*lh(7.6)+5; x=M;
+      cells.forEach((c,j)=>{ R(x,y,tw[j],h,j===0?LT:WHITE); ink(INK); font(j<2?"bold":"normal",j===0?10:7.6); txt(ls[j],j===0?x+tw[j]/2:x+3,j===0?y+h/2+3.5:y+lh(7.6),j===0?{align:"center"}:undefined); x+=tw[j]; }); y+=h; });
+    /* critical controls */
+    if(crit){ const lw=100, ls=wr(crit,CW-lw-10,"bold",7.6), h=Math.max(22,ls.length*lh(7.6)+6); R(M,y,lw,h,RED); ink(WHITE); font("bold",8.5); txt(sf(T.crit),M+lw/2,y+h/2+3,{align:"center"}); R(M+lw,y,CW-lw,h,[253,236,234]); ink([150,0,0]); font("bold",7.6); txt(ls,M+lw+5,y+lh(7.6)+1); y+=h; }
+    ink(RED); font("bolditalic",7); txt(sf(T.stop),W/2,y+9,{align:"center"}); y+=13;
+    /* training roster: compact, 3 columns */
+    R(M,y,CW,13,BLUE,false); ink(WHITE); font("bold",8); txt(sf(T.roster),M+6,y+9.5);
+    font("normal",6.5); txt(sf(T.ack),W-M-6,y+9.5,{align:"right"}); y+=13;
+    const fw=[70,CW/2-70,96,CW/2-96]; x=M; [T.ins,T.tdate].forEach((p,j)=>{ const lw=fw[j*2], vw=fw[j*2+1]; R(x,y,lw,15,GRY); ink(INK); font("bold",7); txt(sf(p),x+lw-4,y+10.5,{align:"right"}); R(x+lw,y,vw,15,WHITE); x+=lw+vw; }); y+=15;
+    const nCol=3, rows=Math.max(4,Math.ceil(Math.max(12,TS.length)/nCol)), colW=CW/nCol, srh=Math.max(15,19*k);
+    for(let c=0;c<nCol;c++){ const x0=M+c*colW; R(x0,y,16,12,DK); R(x0+16,y,colW*0.45,12,DK); R(x0+16+colW*0.45,y,colW-16-colW*0.45,12,DK); ink(WHITE); font("bold",6.5); txt("#",x0+8,y+8.5,{align:"center"}); txt(sf(T.name),x0+20,y+8.5); txt(sf(T.sig),x0+20+colW*0.45,y+8.5); }
+    y+=12;
+    for(let r=0;r<rows;r++){ for(let c=0;c<nCol;c++){ const n=c*rows+r, q=TS[n], x0=M+c*colW; R(x0,y,16,srh,LT); R(x0+16,y,colW*0.45,srh,WHITE); R(x0+16+colW*0.45,y,colW-16-colW*0.45,srh,WHITE);
+        ink(INK); font("normal",7); txt(String(n+1),x0+8,y+srh/2+2.5,{align:"center"});
+        if(q&&!dry){ txt(sf(q.name||""),x0+20,y+srh/2+2.5); if(q.img){ try{ doc.addImage(q.img,"PNG",x0+18+colW*0.45,y+1,Math.min(colW-22-colW*0.45,(srh-2)*600/180),srh-2); }catch(e){} } } }
+      y+=srh; }
+    return y;
+  }
+  const probe=new J({orientation:"landscape",unit:"pt",format:"letter"}); let k=1.15;
+  while(k>0.62 && page(probe,k,true)>H-M) k-=0.03;
+  const doc=new J({orientation:"landscape",unit:"pt",format:"letter"}); page(doc,k,false);
   return doc.output("blob");
 }
 function trainFileName(){ return fileName().replace(/^JSA_/,"JSA_Training_").replace(/\.xlsx$/,".pdf"); }
