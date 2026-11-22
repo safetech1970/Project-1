@@ -1060,16 +1060,6 @@ async function buildXlsx(){
       const al=`<alignment horizontal="${o.h||"left"}" vertical="${o.v||"center"}"${o.wrap?' wrapText="1"':""}${o.shrink?' shrinkToFit="1"':""}${o.ind?' indent="'+o.ind+'"':""}/>`;
       return XF[k]=addTo("cellXfs",`<xf numFmtId="${o.fmt||0}" fontId="${font(o.sz||8,o.b,o.i,o.c)}" fillId="${fill(o.bg)}" borderId="${o.bd?BD:0}" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">${al}</xf>`); };
     const OR="E86A1C", RD="C00000", YL="FFC000", DK="263238", GR="D9D9D9", LT="F2F2F2", PK="FDECEA", WH="FFFFFF";
-    const S_={
-      band:st({bg:OR}), title:st({sz:16,b:1,bg:OR,h:"center",v:"bottom"}), sub:st({sz:7.5,i:1,bg:OR,h:"center",v:"top"}), form:st({sz:7,b:1,bg:OR,h:"right",v:"top"}),
-      lab:st({sz:7,b:1,bg:GR,bd:1,h:"right",shrink:1,ind:1}), val:st({sz:8,bd:1,shrink:1,ind:1}), dval:st({sz:8,bd:1,fmt:164,h:"left",ind:1}),
-      hzL:st({sz:7.5,b:1,c:WH,bg:RD,bd:1,ind:1}), ppL:st({sz:7.5,b:1,bg:YL,bd:1,ind:1}), strip:st({sz:7.5,b:1,bg:LT,bd:1,wrap:1,ind:1}),
-      th:st({sz:6.5,b:1,c:WH,bg:DK,bd:1,h:"center",wrap:1}), num:st({sz:10,b:1,bg:LT,bd:1,h:"center"}),
-      step:st({sz:7.6,b:1,bd:1,v:"top",wrap:1}), cell:st({sz:7.6,bd:1,v:"top",wrap:1}),
-      crL:st({sz:8.5,b:1,c:WH,bg:RD,bd:1,h:"center",wrap:1}), crV:st({sz:7.6,b:1,c:"960000",bg:PK,bd:1,wrap:1,ind:1}),
-      stop:st({sz:7,b:1,i:1,c:RD,h:"center"}), ack:st({sz:8.5}),
-      rh:st({sz:7.5,b:1,c:WH,bg:DK,bd:1,ind:1}), rn:st({sz:8,bg:LT,bd:1,h:"center"}), rv:st({sz:8,bd:1,ind:1}), rd:st({sz:7,bd:1,shrink:1,ind:1}), gap:0 };
-    zip.file("xl/styles.xml",sx);
     /* ---- columns (points, same grid as the PDF: header 72|206|70|158|78|164, steps 24|146|178|260|140, roster 24|254|108|250|112) ---- */
     const CWpt=[24,48,28,70,108,70,38,120,78,24,28,112], CL="ABCDEFGHIJKL";
     const colsXml="<cols>"+CWpt.map((p,i)=>`<col min="${i+1}" max="${i+1}" width="${(Math.max(1,(p/0.75-5)/7)).toFixed(4)}" customWidth="1"/>`).join("")+"</cols>";
@@ -1085,6 +1075,35 @@ async function buildXlsx(){
       name:es?"NOMBRE":"NAME", emp:es?"NO. DE EMPLEADO":"EMPLOYEE #", sig:es?"FIRMA":"SIGNATURE", stop:es?"Detenga el trabajo si las condiciones cambian o encuentra un peligro nuevo.":"Stop work if conditions change or a new hazard is found."};
     const lines=(t,wpt,sz,bold)=>{ const cw=sz*(bold?0.54:0.47); return String(t||"").split("\n").reduce((n,p)=>n+Math.max(1,Math.ceil(p.length*cw/Math.max(10,wpt-8))),0); };
     const hFor=(n,sz)=>n*sz*1.2+5;
+    /* ---- text scale K, chosen like the PDF: the largest (up to 1.15) that keeps page 1 on one page ---- */
+    const hzV=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(k=>lab(k[3])).concat(C.otherHazard?[OTHER+" "+C.otherHazard]:[]).join("  ·  ");
+    const ppV=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(k=>lab(k[3])).join("  ·  ");
+    const TC=[["A","A"],["B","D"],["E","F"],["G","J"],["K","L"]];
+    const SH=[]; for(let i=0;i<8;i++){ const s=C.steps[i]||{}; SH.push({s,has:String(s.step||"").trim()}); }
+    const lh=(n,k)=>n*k*1.18;
+    const H1=k=>{ const L_=(t,w,n,b)=>lines(t,w,n*k,b);
+      const strip=t=>t?Math.max(14,L_(t.toUpperCase(),span("D","L"),7.5,1)*lh(7.5,k)+5):14;
+      const thead=Math.max(...T.cols.map((c,j)=>L_(c,span(...TC[j]),6.5,1)))*lh(6.5,k)+5;
+      const stepH=o=>o.has?Math.max(16,Math.max(L_(o.s.step,span("B","D"),7.6,1),L_(o.s.hazards,span("E","F"),7.6),L_(o.s.controls,span("G","J"),7.6),L_(o.s.ppe,span("K","L"),7.6))*lh(7.6,k)+5):12;
+      const crit=critText?Math.max(22,L_(critText,span("D","L"),7.6,1)*lh(7.6,k)+6):22;
+      return {strip,thead,stepH,crit,total:40+45+4+strip(hzV)+strip(ppV)+4+thead+SH.reduce((a,o)=>a+stepH(o),0)+crit+13}; };
+    const PAGE_H=612-2*0.3*72-6;
+    let K=1.15; while(K>0.62&&H1(K).total>PAGE_H) K-=0.03;
+    const HK=H1(K);
+    const z=n=>Math.max(5,Math.round(n*K*2)/2);
+    const S_={
+      band:st({bg:OR}), title:st({sz:z(16),b:1,bg:OR,h:"center",v:"bottom"}), sub:st({sz:z(7.5),i:1,bg:OR,h:"center",v:"top"}), form:st({sz:z(7),b:1,bg:OR,h:"right",v:"top"}),
+      lab:st({sz:z(7),b:1,bg:GR,bd:1,h:"right",shrink:1,ind:1}), val:st({sz:z(8),bd:1,shrink:1,ind:1}), dval:st({sz:z(8),bd:1,fmt:164,h:"left",ind:1}),
+      hzL:st({sz:z(7.5),b:1,c:WH,bg:RD,bd:1,ind:1,wrap:1}), ppL:st({sz:z(7.5),b:1,bg:YL,bd:1,ind:1,wrap:1}), strip:st({sz:z(7.5),b:1,bg:LT,bd:1,wrap:1,ind:1}),
+      th:st({sz:z(6.5),b:1,c:WH,bg:DK,bd:1,h:"center",wrap:1}), num:st({sz:z(10),b:1,bg:LT,bd:1,h:"center"}),
+      step:st({sz:z(7.6),b:1,bd:1,v:"top",wrap:1}), cell:st({sz:z(7.6),bd:1,v:"top",wrap:1}),
+      crL:st({sz:z(8.5),b:1,c:WH,bg:RD,bd:1,h:"center",wrap:1}), crV:st({sz:z(7.6),b:1,c:"960000",bg:PK,bd:1,wrap:1,ind:1}),
+      stop:st({sz:z(7),b:1,i:1,c:RD,h:"center"}),
+      /* roster page: fixed sizes, like the PDF */
+      rtitle:st({sz:16,b:1,bg:OR,h:"center",v:"bottom"}), rsub:st({sz:7.5,i:1,bg:OR,h:"center",v:"top"}), rform:st({sz:7,b:1,bg:OR,h:"right",v:"top"}),
+      rlab:st({sz:7,b:1,bg:GR,bd:1,h:"right",shrink:1,ind:1}), rval:st({sz:8.5,bd:1,shrink:1,ind:1}), rdval:st({sz:8.5,bd:1,fmt:164,h:"left",ind:1}), rstop:st({sz:7.5,b:1,i:1,c:RD,h:"center"}),
+      ack:st({sz:8.5}), rh:st({sz:7.5,b:1,c:WH,bg:DK,bd:1,ind:1}), rn:st({sz:8,bg:LT,bd:1,h:"center"}), rv:st({sz:8,bd:1,ind:1}), rd:st({sz:7,bd:1,shrink:1,ind:1}) };
+    zip.file("xl/styles.xml",sx);
     /* ---- cell writer ---- */
     const rows=[], merges=[], heights={}; let cur=null, R=0, total1=0, onPage1=true;
     const row=(ht)=>{ R++; heights[R]=ht; cur=[]; rows.push({r:R,ht,cells:cur}); if(onPage1) total1+=ht; return R; };
@@ -1099,8 +1118,8 @@ async function buildXlsx(){
       cur.push(x);
       for(let i=CL.indexOf(c1)+1;i<=CL.indexOf(c2);i++) cur.push(`<c r="${CL[i]}${R}" s="${s}"/>`);
       if(c2!==c1) merges.push(`${c1}${R}:${c2}${R}`); };
-    const band=(ttl,sub)=>{ row(22); put("A","C",S_.band,null); put("D","K",S_.title,{s:ttl}); put("L","L",S_.form,{s:"Form: EHS-JSA"});
-      row(18); put("A","C",S_.band,null); put("D","K",S_.sub,{s:sub}); put("L","L",S_.band,null); return R-1; };
+    const band=(ttl,sub,r2)=>{ row(22); put("A","C",S_.band,null); put("D","K",r2?S_.rtitle:S_.title,{s:ttl}); put("L","L",r2?S_.rform:S_.form,{s:"Form: EHS-JSA"});
+      row(18); put("A","C",S_.band,null); put("D","K",r2?S_.rsub:S_.sub,{s:sub}); put("L","L",S_.band,null); return R-1; };
     const gap=h=>{ row(h); };
     const fmtNum=v=>v===""||v==null?"":v;
     /* ===== page 1: training JSA ===== */
@@ -1112,50 +1131,44 @@ async function buildXlsx(){
     gap(4);
     const nextCol=c=>{ const m=/^([A-Z]+)(\d+)$/.exec(c); let n=colNum(m[1])+1, s=""; while(n>0){ const d=(n-1)%26; s=String.fromCharCode(65+d)+s; n=Math.floor((n-1)/26); } return s+m[2]; };
     const tj=(list,extra)=>"_xlfn.TEXTJOIN(\"  ·  \",TRUE,"+list.map(k=>`IF(JSA!${k[3]}="✔",JSA!${nextCol(k[3])},"")`).concat(extra||[]).join(",")+")";
-    const hzV=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(k=>lab(k[3])).concat(C.otherHazard?[OTHER+" "+C.otherHazard]:[]).join("  ·  ");
-    const ppV=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(k=>lab(k[3])).join("  ·  ");
-    const vw=span("D","L");
-    row(Math.max(15,hFor(lines(hzV.toUpperCase(),vw,7.5,1),7.5))); put("A","C",S_.hzL,{s:T.hz}); put("D","L",S_.strip,{f:tj(KW.filter(k=>k[1]==="h"),[`IF(JSA!G18="✔",JSA!H18,"")`]),v:hzV});
-    row(Math.max(15,hFor(lines(ppV.toUpperCase(),vw,7.5,1),7.5))); put("A","C",S_.ppL,{s:T.ppe}); put("D","L",S_.strip,{f:tj(KW.filter(k=>k[1]==="p")),v:ppV});
+    row(HK.strip(hzV)); put("A","C",S_.hzL,{s:T.hz}); put("D","L",S_.strip,{f:tj(KW.filter(k=>k[1]==="h"),[`IF(JSA!G18="✔",JSA!H18,"")`]),v:hzV});
+    row(HK.strip(ppV)); put("A","C",S_.ppL,{s:T.ppe}); put("D","L",S_.strip,{f:tj(KW.filter(k=>k[1]==="p")),v:ppV});
     gap(4);
-    const TC=[["A","A"],["B","D"],["E","F"],["G","J"],["K","L"]];
-    row(Math.max(16,Math.max(...T.cols.map((c,j)=>lines(c,span(...TC[j]),6.5,1)))*6.5*1.2+5)); T.cols.forEach((c,j)=>put(TC[j][0],TC[j][1],S_.th,{s:c}));
+    row(HK.thead); T.cols.forEach((c,j)=>put(TC[j][0],TC[j][1],S_.th,{s:c}));
     for(let i=0;i<8;i++){ const s=C.steps[i]||{}, r0=36+i, has=String(s.step||"").trim();
-      const n=Math.max(lines(s.step,span("B","D"),7.6,1),lines(s.hazards,span("E","F"),7.6),lines(s.controls,span("G","J"),7.6),lines(s.ppe,span("K","L"),7.6));
-      row(has?Math.max(22,hFor(n,7.6)):14);
+      row(HK.stepH(SH[i]));
       put("A","A",S_.num,{f:lnk("A"+r0),v:has?i+1:"",n:1}); put("B","D",S_.step,{f:lnk("B"+r0),v:s.step||""}); put("E","F",S_.cell,{f:lnk("C"+r0),v:s.hazards||""});
       put("G","J",S_.cell,{f:lnk("E"+r0),v:s.controls||""}); put("K","L",S_.cell,{f:lnk("I"+r0),v:s.ppe||""}); }
-    row(Math.max(24,hFor(lines(critText,span("D","L"),7.6,1),7.6)+2)); put("A","C",S_.crL,{s:T.crit}); put("D","L",S_.crV,{f:lnk("C44"),v:critText});
+    row(HK.crit); put("A","C",S_.crL,{s:T.crit}); put("D","L",S_.crV,{f:lnk("C44"),v:critText});
     row(13); put("A","L",S_.stop,{s:T.stop});
     const brk=R; onPage1=false;
     /* ===== page 2: training roster ===== */
-    logoRows.push(band(T.roster,T.rsub));
+    logoRows.push(band(T.roster,T.rsub,1));
     [[T.loc,"C5",S.loc,T.no,"G5",cache.G5,T.date,"K5",serial(S.date),1],[T.task,"C6",title,T.sup,"C7",S.sup||"",T.ap,"K7",S.appr||"",0]].forEach(h=>{ row(16);
-      put("A","B",S_.lab,{s:h[0]}); put("C","E",S_.val,{f:lnk(h[1]),v:h[2]}); put("F","F",S_.lab,{s:h[3]}); put("G","H",S_.val,{f:lnk(h[4]),v:h[5]}); put("I","I",S_.lab,{s:h[6]});
-      if(h[9]) put("J","L",S_.dval,{f:lnk(h[7]),v:fmtNum(h[8]),n:1}); else put("J","L",S_.val,{f:lnk(h[7]),v:h[8]}); });
-    row(16); put("A","B",S_.lab,{s:T.ins}); put("C","E",S_.val,null); put("F","F",S_.lab,{s:T.tdate}); put("G","L",S_.val,null);
+      put("A","B",S_.rlab,{s:h[0]}); put("C","E",S_.rval,{f:lnk(h[1]),v:h[2]}); put("F","F",S_.rlab,{s:h[3]}); put("G","H",S_.rval,{f:lnk(h[4]),v:h[5]}); put("I","I",S_.rlab,{s:h[6]});
+      if(h[9]) put("J","L",S_.rdval,{f:lnk(h[7]),v:fmtNum(h[8]),n:1}); else put("J","L",S_.rval,{f:lnk(h[7]),v:h[8]}); });
+    row(16); put("A","B",S_.rlab,{s:T.ins}); put("C","E",S_.rval,null); put("F","F",S_.rlab,{s:T.tdate}); put("G","L",S_.rval,null);
     gap(6); row(14); put("A","L",S_.ack,{s:T.ack}); gap(4);
     const RC=[["A","A","#"],["B","E",T.name],["F","G",T.emp],["H","K",T.sig],["L","L",T.date]];
-    const nR=Math.max(20,TS.length), availPt=(612-2*0.3*72-6)*100/Math.max(40,Math.min(100,Math.floor((612-2*0.3*72-4)/total1*100))), rh2=Math.max(14,Math.min(22,Math.floor((availPt-160)/(nR+1))));
+    const nR=Math.max(20,TS.length), rh2=Math.max(14,Math.min(22,Math.floor((PAGE_H-40-48-24-21-13-2)/(nR+1)*10)/10));
     row(20); RC.forEach(c=>put(c[0],c[1],S_.rh,{s:c[2]}));
     const sigRow0=R+1;
     for(let i=0;i<nR;i++){ const q=TS[i], r0=68+i; row(rh2);
       put("A","A",S_.rn,{s:String(i+1)});
       if(i<20){ put("B","E",S_.rv,{f:lnk("C"+r0),v:q?q.name||"":""}); put("F","G",S_.rv,{f:lnk("B"+r0),v:""}); put("H","K",S_.rv,null); put("L","L",S_.rd,{f:`IF(JSA!I${r0}="","",TRIM(LEFT(JSA!I${r0},FIND(" ·",JSA!I${r0}&" ·")-1)))`,v:q?String(q.at||""):""}); }
       else { put("B","E",S_.rv,{s:q?q.name||"":""}); put("F","G",S_.rv,null); put("H","K",S_.rv,null); put("L","L",S_.rd,{s:q?String(q.at||""):""}); } }
-    gap(8); row(13); put("A","L",S_.stop,{s:T.stop});
+    gap(Math.max(4,PAGE_H-40-48-24-20-nR*rh2-13-2)); row(13); put("A","L",S_.rstop,{s:T.stop});
     /* one print scale for both pages: page 1 must fit on one landscape letter page */
-    const avail=612-2*0.3*72-4, scale=Math.max(40,Math.min(100,Math.floor(avail/total1*100)));
     const sd=rows.map(o=>`<row r="${o.r}" ht="${o.ht.toFixed(2)}" customHeight="1">${o.cells.join("")}</row>`).join("");
     const s5='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
-      `<dimension ref="A1:L${R}"/><sheetViews><sheetView showGridLines="0" workbookViewId="0" view="pageBreakPreview" zoomScaleNormal="100"><selection activeCell="C${brk+5}" sqref="C${brk+5}"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="14.5"/>`+colsXml+
+      `<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:L${R}"/><sheetViews><sheetView showGridLines="0" workbookViewId="0" view="pageBreakPreview" zoomScaleNormal="100"><selection activeCell="C${brk+5}" sqref="C${brk+5}"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="14.5"/>`+colsXml+
       `<sheetData>${sd}</sheetData><mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`+
-      `<printOptions horizontalCentered="1"/><pageMargins left="0.3" right="0.3" top="0.3" bottom="0.3" header="0" footer="0"/><pageSetup paperSize="1" scale="${scale}" orientation="landscape"/>`+
+      `<printOptions horizontalCentered="1"/><pageMargins left="0.3" right="0.3" top="0.3" bottom="0.3" header="0" footer="0"/><pageSetup paperSize="1" fitToWidth="1" fitToHeight="0" orientation="landscape"/>`+
       `<rowBreaks count="1" manualBreakCount="1"><brk id="${brk}" max="16383" man="1"/></rowBreaks><drawing r:id="rId1"/></worksheet>`;
     /* ---- drawing: logo in both bands, team signatures in the roster ---- */
     const E=12700, A_=(col,colOff,row0,rowOff,cx,cy,id,rid)=>`<xdr:oneCellAnchor><xdr:from><xdr:col>${col}</xdr:col><xdr:colOff>${Math.round(colOff)}</xdr:colOff><xdr:row>${row0}</xdr:row><xdr:rowOff>${Math.round(rowOff)}</xdr:rowOff></xdr:from><xdr:ext cx="${Math.round(cx)}" cy="${Math.round(cy)}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${id}" name="Picture ${id}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${Math.round(cx)}" cy="${Math.round(cy)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`;
-    const lh=28, lw=Math.min(120,lh*598/169);
-    let anc=logoRows.map((r,i)=>A_(0,10*E,r-1,6*E,lw*E,lh*E,2+i,"rId1")).join("");
+    const lgh=28, lgw=Math.min(120,lgh*598/169);
+    let anc=logoRows.map((r,i)=>A_(0,10*E,r-1,6*E,lgw*E,lgh*E,2+i,"rId1")).join("");
     let d2r=await rd("xl/drawings/_rels/drawing1.xml.rels");
     TS.slice(0,nR).forEach((q,k)=>{ if(!q.img) return; const rid="rIdSig"+k; if(d2r.indexOf('Id="'+rid+'"')<0) return;
       const h=rh2-2, w=Math.min(span("H","K")-8,h*600/180); anc+=A_(7,4*E,sigRow0+k-1,1*E,w*E,h*E,10+k,rid); });
