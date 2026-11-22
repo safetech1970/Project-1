@@ -1209,24 +1209,32 @@ async function buildTrainPdf(){
       const h=Math.max(...ls.map(l=>l.length))*lh(7.6)+5; x=M;
       cells.forEach((c,j)=>{ R(x,y,tw[j],h,j===0?LT:WHITE); ink(INK); font(j<2?"bold":"normal",j===0?10:7.6); txt(ls[j],j===0?x+tw[j]/2:x+3,j===0?y+h/2+3.5:y+lh(7.6),j===0?{align:"center"}:undefined); x+=tw[j]; }); y+=h; });
     /* critical controls */
-    if(crit){ const lw=100, ls=wr(crit,CW-lw-10,"bold",7.6), h=Math.max(22,ls.length*lh(7.6)+6); R(M,y,lw,h,RED); ink(WHITE); font("bold",8.5); txt(sf(T.crit),M+lw/2,y+h/2+3,{align:"center"}); R(M+lw,y,CW-lw,h,[253,236,234]); ink([150,0,0]); font("bold",7.6); txt(ls,M+lw+5,y+lh(7.6)+1); y+=h; }
+    if(crit){ const lw=Math.round(108*k), ls=wr(crit,CW-lw-10,"bold",7.6), h=Math.max(22,ls.length*lh(7.6)+6); R(M,y,lw,h,RED); ink(WHITE); font("bold",8.5); txt(sf(T.crit),M+lw/2,y+h/2+3,{align:"center"}); R(M+lw,y,CW-lw,h,[253,236,234]); ink([150,0,0]); font("bold",7.6); txt(ls,M+lw+5,y+lh(7.6)+1); y+=h; }
     ink(RED); font("bolditalic",7); txt(sf(T.stop),W/2,y+9,{align:"center"}); y+=13;
-    /* training roster: compact, 3 columns */
-    R(M,y,CW,13,BLUE,false); ink(WHITE); font("bold",8); txt(sf(T.roster),M+6,y+9.5);
-    font("normal",6.5); txt(sf(T.ack),W-M-6,y+9.5,{align:"right"}); y+=13;
-    const fw=[70,CW/2-70,96,CW/2-96]; x=M; [T.ins,T.tdate].forEach((p,j)=>{ const lw=fw[j*2], vw=fw[j*2+1]; R(x,y,lw,15,GRY); ink(INK); font("bold",7); txt(sf(p),x+lw-4,y+10.5,{align:"right"}); R(x+lw,y,vw,15,WHITE); x+=lw+vw; }); y+=15;
-    const nCol=3, rows=Math.max(4,Math.ceil(Math.max(12,TS.length)/nCol)), colW=CW/nCol, srh=Math.max(15,19*k);
-    for(let c=0;c<nCol;c++){ const x0=M+c*colW; R(x0,y,16,12,DK); R(x0+16,y,colW*0.45,12,DK); R(x0+16+colW*0.45,y,colW-16-colW*0.45,12,DK); ink(WHITE); font("bold",6.5); txt("#",x0+8,y+8.5,{align:"center"}); txt(sf(T.name),x0+20,y+8.5); txt(sf(T.sig),x0+20+colW*0.45,y+8.5); }
-    y+=12;
-    for(let r=0;r<rows;r++){ for(let c=0;c<nCol;c++){ const n=c*rows+r, q=TS[n], x0=M+c*colW; R(x0,y,16,srh,LT); R(x0+16,y,colW*0.45,srh,WHITE); R(x0+16+colW*0.45,y,colW-16-colW*0.45,srh,WHITE);
-        ink(INK); font("normal",7); txt(String(n+1),x0+8,y+srh/2+2.5,{align:"center"});
-        if(q&&!dry){ txt(sf(q.name||""),x0+20,y+srh/2+2.5); if(q.img){ try{ doc.addImage(q.img,"PNG",x0+18+colW*0.45,y+1,Math.min(colW-22-colW*0.45,(srh-2)*600/180),srh-2); }catch(e){} } } }
-      y+=srh; }
     return y;
+  }
+  /* training roster on its own page */
+  function rosterPage(doc){
+    doc.addPage(); const fill=c=>doc.setFillColor(c[0],c[1],c[2]), ink=c=>doc.setTextColor(c[0],c[1],c[2]), font=(st,n)=>{ doc.setFont("helvetica",st); doc.setFontSize(n); };
+    const R=(x,y,w,h,f,stroke)=>{ if(f){ fill(f); doc.rect(x,y,w,h,stroke===false?"F":"FD"); } else doc.rect(x,y,w,h); };
+    doc.setDrawColor(0,0,0); doc.setLineWidth(0.6); let y=M;
+    R(M,y,CW,40,OR,false);
+    if(LGS&&LGS.src&&LGS.w&&LGS.h){ const lw=Math.min(120,LGS.w*28/LGS.h); fill(WHITE); doc.roundedRect(M+6,y+4,lw+8,32,3,3,"F"); try{ doc.addImage(LGS.src,"PNG",M+10,y+6+Math.max(0,(28-lw*LGS.h/LGS.w)/2),lw,Math.min(28,lw*LGS.h/LGS.w)); }catch(e){} }
+    ink(WHITE); font("bold",16); doc.text(sf(T.roster),W/2,y+19,{align:"center"}); font("italic",7.5); doc.text(sf(es?"Todos los miembros del equipo deben revisar el JSA y firmar antes de realizar la tarea":"All team members must review the JSA and sign before performing the task"),W/2,y+31,{align:"center"});
+    font("bold",7); doc.text("Form: EHS-JSA",W-M-6,y+14,{align:"right"}); y+=40;
+    const g=[[T.loc,S.loc,T.no,no,T.date,fmt(S.date)],[T.task,title,T.sup,S.sup,T.ap,S.appr],[T.ins,"",T.tdate,"",es?"FIRMADOS":"SIGNED",TS.length+(es?" de ":" of ")+Math.max(20,TS.length)]], cw=[72,206,70,158,78,CW-584], rh=16;
+    g.forEach(row=>{ let x=M; row.forEach((c,j)=>{ const lab=j%2===0; R(x,y,cw[j],rh,lab?GRY:WHITE); ink(INK); font(lab?"bold":"normal",lab?7:8.5); const t=doc.splitTextToSize(sf(c||""),cw[j]-6)[0]||""; doc.text(t,lab?x+cw[j]-4:x+4,y+11,lab?{align:"right"}:undefined); x+=cw[j]; }); y+=rh; });
+    y+=8; ink(INK); font("normal",8.5); doc.text(sf(T.ack),M,y+6); y+=14;
+    const cols=[["#",26],[T.name,250],[es?"NO. DE EMPLEADO":"EMPLOYEE #",110],[T.sig,250],[T.date,CW-636]], n=Math.max(20,TS.length), rh2=Math.min(22,(H-M-y-18)/(n+1));
+    let x=M; cols.forEach(c=>{ R(x,y,c[1],rh2,DK); ink(WHITE); font("bold",7.5); doc.text(sf(c[0]),x+5,y+rh2/2+2.7); x+=c[1]; }); y+=rh2;
+    for(let r=0;r<n;r++){ const q=TS[r]; x=M; cols.forEach((c,j)=>{ R(x,y,c[1],rh2,j===0?LT:WHITE); x+=c[1]; }); ink(INK); font("normal",8); doc.text(String(r+1),M+13,y+rh2/2+2.8,{align:"center"});
+      if(q){ doc.text(sf(q.name||""),M+31,y+rh2/2+2.8); if(q.img){ try{ doc.addImage(q.img,"PNG",M+26+250+110+4,y+1,Math.min(240,(rh2-2)*600/180),rh2-2); }catch(e){} } font("normal",7); doc.text(sf(String(q.at||"").slice(0,16)),M+636+4,y+rh2/2+2.5); }
+      y+=rh2; }
+    ink(RED); font("bolditalic",7.5); doc.text(sf(T.stop),W/2,H-M+4,{align:"center"});
   }
   const probe=new J({orientation:"landscape",unit:"pt",format:"letter"}); let k=1.15;
   while(k>0.62 && page(probe,k,true)>H-M) k-=0.03;
-  const doc=new J({orientation:"landscape",unit:"pt",format:"letter"}); page(doc,k,false);
+  const doc=new J({orientation:"landscape",unit:"pt",format:"letter"}); page(doc,k,false); rosterPage(doc);
   return doc.output("blob");
 }
 function trainFileName(){ return fileName().replace(/^JSA_/,"JSA_Training_").replace(/\.xlsx$/,".pdf"); }
