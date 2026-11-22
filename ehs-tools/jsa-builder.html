@@ -1156,7 +1156,7 @@ async function buildTrainPdf(){
   const Lg=S.lang, C=S.content[Lg], es=Lg==="es";
   const J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw new Error(es?"No se cargó el creador de PDF. Recargue la página.":"The PDF writer didn't load. Reload the page.");
   const W=792, H=612, M=22, CW=W-2*M;
-  const OR=[0,0,0], RED=[192,0,0], BLUE=[0,112,192], YEL=[255,192,0], GRN=[0,122,83], DK=[38,50,56], GRY=[217,217,217], LT=[242,242,242], INK=[0,0,0], WHITE=[255,255,255];
+  const OR=[232,106,28], RED=[192,0,0], BLUE=[0,112,192], YEL=[255,192,0], GRN=[0,122,83], DK=[38,50,56], GRY=[217,217,217], LT=[242,242,242], INK=[0,0,0], WHITE=[255,255,255];
   const sf=s=>String(s==null?"":s).replace(/[–—]/g,"-").replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").replace(/[•●▪]/g,"-").replace(/✔|✓/g,"").replace(/[^\u0000-ÿ]/g,"");
   const on=new Set(S.boxes), lbl=k=>es?(ES[k[2]]||k[2]):k[2];
   const hz=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(lbl); if(C.otherHazard) hz.push((es?"OTRO: ":"OTHER: ")+C.otherHazard);
@@ -1178,9 +1178,6 @@ async function buildTrainPdf(){
   /* logo: the one chosen in the app, else the logo built into the JSA form */
   let LGS=(window.GLogo&&GLogo.current&&GLogo.current())||null;
   if(!LGS&&typeof JSZip!=="undefined"){ try{ const z=await JSZip.loadAsync(TEMPLATE_B64,{base64:true}), f=z.file("xl/media/image3.png"); if(f){ const src="data:image/png;base64,"+await f.async("base64"); const d=await new Promise(r=>{ const i=new Image(); i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight}); i.onerror=()=>r(null); i.src=src; }); if(d) LGS={src:src,w:d.w,h:d.h}; } }catch(e){} }
-  /* black title band: print a transparent logo in white so it shows */
-  if(LGS&&LGS.src){ try{ LGS=await new Promise(r=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement("canvas"); c.width=i.naturalWidth; c.height=i.naturalHeight; const x=c.getContext("2d"); x.drawImage(i,0,0); const d=x.getImageData(0,0,c.width,c.height), p=d.data;
-      if(p[3]>200&&p[p.length-1]>200){ r(LGS); return; } for(let j=0;j<p.length;j+=4){ p[j]=p[j+1]=p[j+2]=255; } x.putImageData(d,0,0); r({src:c.toDataURL("image/png"),w:c.width,h:c.height}); }; i.onerror=()=>r(LGS); i.src=LGS.src; }); }catch(e){} }
   /* draw the whole page at a text scale k; returns the height used. Shrinks k until it fits one page. */
   function page(doc,k,dry){
     const fs=n=>n*k, lh=n=>n*k*1.18;
@@ -1195,7 +1192,7 @@ async function buildTrainPdf(){
     const bh=40; R(M,y,CW,bh,OR,false);
     const LG=LGS;
     if(LG&&LG.src&&LG.w&&LG.h&&!dry){ const lh2=28, lw=Math.min(120,LG.w*lh2/LG.h); try{ doc.addImage(LG.src,"PNG",M+10,y+6+(28-lw*LG.h/LG.w>0?(28-lw*LG.h/LG.w)/2:0),lw,Math.min(28,lw*LG.h/LG.w)); }catch(e){} }
-    ink(WHITE); font("bold",16); txt(sf(T.jsa+" - "+T.tr),W/2,y+19,{align:"center"}); font("italic",7.5); txt(sf(T.sub),W/2,y+31,{align:"center"});
+    ink(INK); font("bold",16); txt(sf(T.jsa+" - "+T.tr),W/2,y+19,{align:"center"}); font("italic",7.5); txt(sf(T.sub),W/2,y+31,{align:"center"});
     font("bold",7); txt("Form: EHS-JSA",W-M-6,y+14,{align:"right"});
     y+=bh;
     /* header grid: 3 rows x 3 label/value pairs */
@@ -1225,7 +1222,7 @@ async function buildTrainPdf(){
     doc.setDrawColor(0,0,0); doc.setLineWidth(0.6); let y=M;
     R(M,y,CW,40,OR,false);
     if(LGS&&LGS.src&&LGS.w&&LGS.h){ const lw=Math.min(120,LGS.w*28/LGS.h); try{ doc.addImage(LGS.src,"PNG",M+10,y+6+Math.max(0,(28-lw*LGS.h/LGS.w)/2),lw,Math.min(28,lw*LGS.h/LGS.w)); }catch(e){} }
-    ink(WHITE); font("bold",16); doc.text(sf(T.roster),W/2,y+19,{align:"center"}); font("italic",7.5); doc.text(sf(es?"Todos los miembros del equipo deben revisar el JSA y firmar antes de realizar la tarea":"All team members must review the JSA and sign before performing the task"),W/2,y+31,{align:"center"});
+    ink(INK); font("bold",16); doc.text(sf(T.roster),W/2,y+19,{align:"center"}); font("italic",7.5); doc.text(sf(es?"Todos los miembros del equipo deben revisar el JSA y firmar antes de realizar la tarea":"All team members must review the JSA and sign before performing the task"),W/2,y+31,{align:"center"});
     font("bold",7); doc.text("Form: EHS-JSA",W-M-6,y+14,{align:"right"}); y+=40;
     const g=[[T.loc,S.loc,T.no,no,T.date,fmt(S.date)],[T.task,title,T.sup,S.sup,T.ap,S.appr],[T.ins,"",T.tdate,""]], cw=[72,206,70,158,78,CW-584], rh=16;
     g.forEach(row=>{ let x=M; const ww=row.length===4?[cw[0],cw[1],cw[2],cw[3]+cw[4]+cw[5]]:cw; row.forEach((c,j)=>{ const lab=j%2===0; R(x,y,ww[j],rh,lab?GRY:WHITE); ink(INK); font(lab?"bold":"normal",lab?7:8.5); const t=doc.splitTextToSize(sf(c||""),ww[j]-6)[0]||""; doc.text(t,lab?x+ww[j]-4:x+4,y+11,lab?{align:"right"}:undefined); x+=ww[j]; }); y+=rh; });
