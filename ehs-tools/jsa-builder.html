@@ -1044,6 +1044,74 @@ async function buildXlsx(){
     zip.file("xl/drawings/drawing1.xml",dr); zip.file("xl/drawings/_rels/drawing1.xml.rels",drr);
   }
   if(window.GLogo&&GLogo.current()){ const _png=await GLogo.fitPng(598,169); if(_png) zip.file("xl/media/image3.png",_png.split(",")[1],{base64:true}); }
+  /* 8. Training tab: the one-page training JSA + roster. Every value is a formula linked to the JSA tab
+        (which itself reads the worksheet tab), so edits there flow through. */
+  {
+    const xe=t=>String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const rowsOf=xml=>{ const m={}; xml.replace(/<row r="(\d+)"[^>]*?(?:\/>|>[\s\S]*?<\/row>)/g,(all,r)=>{ m[+r]=all; return all; }); return m; };
+    const R1=rowsOf(s1);
+    const nextCol=c=>{ const m=/^([A-Z]+)(\d+)$/.exec(c); let n=colNum(m[1])+1, s=""; while(n>0){ const d=(n-1)%26; s=String.fromCharCode(65+d)+s; n=Math.floor((n-1)/26); } return s+m[2]; };
+    function remap(from,to,link){
+      const src=R1[from]; if(!src) return `<row r="${to}"/>`;
+      let x=src.replace(/^<row r="\d+"/,`<row r="${to}"`).replace(/\sspans="[^"]*"/,"");
+      return x.replace(/<c r="([A-Z]+)\d+"([^>]*?)(\/>|>([\s\S]*?)<\/c>)/g,(all,col,attrs,end,inner)=>{
+        const ref=col+to, st=(/\ss="\d+"/.exec(attrs)||[""])[0];
+        if(!inner) return link?`<c r="${ref}"${st} t="str"><f>${xe(`IF(JSA!${col}${from}="","",JSA!${col}${from})`)}</f><v></v></c>`:`<c r="${ref}"${st}/>`;
+        if(/\st="s"/.test(attrs)||!link) return `<c r="${ref}"${attrs}>${inner}</c>`;
+        const is=/<is>([\s\S]*?)<\/is>/.exec(inner), vv=/<v>([\s\S]*?)<\/v>/.exec(inner);
+        const v=is?unesc([...is[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(m=>m[1]).join("")):(vv?unesc(vv[1]):"");
+        const num=!is&&!/\st="(str|inlineStr|b|e)"/.test(attrs)&&v!==""&&!isNaN(+v);
+        const f=`IF(JSA!${col}${from}="","",JSA!${col}${from})`;
+        return num?`<c r="${ref}"${st}><f>${xe(f)}</f><v>${v}</v></c>`:`<c r="${ref}"${st} t="str"><f>${xe(f)}</f><v>${xe(v)}</v></c>`;
+      });
+    }
+    const MAP=[[1,1,0],[2,2,0],[3,3,0],[4,4,0],[5,5,1],[6,6,1],[7,7,1]];
+    for(let r=35;r<=44;r++) MAP.push([r,r-23,1]); MAP.push([45,22,0]);
+    for(let r=47;r<=53;r++) MAP.push([r,r-24,1]);
+    for(let r=66;r<=87;r++) MAP.push([r,r-36,1]);
+    const shift=r=>{ for(const m of MAP) if(m[0]===r) return m[1]; return null; };
+    /* hazards and PPE that apply, joined from the JSA checkboxes */
+    const chkd=sec=>KW.filter(k=>k[1]===sec);
+    const join=(list,extra)=>"_xlfn.TEXTJOIN(\"  ·  \",TRUE,"+list.map(k=>`IF(JSA!${k[3]}="✔",JSA!${nextCol(k[3])},"")`).concat(extra||[]).join(",")+")";
+    const hzF=join(chkd("h"),[`IF(JSA!G18="✔",JSA!H18,"")`]), ppF=join(chkd("p"));
+    const hzV=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(k=>lab(k[3])).concat(C.otherHazard?[OTHER+" "+C.otherHazard]:[]).join("  ·  ");
+    const ppV=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(k=>lab(k[3])).join("  ·  ");
+    const strip=(r,label,st,f,v)=>{ const ht=Math.max(18,Math.ceil(String(v).length/150)*12+6);
+      return `<row r="${r}" ht="${ht.toFixed(1)}" customHeight="1"><c r="A${r}" s="${st}" t="inlineStr"><is><t>${xe(label)}</t></is></c><c r="B${r}" s="${st}"/>`+
+        `<c r="C${r}" s="64" t="str"><f>${xe(f)}</f><v>${xe(v)}</v></c>`+["D","E","F","G","H","I","J","K","L"].map(c=>`<c r="${c}${r}" s="64"/>`).join("")+`</row>`; };
+    const gap=r=>remap(4,r,0);
+    let rows=[]; for(const m of MAP.slice(0,7)) rows.push(remap(m[0],m[1],m[2]));
+    rows.push(gap(8)); rows.push(strip(9,es?"PELIGROS":"HAZARDS",58,hzF,hzV)); rows.push(strip(10,es?"EPP REQUERIDO":"PPE REQUIRED",61,ppF,ppV)); rows.push(gap(11));
+    for(const m of MAP.slice(7)) rows.push(remap(m[0],m[1],m[2]));
+    let sd=rows.join("");
+    sd=sd.replace(/<c r="D3"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/,`<c r="D3" s="43" t="inlineStr"><is><t>${xe(es?"Revise este JSA con cada miembro del equipo antes de iniciar la tarea":"Review this JSA with every team member before starting the task")}</t></is></c>`);
+    /* merges: the copied ones (shifted) + the two strips */
+    const mg=[]; (s1.match(/<mergeCell ref="[A-Z]+\d+:[A-Z]+\d+"\/>/g)||[]).forEach(t=>{ const m=/ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"/.exec(t), a=shift(+m[2]), b=shift(+m[4]); if(a!==null&&b!==null&&b-a===+m[4]-+m[2]) mg.push(`<mergeCell ref="${m[1]}${a}:${m[3]}${b}"/>`); });
+    mg.push('<mergeCell ref="A9:B9"/>','<mergeCell ref="C9:L9"/>','<mergeCell ref="A10:B10"/>','<mergeCell ref="C10:L10"/>');
+    const head=s1.slice(0,s1.indexOf("<sheetData>")).replace(/<dimension ref="[^"]*"\/>/,'<dimension ref="A1:L51"/>').replace(/\stabSelected="1"/,"").replace(/<selection[^>]*\/>/,'<selection activeCell="A1" sqref="A1"/>');
+    let s5=head+"<sheetData>"+sd+"</sheetData>"+`<mergeCells count="${mg.length}">${mg.join("")}</mergeCells>`+
+      '<printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.25" bottom="0.25" header="0.3" footer="0.3"/><pageSetup scale="66" orientation="landscape"/>'+
+      '<rowBreaks count="1" manualBreakCount="1"><brk id="22" max="16383" man="1"/></rowBreaks><drawing r:id="rId1"/></worksheet>';
+    s5=s5.replace(/<sheetPr[\s\S]*?(?:\/>|<\/sheetPr>)/,"");
+    /* logos (and digital signatures) on the new tab */
+    let d1=await rd("xl/drawings/drawing1.xml"), d1r=await rd("xl/drawings/_rels/drawing1.xml.rels");
+    const anchors=(d1.match(/<xdr:(oneCellAnchor|twoCellAnchor)[\s\S]*?<\/xdr:\1>/g)||[]).map(a=>{
+      let ok=true; const b=a.replace(/<xdr:row>(\d+)<\/xdr:row>/g,(m,r)=>{ const t=shift(+r+1); if(t===null){ ok=false; return m; } return `<xdr:row>${t-1}</xdr:row>`; }); return ok?b:""; }).join("");
+    const d2=d1.replace(/<xdr:wsDr([^>]*)>[\s\S]*<\/xdr:wsDr>/,(m,attrs)=>`<xdr:wsDr${attrs}>${anchors}</xdr:wsDr>`);
+    zip.file("xl/drawings/drawing2.xml",d2); zip.file("xl/drawings/_rels/drawing2.xml.rels",d1r);
+    zip.file("xl/worksheets/sheet5.xml",s5);
+    zip.file("xl/worksheets/_rels/sheet5.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing2.xml"/></Relationships>');
+    let ct=await rd("[Content_Types].xml");
+    ct=ct.replace("</Types>",'<Override PartName="/xl/worksheets/sheet5.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing2.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/></Types>');
+    zip.file("[Content_Types].xml",ct);
+    let wr=await rd("xl/_rels/workbook.xml.rels");
+    wr=wr.replace("</Relationships>",'<Relationship Id="rIdTrain" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet5.xml"/></Relationships>');
+    zip.file("xl/_rels/workbook.xml.rels",wr);
+    const tn=es?"Capacitación":"Training";
+    wb=wb.replace("</sheets>",`<sheet name="${tn}" sheetId="5" r:id="rIdTrain"/></sheets>`);
+    wb=wb.replace("</definedNames>",`<definedName name="_xlnm.Print_Area" localSheetId="4">'${tn}'!$A$1:$L$51</definedName></definedNames>`);
+    if(!/fullCalcOnLoad/.test(wb)) wb=wb.replace(/<calcPr([^>]*?)\/>/,'<calcPr$1 fullCalcOnLoad="1"/>');
+  }
   zip.file("xl/worksheets/sheet1.xml",s1); zip.file("xl/worksheets/sheet2.xml",s2); zip.file("xl/worksheets/sheet3.xml",s3); zip.file("xl/worksheets/sheet4.xml",s4);
   zip.file("xl/sharedStrings.xml",ss); zip.file("xl/workbook.xml",wb); zip.file("docProps/app.xml",app); zip.file("xl/comments1.xml",c1); zip.file("xl/comments2.xml",c2);
   return zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
