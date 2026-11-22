@@ -1204,7 +1204,6 @@ async function buildTrainPdf(){
       R(M,y,lw,h,b[2]); ink(b[3]); font("bold",7.5); txt(sf(b[0]),M+5,y+h/2+2.6); R(M+lw,y,CW-lw,h,LT); ink(INK); font("bold",7.5); txt(ls,M+lw+5,y+lh(7.5)); y+=h; });
     y+=4;
     /* job steps table */
-    R(M,y,CW,14,GRN,false); ink(WHITE); font("bold",8.5); txt(sf("4.  "+T.steps).slice(0,160),M+6,y+10); y+=14;
     const tw=[20,150,175,CW-20-150-175-140,140];
     const hdr=T.cols.map((c,j)=>wr(c,tw[j]-6,"bold",6.5)), hh=Math.max(...hdr.map(l=>l.length))*lh(6.5)+5; let x=M;
     T.cols.forEach((c,j)=>{ R(x,y,tw[j],hh,DK); ink(WHITE); font("bold",6.5); txt(hdr[j],x+tw[j]/2,y+lh(6.5)+1,{align:"center"}); x+=tw[j]; }); y+=hh;
