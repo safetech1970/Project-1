@@ -595,7 +595,7 @@ const TEMPLATE_B64 = "UEsDBBQAAAAIAA6xTV2Ntdf98QEAAO0KAAATAAAAW0NvbnRlbnRfVHlwZX
 /* ---------- catalog: Keywords-tab row id, section, English label, JSA cell ---------- */
 const KW = [[12,"h","CHEMICAL EXPOSURE","A13"],[13,"h","HAZARDOUS ATMOSPHERE","A14"],[14,"h","CONFINED SPACE","A15"],[15,"h","BODY POSTURE","A16"],[16,"h","NOISE","A17"],[17,"h","WORKING / WALKING SURFACES","A18"],[18,"h","ENVIRONMENT / WEATHER (OUTDOOR)","C13"],[19,"h","ARC / FLASH","C14"],[20,"h","OPEN HOLE","C15"],[21,"h","IGNITION SOURCES","C16"],[22,"h","STORED ENERGY","C17"],[23,"h","LIFTING","C18"],[24,"h","OVERHEAD","E13"],[25,"h","FALLS","E14"],[26,"h","MACHINERY","E15"],[27,"h","HEAT STRESS","E16"],[28,"h","FIRE / EXPLOSION","E17"],[29,"h","SPILL","E18"],[30,"h","SLIP / TRIPS","G13"],[31,"h","FORKLIFT TRAFFIC","G14"],[32,"h","PINCH POINTS","G15"],[33,"h","HOT SURFACES","G16"],[34,"h","STRUCK-BY / VEHICLE TRAFFIC","G17"],
 [35,"c","PHYSICAL BARRIERS","A21"],[36,"c","SPECIAL SAFETY EQUIPMENT","A22"],[37,"c","FORKLIFT TRAFFIC AWARENESS","A23"],[38,"c","LOCK-OUT / TAG-OUT","A24"],[39,"c","REQUIRED WORK PERMITS","A25"],[40,"c","HOUSEKEEPING PRACTICES","C21"],[41,"c","EMERGENCY EVACUATION PROCEDURES","C22"],[42,"c","EYEWASH / SAFETY SHOWER LOCATION","C23"],[43,"c","SAFETY DATA SHEETS (SDS)","C24"],[44,"c","PPE TRAINING","C25"],[45,"c","AMMONIA AWARENESS","E21"],[46,"c","FALL PROTECTION","E22"],[47,"c","PROPER LIFTING TECHNIQUES","E23"],[48,"c","SPILL CONTROL / CONTINGENCY PLAN","E24"],[49,"c","3-POINT CONTACT","E25"],[50,"c","CRITICAL 5 REVIEW","G21"],[51,"c","HAZCOM","G22"],[52,"c","MACHINE GUARDING","G23"],
-[53,"p","HARD HAT","A28"],[54,"p","SAFETY SHOES","A29"],[55,"p","WATERPROOF SLIP-RESISTANT BOOTS","A30"],[56,"p","SAFETY GLASSES","A31"],[57,"p","SAFETY HARNESS","A32"],[58,"p","FACE SHIELD","C28"],[59,"p","GOGGLES","C29"],[60,"p","RESPIRATORY PROTECTION","C30"],[61,"p","BARRICADES","C31"],[62,"p","FIRE EXTINGUISHER","C32"],[63,"p","WORK PERMIT REQUIRED","E28"],[64,"p","CUT-RESISTANT GLOVES","E29"],[65,"p","FORKLIFT","E30"],[66,"p","GLOVES","E31"],[67,"p","NITRILE GLOVES","E32"],[68,"p","HI-VIS SAFETY VEST","G28"],[69,"p","DUST MASK (OPTIONAL)","G29"],[70,"p","HEARING PROTECTION (OPTIONAL)","G30"],[71,"p","HAIR NET","G31"],[72,"p","SEAT BELT","G32"]];
+[53,"p","HARD HAT","A28"],[54,"p","SLIP-RESISTANT SHOES","A29"],[55,"p","WATERPROOF SLIP-RESISTANT BOOTS","A30"],[56,"p","SAFETY GLASSES","A31"],[57,"p","SAFETY HARNESS","A32"],[58,"p","FACE SHIELD","C28"],[59,"p","GOGGLES","C29"],[60,"p","RESPIRATORY PROTECTION","C30"],[61,"p","BARRICADES","C31"],[62,"p","FIRE EXTINGUISHER","C32"],[63,"p","WORK PERMIT REQUIRED","E28"],[64,"p","CUT-RESISTANT GLOVES","E29"],[65,"p","FORKLIFT","E30"],[66,"p","GLOVES","E31"],[67,"p","NITRILE GLOVES","E32"],[68,"p","HI-VIS SAFETY VEST","G28"],[69,"p","DUST MASK (OPTIONAL)","G29"],[70,"p","HEARING PROTECTION (OPTIONAL)","G30"],[71,"p","HAIR NET","G31"],[72,"p","SEAT BELT","G32"]];
 const BY_CELL = Object.fromEntries(KW.map(k=>[k[3],k]));
 const LOCS = [["Main Plant","MP"],["North Plant","NP"],["South Plant","SP"],["East Plant","EP"],["West Plant","WP"]];
 
@@ -620,7 +620,7 @@ const ES = {
 "SAFETY DATA SHEETS (SDS)":"HOJAS DE DATOS DE SEGURIDAD (HDS)","SPILL CONTROL / CONTINGENCY PLAN":"CONTROL DE DERRAMES / CONTINGENCIA","REQUIRED WORK PERMITS":"PERMISOS DE TRABAJO REQUERIDOS",
 "PPE TRAINING":"CAPACITACIÓN EN EPP","3-POINT CONTACT":"3 PUNTOS DE APOYO",
 "3.  SAFETY EQUIPMENT / PPE REQUIRED FOR THIS JOB  (check all that apply)":"3.  EQUIPO DE SEGURIDAD / EPP REQUERIDO PARA ESTE TRABAJO  (marque todos los que apliquen)",
-"HARD HAT":"CASCO","FACE SHIELD":"CARETA FACIAL","WORK PERMIT REQUIRED":"PERMISO DE TRABAJO REQUERIDO","HI-VIS SAFETY VEST":"CHALECO DE ALTA VISIBILIDAD","SAFETY SHOES":"CALZADO DE SEGURIDAD",
+"HARD HAT":"CASCO","FACE SHIELD":"CARETA FACIAL","WORK PERMIT REQUIRED":"PERMISO DE TRABAJO REQUERIDO","HI-VIS SAFETY VEST":"CHALECO DE ALTA VISIBILIDAD","SLIP-RESISTANT SHOES":"CALZADO ANTIDESLIZANTE","SAFETY SHOES":"CALZADO ANTIDESLIZANTE",
 "GOGGLES":"GOGLES","CUT-RESISTANT GLOVES":"GUANTES ANTICORTE","DUST MASK (OPTIONAL)":"MASCARILLA CONTRA POLVO (OPCIONAL)","WATERPROOF SLIP-RESISTANT BOOTS":"BOTAS IMPERM. ANTIDERRAPANTES",
 "RESPIRATORY PROTECTION":"PROTECCIÓN RESPIRATORIA","FORKLIFT":"MONTACARGAS","HEARING PROTECTION (OPTIONAL)":"PROTECCIÓN AUDITIVA (OPCIONAL)","SAFETY GLASSES":"LENTES DE SEGURIDAD",
 "BARRICADES":"BARRICADAS","GLOVES":"GUANTES","HAIR NET":"RED PARA CABELLO","SAFETY HARNESS":"ARNÉS DE SEGURIDAD","FIRE EXTINGUISHER":"EXTINTOR","NITRILE GLOVES":"GUANTES DE NITRILO","SEAT BELT":"CINTURÓN DE SEGURIDAD",
@@ -709,6 +709,7 @@ function freshState(example){
     content:{en:JSON.parse(JSON.stringify(EXAMPLE.en)), es:null}, stale:{en:false,es:false}};
 }
 try{ const saved=JSON.parse(localStorage.getItem("jsa-builder-v1")||"null"); if(saved&&saved.content) S=Object.assign(S,saved); }catch(e){}
+try{ if(S.content){ fixContentPPE(S.content.en); fixContentPPE(S.content.es); } }catch(e){}
 function save(){ try{ localStorage.setItem("jsa-builder-v1",JSON.stringify(S)); }catch(e){} }
 
 /* ---------- capabilities ---------- */
@@ -832,7 +833,7 @@ Output language: ${LANG_RULE[S.lang]}
 
 Rules:
 - Exactly 8 job steps, in the order the work is done from start to finish.
-- For each step: "step" = short title that starts with a verb (max 55 characters); "hazards" = potential incidents and hazards as short phrases separated by semicolons (max 170 characters); "controls" = specific actions that eliminate or reduce those hazards, short imperative sentences (max 260 characters); "ppe" = PPE needed for that step (max 90 characters).
+- For each step: "step" = short title that starts with a verb (max 55 characters); "hazards" = potential incidents and hazards as short phrases separated by semicolons (max 170 characters); "controls" = specific actions that eliminate or reduce those hazards, short imperative sentences (max 260 characters); "ppe" = PPE needed for that step (max 90 characters); for footwear always write "slip-resistant shoes" (Spanish: "zapatos antideslizantes"), never "safety shoes".
 - Follow Cal/OSHA Title 8. Recommended practice: a full-body harness is required on scissor lifts. Prefer elimination, engineering and administrative controls before PPE. Be specific to this task; no filler.
 - "critical": 5 or 6 critical controls, each max 90 characters, no numbering.
 - "title": the task name as it should appear on the form, always in English even when the output language is Spanish (max 50 characters).
@@ -855,8 +856,13 @@ Reply with only the translated JSON.
 ${JSON.stringify(obj)}`;
 }
 function clean(s,max){ return String(s??"").replace(/\s+/g," ").trim().slice(0,max); }
+/* house rule: footwear is "slip-resistant shoes", never "safety shoes" */
+function fixPPE(t){ return String(t==null?"":t)
+  .replace(/\bsafety([ -])shoes?\b/gi,(m,sp)=>{ const up=m===m.toUpperCase(), cap=m[0]==="S"; const v=(/shoe$/i.test(m)?"slip-resistant shoe":"slip-resistant shoes"); return up?v.toUpperCase():cap?"S"+v.slice(1):v; })
+  .replace(/\b(zapatos|calzado) de seguridad\b/gi,(m,w)=>{ const up=m===m.toUpperCase(), cap=/^[A-ZÁÉÍÓÚ]/.test(m); const v=/^zap/i.test(w)?"zapatos antideslizantes":"calzado antideslizante"; return up?v.toUpperCase():cap?v[0].toUpperCase()+v.slice(1):v; }); }
+function fixContentPPE(c){ if(c&&Array.isArray(c.steps)) c.steps.forEach(s=>{ if(s) s.ppe=fixPPE(s.ppe); }); return c; }
 function normalizeContent(r){
-  const steps=(Array.isArray(r.steps)?r.steps:[]).slice(0,8).map(s=>({step:clean(s.step,90),hazards:clean(s.hazards,260),controls:clean(s.controls,400),ppe:clean(s.ppe,160)}));
+  const steps=(Array.isArray(r.steps)?r.steps:[]).slice(0,8).map(s=>({step:clean(s.step,90),hazards:clean(s.hazards,260),controls:clean(s.controls,400),ppe:fixPPE(clean(s.ppe,160))}));
   while(steps.length<8) steps.push({step:"",hazards:"",controls:"",ppe:""});
   return {title:clean(r.title,70), steps, critical:(Array.isArray(r.critical)?r.critical:[]).map(x=>clean(x,140)).filter(Boolean).slice(0,6),
           otherHazard:clean(r.otherHazard,45).toUpperCase(), otherControl:clean(r.otherControl,45).toUpperCase()};
@@ -970,6 +976,7 @@ const SHEETS_ES = [["worksheet","Pasos"],["Lists","Listas"],["Keywords","Claves"
 function renameRefs(xml){ for(const [a,b] of SHEETS_ES) xml=xml.split(a+"!").join(b+"!"); return xml; }
 
 async function buildXlsx(){
+  fixContentPPE(S.content.en); fixContentPPE(S.content.es);
   const L=S.lang, C=S.content[L], es=L==="es";
   const zip=await JSZip.loadAsync(TEMPLATE_B64,{base64:true});
   const rd=p=>zip.file(p).async("string");
@@ -978,6 +985,7 @@ async function buildXlsx(){
   let c1=await rd("xl/comments1.xml"), c2=await rd("xl/comments2.xml");
 
   /* 1. template language (before any content goes in) */
+  ss=ss.split("<t>SAFETY SHOES</t>").join("<t>SLIP-RESISTANT SHOES</t>");
   ss=translateSS(ss,L); c1=translateComments(c1,L); c2=translateComments(c2,L);
   if(es){
     s1=translateInline(s1,L); s3=translateInline(s3,L); s4=translateInline(s4,L);
@@ -1312,6 +1320,7 @@ async function buildTrainPdf_v1(){
 }
 /* ---------- One-page training JSA (PDF), laid out like the JSA form ---------- */
 async function buildTrainPdf(){
+  fixContentPPE(S.content.en); fixContentPPE(S.content.es);
   const Lg=S.lang, C=S.content[Lg], es=Lg==="es";
   const J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw new Error(es?"No se cargó el creador de PDF. Recargue la página.":"The PDF writer didn't load. Reload the page.");
   const W=792, H=612, M=22, CW=W-2*M;
@@ -1414,6 +1423,7 @@ function igCtl(t,maxWords){ return igPhrase(t,maxWords,{whole:1,multi:1}); }
 function igClause(t,maxWords,whole,act){ return igPhrase(t,maxWords,{whole:!!whole,act:!!act}); }
 function igRank(items,text){ const T=String(text||"").toLowerCase(); return items.map((x,i)=>({x,i,n:String(x).toLowerCase().split(/[\s\/,()-]+/).filter(w=>w.length>3).reduce((a,w)=>a+(T.split(w).length-1),0)})).sort((a,b)=>b.n-a.n||a.i-b.i).map(o=>o.x); }
 function buildInfographicPrompt(o){
+  fixContentPPE(S.content.en); fixContentPPE(S.content.es);
   o=o||{}; const fmt=o.format||"letter", lang=o.lang||S.lang, simple=(o.detail||"simple")==="simple";
   const langs=lang==="both"?["en","es"].filter(l=>S.content[l]):[lang];
   const on=new Set(S.boxes);
