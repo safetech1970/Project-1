@@ -1101,10 +1101,12 @@ async function buildXlsx(){
     const font=(sz,b,i,rgb)=>{ const k=[sz,b,i,rgb].join("|"); if(FM[k]==null) FM[k]=addTo("fonts",`<font>${b?"<b/>":""}${i?"<i/>":""}<sz val="${sz}"/><color rgb="FF${rgb||"000000"}"/><name val="Arial"/><family val="2"/></font>`); return FM[k]; };
     const fill=rgb=>{ if(!rgb) return 0; if(FL[rgb]==null) FL[rgb]=addTo("fills",`<fill><patternFill patternType="solid"><fgColor rgb="FF${rgb}"/><bgColor indexed="64"/></patternFill></fill>`); return FL[rgb]; };
     const BD=addTo("borders",'<border><left style="thin"><color rgb="FF000000"/></left><right style="thin"><color rgb="FF000000"/></right><top style="thin"><color rgb="FF000000"/></top><bottom style="thin"><color rgb="FF000000"/></bottom><diagonal/></border>');
-    /* o: {sz,b,i,c (text rgb),bg,bd,h,v,wrap,shrink,fmt,ind} */
+    const BS={}, bside=sd=>{ if(BS[sd]==null){ const t=(n,k)=>sd.indexOf(k)>=0?`<${n} style="thin"><color rgb="FF000000"/></${n}>`:`<${n}/>`;
+      BS[sd]=addTo("borders",`<border>${t("left","l")}${t("right","r")}${t("top","t")}${t("bottom","b")}<diagonal/></border>`); } return BS[sd]; };
+    /* o: {sz,b,i,c (text rgb),bg,bd,bs (outer sides: l r t b),h,v,wrap,shrink,fmt,ind} */
     const st=o=>{ const k=JSON.stringify(o); if(XF[k]!=null) return XF[k];
       const al=`<alignment horizontal="${o.h||"left"}" vertical="${o.v||"center"}"${o.wrap?' wrapText="1"':""}${o.shrink?' shrinkToFit="1"':""}${o.ind?' indent="'+o.ind+'"':""}/>`;
-      return XF[k]=addTo("cellXfs",`<xf numFmtId="${o.fmt||0}" fontId="${font(o.sz||8,o.b,o.i,o.c)}" fillId="${fill(o.bg)}" borderId="${o.bd?BD:0}" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">${al}</xf>`); };
+      return XF[k]=addTo("cellXfs",`<xf numFmtId="${o.fmt||0}" fontId="${font(o.sz||8,o.b,o.i,o.c)}" fillId="${fill(o.bg)}" borderId="${o.bd?BD:o.bs?bside(o.bs):0}" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">${al}</xf>`); };
     const OR="E86A1C", RD="C00000", YL="FFC000", DK="263238", GR="D9D9D9", LT="F2F2F2", PK="FDECEA", WH="FFFFFF";
     /* ---- columns (points, same grid as the PDF: header 72|206|70|158|78|164, steps 24|146|178|260|140, roster 24|254|108|250|112) ---- */
     const CWpt=[24,48,28,70,108,70,38,120,78,24,28,112], CL="ABCDEFGHIJKL";
@@ -1138,7 +1140,8 @@ async function buildXlsx(){
     const HK=H1(K);
     const z=n=>Math.max(5,Math.round(n*K*2)/2);
     const S_={
-      band:st({bg:OR}), title:st({sz:z(16),b:1,bg:OR,h:"center",v:"bottom"}), sub:st({sz:z(7.5),i:1,bg:OR,h:"center",v:"top"}), form:st({sz:z(7),b:1,bg:OR,h:"right",v:"top"}),
+      bandTL:st({bg:OR,bs:"tl"}), bandBL:st({bg:OR,bs:"bl"}), bandBR:st({bg:OR,bs:"br"}),
+      title:st({sz:z(16),b:1,bg:OR,h:"center",v:"bottom",bs:"t"}), sub:st({sz:z(7.5),i:1,bg:OR,h:"center",v:"top",bs:"b"}), form:st({sz:z(7),b:1,bg:OR,h:"right",v:"top",ind:1,bs:"tr"}),
       lab:st({sz:z(7),b:1,bg:GR,bd:1,h:"right",shrink:1,ind:1}), val:st({sz:z(8),bd:1,shrink:1,ind:1}), dval:st({sz:z(8),bd:1,fmt:164,h:"left",ind:1}),
       hzL:st({sz:z(7.5),b:1,c:WH,bg:RD,bd:1,ind:1,wrap:1}), ppL:st({sz:z(7.5),b:1,bg:YL,bd:1,ind:1,wrap:1}), strip:st({sz:z(7.5),b:1,bg:LT,bd:1,wrap:1,ind:1}),
       th:st({sz:z(6.5),b:1,c:WH,bg:DK,bd:1,h:"center",wrap:1}), num:st({sz:z(10),b:1,bg:LT,bd:1,h:"center"}),
@@ -1146,7 +1149,7 @@ async function buildXlsx(){
       crL:st({sz:z(8.5),b:1,c:WH,bg:RD,bd:1,h:"center",wrap:1}), crV:st({sz:z(7.6),b:1,c:"960000",bg:PK,bd:1,wrap:1,ind:1}),
       stop:st({sz:z(7),b:1,i:1,c:RD,h:"center"}),
       /* roster page: fixed sizes, like the PDF */
-      rtitle:st({sz:16,b:1,bg:OR,h:"center",v:"bottom"}), rsub:st({sz:7.5,i:1,bg:OR,h:"center",v:"top"}), rform:st({sz:7,b:1,bg:OR,h:"right",v:"top"}),
+      rtitle:st({sz:16,b:1,bg:OR,h:"center",v:"bottom",bs:"t"}), rsub:st({sz:7.5,i:1,bg:OR,h:"center",v:"top",bs:"b"}), rform:st({sz:7,b:1,bg:OR,h:"right",v:"top",ind:1,bs:"tr"}),
       rlab:st({sz:7,b:1,bg:GR,bd:1,h:"right",shrink:1,ind:1}), rval:st({sz:8.5,bd:1,shrink:1,ind:1}), rdval:st({sz:8.5,bd:1,fmt:164,h:"left",ind:1}), rstop:st({sz:7.5,b:1,i:1,c:RD,h:"center"}),
       ack:st({sz:8.5}), rh:st({sz:7.5,b:1,c:WH,bg:DK,bd:1,ind:1}), rn:st({sz:8,bg:LT,bd:1,h:"center"}), rv:st({sz:8,bd:1,ind:1}), rd:st({sz:7,bd:1,shrink:1,ind:1}) };
     zip.file("xl/styles.xml",sx);
@@ -1164,8 +1167,8 @@ async function buildXlsx(){
       cur.push(x);
       for(let i=CL.indexOf(c1)+1;i<=CL.indexOf(c2);i++) cur.push(`<c r="${CL[i]}${R}" s="${s}"/>`);
       if(c2!==c1) merges.push(`${c1}${R}:${c2}${R}`); };
-    const band=(ttl,sub,r2)=>{ row(22); put("A","C",S_.band,null); put("D","K",r2?S_.rtitle:S_.title,{s:ttl}); put("L","L",r2?S_.rform:S_.form,{s:"Form: EHS-JSA"});
-      row(18); put("A","C",S_.band,null); put("D","K",r2?S_.rsub:S_.sub,{s:sub}); put("L","L",S_.band,null); return R-1; };
+    const band=(ttl,sub,r2)=>{ row(22); put("A","C",S_.bandTL,null); put("D","K",r2?S_.rtitle:S_.title,{s:ttl}); put("L","L",r2?S_.rform:S_.form,{s:"Form: EHS-JSA"});
+      row(18); put("A","C",S_.bandBL,null); put("D","K",r2?S_.rsub:S_.sub,{s:sub}); put("L","L",S_.bandBR,null); return R-1; };
     const gap=h=>{ row(h); };
     const fmtNum=v=>v===""||v==null?"":v;
     /* ===== page 1: training JSA ===== */
