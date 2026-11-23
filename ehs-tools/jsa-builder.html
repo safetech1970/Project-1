@@ -1382,7 +1382,7 @@ async function buildTrainPdf(){
     doc.setDrawColor(0,0,0); doc.setLineWidth(0.6);
     let y=M;
     /* title band */
-    const bh=40; R(M,y,CW,bh,OR,false);
+    const bh=40; R(M,y,CW,bh,OR);
     const LG=LGS;
     if(LG&&LG.src&&LG.w&&LG.h&&!dry){ const lh2=28, lw=Math.min(120,LG.w*lh2/LG.h); try{ doc.addImage(LG.src,"PNG",M+10,y+6+(28-lw*LG.h/LG.w>0?(28-lw*LG.h/LG.w)/2:0),lw,Math.min(28,lw*LG.h/LG.w)); }catch(e){} }
     ink(INK); font("bold",16); txt(sf(T.jsa),W/2,y+19,{align:"center"}); font("italic",7.5); txt(sf(T.sub),W/2,y+31,{align:"center"});
@@ -1413,7 +1413,7 @@ async function buildTrainPdf(){
     doc.addPage(); const fill=c=>doc.setFillColor(c[0],c[1],c[2]), ink=c=>doc.setTextColor(c[0],c[1],c[2]), font=(st,n)=>{ doc.setFont("helvetica",st); doc.setFontSize(n); };
     const R=(x,y,w,h,f,stroke)=>{ if(f){ fill(f); doc.rect(x,y,w,h,stroke===false?"F":"FD"); } else doc.rect(x,y,w,h); };
     doc.setDrawColor(0,0,0); doc.setLineWidth(0.6); let y=M;
-    R(M,y,CW,40,OR,false);
+    R(M,y,CW,40,OR);
     if(LGS&&LGS.src&&LGS.w&&LGS.h){ const lw=Math.min(120,LGS.w*28/LGS.h); try{ doc.addImage(LGS.src,"PNG",M+10,y+6+Math.max(0,(28-lw*LGS.h/LGS.w)/2),lw,Math.min(28,lw*LGS.h/LGS.w)); }catch(e){} }
     ink(INK); font("bold",16); doc.text(sf(T.roster),W/2,y+19,{align:"center"}); font("italic",7.5); doc.text(sf(es?"Todos los miembros del equipo deben revisar el JSA y firmar antes de realizar la tarea":"All team members must review the JSA and sign before performing the task"),W/2,y+31,{align:"center"});
     font("bold",7); doc.text("Form: EHS-JSA",W-M-6,y+14,{align:"right"}); y+=40;
