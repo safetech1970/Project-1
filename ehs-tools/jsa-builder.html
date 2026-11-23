@@ -975,6 +975,15 @@ function translateComments(xml,lang){
 const SHEETS_ES = [["worksheet","Pasos"],["Lists","Listas"],["Keywords","Claves"]];
 function renameRefs(xml){ for(const [a,b] of SHEETS_ES) xml=xml.split(a+"!").join(b+"!"); return xml; }
 
+/* ---------- PPE items <-> section 3 boxes: unchecking a box hides that item in every step, checking adds it ---------- */
+const PPE_RX=[[55,/waterproof|rubber boot|botas/i],[64,/cut[- ]?resistant|anticorte/i],[67,/nitrile|nitrilo/i],[69,/dust mask|mascarilla|cubrebocas/i],[59,/goggle|gogle/i],[58,/face shield|careta/i],
+  [60,/respirat/i],[57,/harness|arn[eé]s/i],[53,/hard ?hat|casco/i],[54,/slip[- ]resistant (shoe|footwear)|safety[- ]toe|zapatos? antideslizante|calzado/i],[56,/safety glasses|eye protection|lentes|gafas/i],
+  [68,/hi[- ]?vis|high[- ]vis|reflective|chaleco/i],[70,/hearing|ear ?plug|ear ?muff|auditiv|tapones/i],[71,/hair ?net|beard net|red para (el )?cabello|cofia/i],[72,/seat ?belt|cintur[oó]n/i],
+  [62,/extinguisher|extintor/i],[63,/permit|permiso/i],[61,/barricad/i],[66,/glove|guante/i]];
+const PPE_NOADD=new Set([61,62,63,65]); /* not worn: never appended to steps */
+function ppeItems(t){ return String(t||"").split(/\s*[,;]\s*/).map(x=>x.trim()).filter(Boolean); }
+function ppeBox(item){ if(/\s(and|y|&)\s/i.test(item)) return null; for(const [id,rx] of PPE_RX) if(rx.test(item)) return id; return null; }
+function ppeShown(t,boxes){ const on=new Set(boxes||S.boxes); return ppeItems(t).filter(it=>{ const id=ppeBox(it); return id==null||on.has(id); }).join(", "); }
 async function buildXlsx(){
   fixContentPPE(S.content.en); fixContentPPE(S.content.es);
   const L=S.lang, C=S.content[L], es=L==="es";
@@ -1008,6 +1017,19 @@ async function buildXlsx(){
   C.steps.forEach((st,i)=>{ const r=i+2; s2=setCell(s2,"B"+r,i+1,true); s2=setCell(s2,"C"+r,st.step); s2=setCell(s2,"D"+r,st.hazards); s2=setCell(s2,"E"+r,st.controls); s2=setCell(s2,"F"+r,st.ppe); });
   const critText=C.critical.map((c,i)=>`${i+1}) ${c}`).join("  ");
   s2=setCell(s2,"B11",critText);
+  /* step PPE follows the section-3 boxes (worksheet text written as "a, b, c" so items can be matched) */
+  const PPEV=[];
+  { const onB=new Set(S.boxes), q=t=>String(t).replace(/"/g,'""');
+    const fx=(xml,ref,f)=>{ const m=cellRe(ref).exec(xml); if(!m) return xml; const attrs=m[1].replace(/\st="[^"]*"/,""); return xml.slice(0,m.index)+`<c r="${ref}"${attrs} t="str"><f>${esc(f)}</f><v></v></c>`+xml.slice(m.index+m[0].length); };
+    C.steps.forEach((st,i)=>{ const r=i+2, items=ppeItems(st.ppe), txt=items.join(", ");
+      s2=setCell(s2,"F"+r,txt);
+      let x=`", "&worksheet!F${r}&","`; const inStep=new Set();
+      items.forEach(it=>{ const id=ppeBox(it); if(id==null) return; inStep.add(id); const k=KW.find(k=>k[0]===id); x=`SUBSTITUTE(${x},", ${q(it)},",IF(JSA!${k[3]}="✔",", ${q(it)},",","))`; });
+      const adds=KW.filter(k=>k[1]==="p"&&!onB.has(k[0])&&!inStep.has(k[0])&&!PPE_NOADD.has(k[0])).map(k=>`IF(JSA!${k[3]}="✔"," ${q((es?(ES[k[2]]||k[2]):k[2]).toLowerCase())},","")`);
+      const full=adds.length?`${x}&${adds.join("&")}`:x;
+      s1=fx(s1,"I"+(36+i),`MID(${full},3,LEN(${full})-3)`);
+      PPEV.push(ppeShown(st.ppe)); });
+  }
 
   /* 3. page-1 header fields */
   const title=englishTitle(C.title), status=UI[L].statuses[S.status];
@@ -1045,7 +1067,7 @@ async function buildXlsx(){
   Object.assign(cache,{A10:nH,C10:nC,E10:nP,G10:nS,K6:plusYear(S.date),G5:(LOCS.find(l=>l[0]===S.loc)||[0,"LOC"])[1]+"-"+(code||"TASK")+"-R"+S.status});
   cache.A34=(es?"4.  PASOS DEL TRABAJO, PELIGROS Y CONTROLES":"4.  JOB STEPS, HAZARDS & CONTROLS")+(title?" — "+title.toUpperCase():"");
   ["B35","C35","E35","I35"].forEach((r,i)=>cache[r]=HEAD[L][i]);
-  C.steps.forEach((st,i)=>{ const r=36+i; cache["A"+r]=i+1; cache["B"+r]=st.step; cache["C"+r]=st.hazards; cache["E"+r]=st.controls; cache["I"+r]=st.ppe; });
+  C.steps.forEach((st,i)=>{ const r=36+i; cache["A"+r]=i+1; cache["B"+r]=st.step; cache["C"+r]=st.hazards; cache["E"+r]=st.controls; cache["I"+r]=PPEV[i]; });
   cache.C44=critText;
   Object.assign(cache,{C51:S.loc,G51:cache.G5,K51:serial(S.date),C52:title,G52:S.sup||"",K52:S.appr||"",
     A56:nS?"✔":"",C56:nC?"✔":"",E56:nS?"✔":"",G56:nP?"✔":"",A57:nH?"✔":"",C57:nS?"✔":"",E57:nS?"✔":""});
@@ -1162,7 +1184,7 @@ async function buildXlsx(){
     for(let i=0;i<8;i++){ const s=C.steps[i]||{}, r0=36+i, has=String(s.step||"").trim();
       row(HK.stepH(SH[i]));
       put("A","A",S_.num,{f:lnk("A"+r0),v:has?i+1:"",n:1}); put("B","D",S_.step,{f:lnk("B"+r0),v:s.step||""}); put("E","F",S_.cell,{f:lnk("C"+r0),v:s.hazards||""});
-      put("G","J",S_.cell,{f:lnk("E"+r0),v:s.controls||""}); put("K","L",S_.cell,{f:lnk("I"+r0),v:s.ppe||""}); }
+      put("G","J",S_.cell,{f:lnk("E"+r0),v:s.controls||""}); put("K","L",S_.cell,{f:lnk("I"+r0),v:PPEV[i]||""}); }
     row(HK.crit); put("A","C",S_.crL,{s:T.crit}); put("D","L",S_.crV,{f:lnk("C44"),v:critText});
     row(13); put("A","L",S_.stop,{s:T.stop});
     const brk=R; onPage1=false;
@@ -1375,7 +1397,7 @@ async function buildTrainPdf(){
     const tw=[20,150,175,CW-20-150-175-140,140];
     const hdr=T.cols.map((c,j)=>wr(c,tw[j]-6,"bold",6.5)), hh=Math.max(...hdr.map(l=>l.length))*lh(6.5)+5; let x=M;
     T.cols.forEach((c,j)=>{ R(x,y,tw[j],hh,DK); ink(WHITE); font("bold",6.5); txt(hdr[j],x+tw[j]/2,y+lh(6.5)+1,{align:"center"}); x+=tw[j]; }); y+=hh;
-    steps.forEach((s,i)=>{ const cells=[String(i+1),s.step,s.hazards,s.controls,s.ppe], ls=cells.map((c,j)=>j===0?[c]:wr(c||"",tw[j]-6,j===1?"bold":"normal",7.6));
+    steps.forEach((s,i)=>{ const cells=[String(i+1),s.step,s.hazards,s.controls,ppeShown(s.ppe)], ls=cells.map((c,j)=>j===0?[c]:wr(c||"",tw[j]-6,j===1?"bold":"normal",7.6));
       const h=Math.max(...ls.map(l=>l.length))*lh(7.6)+5; x=M;
       cells.forEach((c,j)=>{ R(x,y,tw[j],h,j===0?LT:WHITE); ink(INK); font(j<2?"bold":"normal",j===0?10:7.6); txt(ls[j],j===0?x+tw[j]/2:x+3,j===0?y+h/2+3.5:y+lh(7.6),j===0?{align:"center"}:undefined); x+=tw[j]; }); y+=h; });
     /* critical controls */
