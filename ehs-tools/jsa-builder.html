@@ -281,6 +281,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
         <div style="min-width:14em"><label class="lbl" for="ig-fmt" id="ig-lfmt">Format</label><select id="ig-fmt"></select></div>
         <div style="min-width:12em"><label class="lbl" for="ig-lang" id="ig-llang">Language</label><select id="ig-lang"></select></div>
+        <div style="min-width:14em"><label class="lbl" for="ig-detail" id="ig-ldetail">Detail</label><select id="ig-detail"></select></div>
       </div>
       <textarea id="ig-text" rows="14" readonly style="font-family:var(--mono);font-size:.82rem"></textarea>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
@@ -1402,8 +1403,10 @@ function trainFileName(){ return fileName().replace(/^JSA_/,"JSA_Training_").rep
 function igShort(t,maxWords){ const s=String(t||"").replace(/\s+/g," ").trim(); if(!s) return ""; const first=(s.split(/(?<=[.!?])\s+/)[0]||s).replace(/[.;]+$/,""); const w=first.split(" "); return w.length>maxWords?w.slice(0,maxWords).join(" ").replace(/[,;:]$/,"")+"…":first; }
 function igFirst(t,maxWords){ const s=String(t||"").replace(/\s+/g," ").trim(); const seg=(s.split(/;\s*|(?<=[.!?])\s+/)[0]||s).replace(/[.:;,]+$/,""); const w=seg.split(" "); return w.length>maxWords?w.slice(0,maxWords).join(" ").replace(/[,;:]$/,"")+"…":seg; }
 function igCtl(t,maxWords){ const ss=String(t||"").replace(/\s+/g," ").trim().split(/(?<=[.!?])\s+/).filter(Boolean); let out=ss[0]||""; if(ss[1]&&(out+" "+ss[1]).split(" ").length<=maxWords) out+=" "+ss[1]; out=out.replace(/[.]+$/,""); const w=out.split(" "); return w.length>maxWords?w.slice(0,maxWords).join(" ").replace(/[,;:]$/,"")+"…":out; }
+function igClause(t,maxWords,whole,act){ let parts=String(t||"").replace(/\s+/g," ").trim().split(whole?/(?<=[.!?])\s+/:/(?<=[.!?])\s+|;\s*/).filter(Boolean); if(act&&parts.length>1&&/\b(certified|trained|training|awareness|certificad|capacitad|capacitación)\w*/i.test(parts[0])) parts=parts.slice(1); let c=(parts[0]||"").replace(/\s*\([^)]*\)/g,"").replace(/[.,:;\s]+$/,""); let w=c.split(" "); if(w.length<=maxWords) return c; c=w.slice(0,maxWords).join(" "); const k=c.lastIndexOf(","); if(k>c.length*0.45) c=c.slice(0,k); return c.replace(/\s+(and|or|y|o|de|the|a|to|with|for|con|en|para|la|el|los|las)$/i,"").replace(/[,:]$/,""); }
+function igRank(items,text){ const T=String(text||"").toLowerCase(); return items.map((x,i)=>({x,i,n:String(x).toLowerCase().split(/[\s\/,()-]+/).filter(w=>w.length>3).reduce((a,w)=>a+(T.split(w).length-1),0)})).sort((a,b)=>b.n-a.n||a.i-b.i).map(o=>o.x); }
 function buildInfographicPrompt(o){
-  o=o||{}; const fmt=o.format||"poster", lang=o.lang||S.lang;
+  o=o||{}; const fmt=o.format||"poster", lang=o.lang||S.lang, simple=(o.detail||"simple")==="simple";
   const langs=lang==="both"?["en","es"].filter(l=>S.content[l]):[lang];
   const on=new Set(S.boxes);
   const FM={poster:"Portrait poster, 2:3 aspect ratio (11 x 17 in), high resolution, print-ready for a break-room wall.",
@@ -1414,7 +1417,9 @@ function buildInfographicPrompt(o){
     const steps=(C.steps||[]).filter(s=>s&&String(s.step||"").trim());
     const hz=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(k=>l==="es"?(ES[k[2]]||k[2]):k[2]); if(C.otherHazard) hz.push(C.otherHazard);
     const ppe=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(k=>l==="es"?(ES[k[2]]||k[2]):k[2]);
-    const crit=(C.critical||[]).filter(Boolean);
+    let crit=(C.critical||[]).filter(Boolean);
+    const allTxt=(C.steps||[]).map(s=>[s.hazards,s.controls,s.ppe].join(" ")).join(" ");
+    let hzS=hz, ppS=ppe; if(simple){ hzS=igRank(hz,allTxt).slice(0,6); ppS=igRank(ppe.filter(x=>!/^(forklift|montacargas|fire extinguisher|extintor)/i.test(x)),allTxt).slice(0,6); crit=crit.slice(0,3); }
     const cap=s=>String(s).toLowerCase().replace(/(^|[\s\/(-])([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase());
     const title=(C.title||S.task||"").trim()||englishTitle(C.title);
     const dt=S.date?(()=>{ const [y,m,d]=S.date.split("-"); return m+"/"+d+"/"+y; })():"";
@@ -1424,26 +1429,26 @@ function buildInfographicPrompt(o){
     out.push(`SUBTITLE: "${L(l,"Review this JSA with every team member before starting the task","Revise este JSA con cada miembro del equipo antes de iniciar la tarea")}"`);
     const info=[S.loc&&`${L(l,"Location","Ubicación")}: ${S.loc}`,`${L(l,"JSA No.","JSA No.")}: ${jsaNo()}`,dt&&`${L(l,"Date","Fecha")}: ${dt}`].filter(Boolean);
     out.push(`INFO STRIP (small): "${info.join("  |  ")}"`);
-    if(hz.length) out.push(`\nSECTION "${L(l,"KEY HAZARDS","PELIGROS PRINCIPALES")}" (red; compact grid, one simple warning icon per item):\n`+hz.map(h=>`- ${cap(h)}`).join("\n"));
-    if(ppe.length) out.push(`\nSECTION "${L(l,"REQUIRED PPE","EPP REQUERIDO")}" (amber; compact grid, one icon per item):\n`+ppe.map(p=>`- ${cap(p)}`).join("\n"));
+    if(hzS.length) out.push(`\nSECTION "${L(l,"KEY HAZARDS","PELIGROS PRINCIPALES")}" (red; small icon row, one simple warning icon per item):\n`+hzS.map(h=>`- ${cap(h)}`).join("\n"));
+    if(ppS.length) out.push(`\nSECTION "${L(l,"REQUIRED PPE","EPP REQUERIDO")}" (amber; small icon row, one PPE icon per item):\n`+ppS.map(p=>`- ${cap(p)}`).join("\n"));
     out.push(`\nSECTION "${L(l,"JOB STEPS","PASOS DEL TRABAJO")}" (main area; numbered cards in order, each with a simple icon that shows the action):`);
-    steps.forEach((s,i)=>{ out.push(`${i+1}. ${String(s.step).trim()}\n   ${L(l,"Hazard","Peligro")}: ${igFirst(s.hazards,12)}\n   ${L(l,"Control","Control")}: ${igCtl(s.controls,18)}`); });
-    if(crit.length) out.push(`\nBANNER "${L(l,"CRITICAL CONTROLS","CONTROLES CRÍTICOS")}" (red band, numbered):\n`+crit.map((c,i)=>`${i+1}) ${igShort(c,14)}`).join("\n"));
+    steps.forEach((s,i)=>{ out.push(simple?`${i+1}. ${String(s.step).trim()}\n   ${L(l,"Hazard","Peligro")}: ${igClause(s.hazards,7)}\n   ${L(l,"Do","Hacer")}: ${igClause(s.controls,10,0,1)}`:`${i+1}. ${String(s.step).trim()}\n   ${L(l,"Hazard","Peligro")}: ${igFirst(s.hazards,12)}\n   ${L(l,"Control","Control")}: ${igCtl(s.controls,18)}`); });
+    if(crit.length) out.push(`\nBANNER "${L(l,"CRITICAL CONTROLS","CONTROLES CRÍTICOS")}" (red band, numbered):\n`+crit.map((c,i)=>`${i+1}) ${simple?igClause(c,12,1):igShort(c,14)}`).join("\n"));
     out.push(`\nFOOTER (bold red): "${L(l,"Stop work if conditions change or a new hazard is found.","Detenga el trabajo si las condiciones cambian o encuentra un peligro nuevo.")}"`);
     return out.join("\n"); };
   const both=langs.length>1;
   const P=[];
-  P.push("Create a professional workplace-safety training infographic as an image, for frontline workers at a produce/food plant.");
+  P.push("Generate an image now (do not ask me questions first): a professional workplace-safety training infographic for frontline workers at a produce/food plant.");
   P.push("\nFORMAT: "+(FM[fmt]||FM.poster)+(both?" Make two matching versions with the same layout: one in English and one in Spanish (or one image split into an English half and a Spanish half if you can only make one).":""));
-  P.push("\nSTYLE:\n- Clean, modern flat-vector style with simple icons; no photos and no realistic faces.\n- Colors: safety orange #E86A1C header band, charcoal #263238 text and card headers, red #C00000 for hazards and critical controls, amber #FFC000 for PPE, green #007A53 for check marks on controls, white or very light grey background.\n- Bold, highly legible sans-serif type (like Arial or Helvetica); strong contrast; generous spacing; readable from 6 feet away.\n- Leave a clear blank area in the top-left corner of the header for our company logo (I will add it later). Do not draw any logo, brand name or watermark.\n- Clear visual hierarchy: title band, info strip, hazards and PPE side by side, then the numbered job steps, then the critical controls banner and footer.");
-  P.push("\nTEXT RULES:\n- Use the text below exactly as written, spelled exactly, including accents. Do not invent, translate or add any other text.\n- If something does not fit, shorten the hazard/control lines, never the step names, and never make text too small to read.\n- Every step card shows its number, the step name in bold, a red warning icon with the hazard line, and a green check icon with the control line.");
+  P.push("\nSTYLE:\n- Clean, modern flat-vector style with simple icons; no photos and no realistic faces.\n- Colors: safety orange #E86A1C header band, charcoal #263238 text and card headers, red #C00000 for hazards and critical controls, amber #FFC000 for PPE, green #007A53 for check marks on controls, white or very light grey background.\n- Bold, legible sans-serif type (like Arial or Helvetica); strong contrast; let the icons carry the message and keep the words few and large.\n- Leave a clear blank area in the top-left corner of the header for our company logo (I will add it later). Do not draw any logo, brand name or watermark.\n- Clear visual hierarchy: title band, info strip, hazards and PPE side by side, then the numbered job steps, then the critical controls banner and footer.");
+  P.push("\nTEXT RULES:\n- Use the text below exactly as written, spelled exactly, including accents. Do not invent, translate or add any other text.\n- If something does not fit, drop the hazard lines first, then shorten the control lines; never drop a step name.\n- Every step card shows its number, the step name in bold, a red warning icon with the hazard line, and a green check icon with the control line.");
   langs.forEach(l=>{ P.push("\n=== CONTENT"+(both?" ("+(l==="es"?"SPANISH":"ENGLISH")+" VERSION)":"")+(l==="es"&&!both?" — all text in Spanish":"")+" ===\n"+block(l)); });
-  P.push("\nAfter the image, list any words you could not render exactly so I can correct them.");
+  P.push(simple?"\nAfter the image, list any words you could not render exactly so I can correct them.":"\nThis is a text-heavy layout: use a dense grid with small but clear text. After the image, list any words you could not render exactly so I can correct them.");
   return P.join("\n");
 }
-function igRender(){ const t=$("ig-text"); if(!t) return; t.value=buildInfographicPrompt({format:$("ig-fmt").value,lang:$("ig-lang").value}); }
+function igRender(){ const t=$("ig-text"); if(!t) return; t.value=buildInfographicPrompt({format:$("ig-fmt").value,lang:$("ig-lang").value,detail:$("ig-detail").value}); }
 $("ig-btn").onclick=()=>{ const p=$("ig-panel"); if(!S.content[S.lang]) return; p.hidden=!p.hidden; if(!p.hidden){ igLabels(); igRender(); p.scrollIntoView({behavior:"smooth",block:"nearest"}); } };
-$("ig-fmt").onchange=igRender; $("ig-lang").onchange=igRender;
+$("ig-fmt").onchange=igRender; $("ig-lang").onchange=igRender; $("ig-detail").onchange=igRender;
 $("ig-copy").onclick=async()=>{ const t=$("ig-text"), m=$("ig-msg"), es=S.lang==="es"; let ok=false;
   try{ await navigator.clipboard.writeText(t.value); ok=true; }catch(e){ try{ t.focus(); t.select(); ok=document.execCommand("copy"); }catch(e2){} }
   m.textContent=ok?(es?"Copiado. Péguelo en ChatGPT.":"Copied. Paste it into ChatGPT."):(es?"Seleccione el texto y cópielo (Ctrl+C).":"Select the text and copy it (Ctrl+C)."); m.className="status "+(ok?"ok":"err"); };
@@ -1453,6 +1458,7 @@ function igLabels(){ const es=S.lang==="es";
   $("ig-lfmt").textContent=es?"Formato":"Format"; $("ig-llang").textContent=es?"Idioma":"Language";
   const f=$("ig-fmt"), fv=f.value; f.innerHTML=[["poster",es?"Póster vertical (11×17)":"Portrait poster (11×17)"],["landscape",es?"Horizontal 16:9 (pantalla)":"Landscape 16:9 (screen)"],["square",es?"Cuadrado (teléfono / chat)":"Square (phone / chat)"]].map(o=>`<option value="${o[0]}">${o[1]}</option>`).join(""); f.value=fv||"poster";
   const g=$("ig-lang"), gv=g.value; g.innerHTML=[["en","English"],["es","Español"],["both",es?"Inglés y español":"English and Spanish"]].filter(o=>o[0]==="both"?(S.content.en&&S.content.es):S.content[o[0]]).map(o=>`<option value="${o[0]}">${o[1]}</option>`).join(""); g.value=(gv&&[...g.options].some(x=>x.value===gv))?gv:S.lang;
+  const d=$("ig-detail"), dv=d.value; d.innerHTML=[["simple",es?"Sencillo (recomendado)":"Simple (recommended)"],["full",es?"Completo (todo el texto)":"Full (all text)"]].map(o=>`<option value="${o[0]}">${o[1]}</option>`).join(""); d.value=dv||"simple"; $("ig-ldetail").textContent=es?"Detalle":"Detail";
   $("ig-copy").textContent=es?"Copiar prompt":"Copy prompt"; $("ig-open").textContent=es?"Abrir ChatGPT":"Open ChatGPT"; }
 $("dl-train").onclick=async()=>{
   const out=$("dl-status"), es=S.lang==="es"; if(!S.content[S.lang]) return;
