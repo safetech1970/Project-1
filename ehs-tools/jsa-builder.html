@@ -271,9 +271,24 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
         <div><label class="lbl" for="f-code" id="l-code">Task code</label><input id="f-code" style="width:9.5em;font-family:var(--mono)" maxlength="14"></div>
         <button class="btn btn-primary" id="dl" type="button">Download Excel</button>
         <button class="btn btn-ghost" id="dl-train" type="button">Training sheet (PDF)</button>
+        <button class="btn btn-ghost" id="ig-btn" type="button">Infographic prompt</button>
       </div>
     </section>
     <p class="status" id="dl-status" role="status" aria-live="polite" style="margin:-8px 4px 0"></p>
+    <section class="panel" id="ig-panel" hidden style="padding:16px 18px">
+      <h3 id="ig-h" style="margin:0 0 4px">Infographic prompt for ChatGPT</h3>
+      <p id="ig-help" class="status" style="margin:0 0 10px"></p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="min-width:14em"><label class="lbl" for="ig-fmt" id="ig-lfmt">Format</label><select id="ig-fmt"></select></div>
+        <div style="min-width:12em"><label class="lbl" for="ig-lang" id="ig-llang">Language</label><select id="ig-lang"></select></div>
+      </div>
+      <textarea id="ig-text" rows="14" readonly style="font-family:var(--mono);font-size:.82rem"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <button class="btn btn-primary" id="ig-copy" type="button">Copy prompt</button>
+        <a class="btn btn-ghost" id="ig-open" href="https://chatgpt.com/" target="_blank" rel="noopener">Open ChatGPT</a>
+        <span class="status" id="ig-msg" role="status" aria-live="polite"></span>
+      </div>
+    </section>
 
     <section class="panel notice" id="tr-notice" hidden>
       <span id="tr-text"></span>
@@ -765,7 +780,7 @@ function renderContent(){
     $("tr-btn").textContent = S.lang==="es" ? "Traducir del inglés" : "Translate from Spanish";
     $("tr-btn").disabled = !src || !sampleApi || busy;
   }
-  $("dl").disabled = missing || busy; { const tb=$("dl-train"); if(tb){ tb.disabled=missing||busy; tb.textContent=S.lang==="es"?"Hoja de capacitación (PDF)":"Training sheet (PDF)"; } }
+  $("dl").disabled = missing || busy; { const tb=$("dl-train"); if(tb){ tb.disabled=missing||busy; tb.textContent=S.lang==="es"?"Hoja de capacitación (PDF)":"Training sheet (PDF)"; } } { const ib=$("ig-btn"); if(ib){ ib.disabled=missing||busy; ib.textContent=S.lang==="es"?"Prompt de infografía":"Infographic prompt"; } if(window.igRender&&!$("ig-panel").hidden){ igLabels(); igRender(); } }
   if(missing) return;
   $("o-haz").value=c.otherHazard||""; $("o-ctl").value=c.otherControl||"";
   $("steps").innerHTML=c.steps.map((s,i)=>`<div class="step"><div class="num">${i+1}</div>
@@ -1383,6 +1398,62 @@ async function buildTrainPdf(){
   return doc.output("blob");
 }
 function trainFileName(){ return fileName().replace(/^JSA_/,"JSA_Training_").replace(/\.xlsx$/,".pdf"); }
+/* ---------- Infographic prompt: turns the training output into a ready-to-paste ChatGPT image prompt ---------- */
+function igShort(t,maxWords){ const s=String(t||"").replace(/\s+/g," ").trim(); if(!s) return ""; const first=(s.split(/(?<=[.!?])\s+/)[0]||s).replace(/[.;]+$/,""); const w=first.split(" "); return w.length>maxWords?w.slice(0,maxWords).join(" ").replace(/[,;:]$/,"")+"…":first; }
+function igFirst(t,maxWords){ const s=String(t||"").replace(/\s+/g," ").trim(); const seg=(s.split(/;\s*|(?<=[.!?])\s+/)[0]||s).replace(/[.:;,]+$/,""); const w=seg.split(" "); return w.length>maxWords?w.slice(0,maxWords).join(" ").replace(/[,;:]$/,"")+"…":seg; }
+function igCtl(t,maxWords){ const ss=String(t||"").replace(/\s+/g," ").trim().split(/(?<=[.!?])\s+/).filter(Boolean); let out=ss[0]||""; if(ss[1]&&(out+" "+ss[1]).split(" ").length<=maxWords) out+=" "+ss[1]; out=out.replace(/[.]+$/,""); const w=out.split(" "); return w.length>maxWords?w.slice(0,maxWords).join(" ").replace(/[,;:]$/,"")+"…":out; }
+function buildInfographicPrompt(o){
+  o=o||{}; const fmt=o.format||"poster", lang=o.lang||S.lang;
+  const langs=lang==="both"?["en","es"].filter(l=>S.content[l]):[lang];
+  const on=new Set(S.boxes);
+  const FM={poster:"Portrait poster, 2:3 aspect ratio (11 x 17 in), high resolution, print-ready for a break-room wall.",
+    landscape:"Landscape slide, 16:9 aspect ratio, high resolution, for a TV screen or a training presentation.",
+    square:"Square 1:1 image, high resolution, for a phone screen or a team chat post."};
+  const L=(l,en,es)=>l==="es"?es:en;
+  const block=l=>{ const C=S.content[l]; if(!C) return "";
+    const steps=(C.steps||[]).filter(s=>s&&String(s.step||"").trim());
+    const hz=KW.filter(k=>k[1]==="h"&&on.has(k[0])).map(k=>l==="es"?(ES[k[2]]||k[2]):k[2]); if(C.otherHazard) hz.push(C.otherHazard);
+    const ppe=KW.filter(k=>k[1]==="p"&&on.has(k[0])).map(k=>l==="es"?(ES[k[2]]||k[2]):k[2]);
+    const crit=(C.critical||[]).filter(Boolean);
+    const cap=s=>String(s).toLowerCase().replace(/(^|[\s\/(-])([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase());
+    const title=(C.title||S.task||"").trim()||englishTitle(C.title);
+    const dt=S.date?(()=>{ const [y,m,d]=S.date.split("-"); return m+"/"+d+"/"+y; })():"";
+    const out=[];
+    out.push(`TITLE: "${L(l,"JOB SAFETY ANALYSIS","ANÁLISIS DE SEGURIDAD DEL TRABAJO")}"`);
+    out.push(`TASK (large, under the title): "${title}"`);
+    out.push(`SUBTITLE: "${L(l,"Review this JSA with every team member before starting the task","Revise este JSA con cada miembro del equipo antes de iniciar la tarea")}"`);
+    const info=[S.loc&&`${L(l,"Location","Ubicación")}: ${S.loc}`,`${L(l,"JSA No.","JSA No.")}: ${jsaNo()}`,dt&&`${L(l,"Date","Fecha")}: ${dt}`].filter(Boolean);
+    out.push(`INFO STRIP (small): "${info.join("  |  ")}"`);
+    if(hz.length) out.push(`\nSECTION "${L(l,"KEY HAZARDS","PELIGROS PRINCIPALES")}" (red; compact grid, one simple warning icon per item):\n`+hz.map(h=>`- ${cap(h)}`).join("\n"));
+    if(ppe.length) out.push(`\nSECTION "${L(l,"REQUIRED PPE","EPP REQUERIDO")}" (amber; compact grid, one icon per item):\n`+ppe.map(p=>`- ${cap(p)}`).join("\n"));
+    out.push(`\nSECTION "${L(l,"JOB STEPS","PASOS DEL TRABAJO")}" (main area; numbered cards in order, each with a simple icon that shows the action):`);
+    steps.forEach((s,i)=>{ out.push(`${i+1}. ${String(s.step).trim()}\n   ${L(l,"Hazard","Peligro")}: ${igFirst(s.hazards,12)}\n   ${L(l,"Control","Control")}: ${igCtl(s.controls,18)}`); });
+    if(crit.length) out.push(`\nBANNER "${L(l,"CRITICAL CONTROLS","CONTROLES CRÍTICOS")}" (red band, numbered):\n`+crit.map((c,i)=>`${i+1}) ${igShort(c,14)}`).join("\n"));
+    out.push(`\nFOOTER (bold red): "${L(l,"Stop work if conditions change or a new hazard is found.","Detenga el trabajo si las condiciones cambian o encuentra un peligro nuevo.")}"`);
+    return out.join("\n"); };
+  const both=langs.length>1;
+  const P=[];
+  P.push("Create a professional workplace-safety training infographic as an image, for frontline workers at a produce/food plant.");
+  P.push("\nFORMAT: "+(FM[fmt]||FM.poster)+(both?" Make two matching versions with the same layout: one in English and one in Spanish (or one image split into an English half and a Spanish half if you can only make one).":""));
+  P.push("\nSTYLE:\n- Clean, modern flat-vector style with simple icons; no photos and no realistic faces.\n- Colors: safety orange #E86A1C header band, charcoal #263238 text and card headers, red #C00000 for hazards and critical controls, amber #FFC000 for PPE, green #007A53 for check marks on controls, white or very light grey background.\n- Bold, highly legible sans-serif type (like Arial or Helvetica); strong contrast; generous spacing; readable from 6 feet away.\n- Leave a clear blank area in the top-left corner of the header for our company logo (I will add it later). Do not draw any logo, brand name or watermark.\n- Clear visual hierarchy: title band, info strip, hazards and PPE side by side, then the numbered job steps, then the critical controls banner and footer.");
+  P.push("\nTEXT RULES:\n- Use the text below exactly as written, spelled exactly, including accents. Do not invent, translate or add any other text.\n- If something does not fit, shorten the hazard/control lines, never the step names, and never make text too small to read.\n- Every step card shows its number, the step name in bold, a red warning icon with the hazard line, and a green check icon with the control line.");
+  langs.forEach(l=>{ P.push("\n=== CONTENT"+(both?" ("+(l==="es"?"SPANISH":"ENGLISH")+" VERSION)":"")+(l==="es"&&!both?" — all text in Spanish":"")+" ===\n"+block(l)); });
+  P.push("\nAfter the image, list any words you could not render exactly so I can correct them.");
+  return P.join("\n");
+}
+function igRender(){ const t=$("ig-text"); if(!t) return; t.value=buildInfographicPrompt({format:$("ig-fmt").value,lang:$("ig-lang").value}); }
+$("ig-btn").onclick=()=>{ const p=$("ig-panel"); if(!S.content[S.lang]) return; p.hidden=!p.hidden; if(!p.hidden){ igLabels(); igRender(); p.scrollIntoView({behavior:"smooth",block:"nearest"}); } };
+$("ig-fmt").onchange=igRender; $("ig-lang").onchange=igRender;
+$("ig-copy").onclick=async()=>{ const t=$("ig-text"), m=$("ig-msg"), es=S.lang==="es"; let ok=false;
+  try{ await navigator.clipboard.writeText(t.value); ok=true; }catch(e){ try{ t.focus(); t.select(); ok=document.execCommand("copy"); }catch(e2){} }
+  m.textContent=ok?(es?"Copiado. Péguelo en ChatGPT.":"Copied. Paste it into ChatGPT."):(es?"Seleccione el texto y cópielo (Ctrl+C).":"Select the text and copy it (Ctrl+C)."); m.className="status "+(ok?"ok":"err"); };
+function igLabels(){ const es=S.lang==="es";
+  $("ig-h").textContent=es?"Prompt de infografía para ChatGPT":"Infographic prompt for ChatGPT";
+  $("ig-help").textContent=es?"Copie este prompt y péguelo en ChatGPT (u otra herramienta de imágenes) para crear una infografía de capacitación a partir de este JSA. Se actualiza con sus cambios.":"Copy this prompt and paste it into ChatGPT (or another image tool) to create a training infographic from this JSA. It updates with your edits.";
+  $("ig-lfmt").textContent=es?"Formato":"Format"; $("ig-llang").textContent=es?"Idioma":"Language";
+  const f=$("ig-fmt"), fv=f.value; f.innerHTML=[["poster",es?"Póster vertical (11×17)":"Portrait poster (11×17)"],["landscape",es?"Horizontal 16:9 (pantalla)":"Landscape 16:9 (screen)"],["square",es?"Cuadrado (teléfono / chat)":"Square (phone / chat)"]].map(o=>`<option value="${o[0]}">${o[1]}</option>`).join(""); f.value=fv||"poster";
+  const g=$("ig-lang"), gv=g.value; g.innerHTML=[["en","English"],["es","Español"],["both",es?"Inglés y español":"English and Spanish"]].filter(o=>o[0]==="both"?(S.content.en&&S.content.es):S.content[o[0]]).map(o=>`<option value="${o[0]}">${o[1]}</option>`).join(""); g.value=(gv&&[...g.options].some(x=>x.value===gv))?gv:S.lang;
+  $("ig-copy").textContent=es?"Copiar prompt":"Copy prompt"; $("ig-open").textContent=es?"Abrir ChatGPT":"Open ChatGPT"; }
 $("dl-train").onclick=async()=>{
   const out=$("dl-status"), es=S.lang==="es"; if(!S.content[S.lang]) return;
   $("dl-train").disabled=true; out.textContent=es?"Creando la hoja de capacitación…":"Building the training sheet…"; out.className="status";
