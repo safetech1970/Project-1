@@ -1973,6 +1973,96 @@ document.addEventListener('DOMContentLoaded',function(){
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
 })();
+/*GDESIGN*/
+/* Interface design for every app: color scheme, font and corner style, picked in the gear panel.
+   Remaps the app's own brand colors (navy / orange / yellow) on screen only. Saved on this device, per app. */
+(function(){
+  if(window.GDESIGN) return;
+  var root=document.documentElement;
+  var KEY='g_design_v1:'+(location.pathname.split('/').pop()||'index'), D={pal:'orig',font:'orig',shape:'orig'}, P={};
+  try{ P=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ P={}; }
+  for(var k in D) if(!(k in P)) P[k]=D[k];
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
+  function es(){ return (root.lang||'').toLowerCase().slice(0,2)==='es'; }
+  /* [header/dark brand, main accent, highlight] */
+  var PAL={orig:null,
+    ocean:['#0B3C5D','#1C7ED6','#3BC9DB'], forest:['#1E3D2B','#2F9E44','#F2C94C'], slate:['#2B2D31','#F08C00','#FFD43B'],
+    crimson:['#2A1215','#C92A2A','#F59F00'], royal:['#241A4A','#7048E8','#FCC419'], teal:['#0E3B43','#0CA678','#FFA94D'],
+    hivis:['#111111','#82C91E','#FAB005'], mono:['#1F2937','#4B5563','#9CA3AF']};
+  var FONTS={orig:'',system:'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif',rounded:'ui-rounded,"SF Pro Rounded","Nunito","Varela Round","Trebuchet MS",system-ui,sans-serif',
+    serif:'Georgia,"Times New Roman",Cambria,serif',condensed:'"Arial Narrow","Roboto Condensed","Barlow Condensed","Helvetica Neue",Arial,sans-serif'};
+  var TX={en:{h:'Interface design',pal:'Color scheme',font:'Font',shape:'Corners',orig:'Original',ocean:'Ocean',forest:'Forest',slate:'Slate',crimson:'Crimson',royal:'Royal',teal:'Teal',hivis:'Hi-Vis',mono:'Graphite',
+        system:'Modern',rounded:'Rounded',serif:'Classic',condensed:'Condensed',square:'Square',soft:'Original',round:'Round',note:'Changes the look of this app on this device only. Reports and printouts keep their own colors.'},
+      es:{h:'Diseño de la interfaz',pal:'Esquema de color',font:'Letra',shape:'Esquinas',orig:'Original',ocean:'Océano',forest:'Bosque',slate:'Pizarra',crimson:'Carmesí',royal:'Real',teal:'Turquesa',hivis:'Alta visibilidad',mono:'Grafito',
+        system:'Moderna',rounded:'Redondeada',serif:'Clásica',condensed:'Condensada',square:'Cuadradas',soft:'Original',round:'Redondas',note:'Cambia la apariencia de esta app solo en este dispositivo. Los reportes e impresiones conservan sus colores.'}};
+  function t(k){ return TX[es()?'es':'en'][k]||k; }
+  /* ---- color math ---- */
+  function hex2rgb(h){ h=h.replace('#',''); if(h.length===3||h.length===4) h=h.split('').map(function(c){return c+c;}).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16),h.length>=8?parseInt(h.slice(6,8),16)/255:1]; }
+  function rgb2hsl(r,g,b){ r/=255;g/=255;b/=255; var mx=Math.max(r,g,b),mn=Math.min(r,g,b),h=0,s=0,l=(mx+mn)/2; if(mx!==mn){ var d=mx-mn; s=l>.5?d/(2-mx-mn):d/(mx+mn); h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4; h*=60; } return [h,s,l]; }
+  function hsl2rgb(h,s,l){ h=((h%360)+360)%360/360; function f(p,q,t){ if(t<0)t+=1; if(t>1)t-=1; if(t<1/6) return p+(q-p)*6*t; if(t<1/2) return q; if(t<2/3) return p+(q-p)*(2/3-t)*6; return p; }
+    if(s===0) return [l*255,l*255,l*255].map(Math.round); var q=l<.5?l*(1+s):l+s-l*s,p=2*l-q; return [f(p,q,h+1/3),f(p,q,h),f(p,q,h-1/3)].map(function(x){return Math.round(x*255);}); }
+  var REF={dark:.17,acc:.5,hi:.52};
+  function role(h,s,l){ if(s>=.5&&h>=8&&h<40&&l>.3&&l<.85) return 'acc'; if(s>=.55&&h>=40&&h<58&&l>.42&&l<.85) return 'hi'; if(s>=.2&&h>=195&&h<240&&l<.32) return 'dark'; return null; }
+  function mapColor(r,g,b,a,pal){
+    var hsl=rgb2hsl(r,g,b), ro=role(hsl[0],hsl[1],hsl[2]); if(!ro) return null;
+    var tg=hex2rgb(pal[ro==='dark'?0:ro==='acc'?1:2]), th=rgb2hsl(tg[0],tg[1],tg[2]);
+    var l=Math.max(0,Math.min(1,th[2]+(hsl[2]-REF[ro])*(ro==='dark'?.9:1))), c=hsl2rgb(th[0],Math.min(1,th[1]*(hsl[1]>.85?1:Math.max(.6,hsl[1]/.85))),l);
+    return a<1?'rgba('+c[0]+','+c[1]+','+c[2]+','+(+a.toFixed(3))+')':'rgb('+c[0]+','+c[1]+','+c[2]+')';
+  }
+  var CRX=/#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)/g;
+  function remapValue(v,pal){ return v.replace(CRX,function(m){ var c; if(m.charAt(0)==='#') c=hex2rgb(m); else { var n=m.match(/[\d.]+/g).map(Number); c=[n[0],n[1],n[2],n.length>3?n[3]:1]; } var out=mapColor(c[0],c[1],c[2],c[3],pal); return out||m; }); }
+  /* ---- walk the app's stylesheets (screen rules only), remembering the originals so any scheme can be undone ---- */
+  var orig=[], seen=typeof WeakSet!=='undefined'?new WeakSet():null;
+  function collect(rules,skip){ [].forEach.call(rules||[],function(r){
+      if(r.cssRules&&r.media){ var m=String(r.media.mediaText||''); if(/print/.test(m)&&!/screen/.test(m)) return; collect(r.cssRules); return; }
+      if(r.cssRules&&!r.style){ collect(r.cssRules); return; }
+      var st=r.style; if(!st||(seen&&seen.has(st))) return; if(seen) seen.add(st);
+      for(var i=0;i<st.length;i++){ var p=st[i], v=st.getPropertyValue(p); if(v&&CRX.test(v)){ CRX.lastIndex=0; orig.push([st,p,v,st.getPropertyPriority(p)]); } CRX.lastIndex=0; } }); }
+  function scan(){ [].forEach.call(document.styleSheets,function(sh){ var n=sh.ownerNode; if(n&&(n.id==='gui-css'||n.id==='gd-css')) return; try{ collect(sh.cssRules); }catch(e){} }); }
+  function paint(){ var pal=PAL[P.pal]; orig.forEach(function(o){ var v=pal?remapValue(o[2],pal):o[2]; if(o[0].getPropertyValue(o[1])!==v) o[0].setProperty(o[1],v,o[3]); }); }
+  /* inline style="" colors (buttons and bars added by script) */
+  function inl(){ var pal=PAL[P.pal]; [].forEach.call(document.querySelectorAll('[style]'),function(el){ if(el.closest&&el.closest('#gui-pan')) return;
+      var cur=el.getAttribute('style')||'', o=el.getAttribute('data-gd-o');
+      if(o===null||cur!==el.getAttribute('data-gd-p')){ CRX.lastIndex=0; if(!CRX.test(cur)){ CRX.lastIndex=0; return; } CRX.lastIndex=0; o=cur; el.setAttribute('data-gd-o',o); }
+      var v=pal?remapValue(o,pal):o; if(v!==cur) el.setAttribute('style',v); el.setAttribute('data-gd-p',v); }); }
+  function css(){
+    var st=document.getElementById('gd-css'); if(!st){ st=document.createElement('style'); st.id='gd-css'; (document.head||root).appendChild(st); }
+    var f=FONTS[P.font], x='';
+    if(f) x+='@media screen{html.gd-f body,html.gd-f body *:not(code):not(pre):not(kbd):not(samp):not(svg):not(svg *):not(#gui-pan):not(#gui-pan *):not([class*=mono]):not([class*=Mono]){font-family:'+f+'!important}}';
+    if(P.shape==='square') x+='@media screen{html.gd-sq body *:not(#gui-btn):not(#gui-pan):not(#gui-pan *):not(input[type=radio]):not(svg):not(svg *){border-radius:0!important}}';
+    if(P.shape==='round') x+='@media screen{html.gd-rd button:not(#gui-btn):not(#gui-pan *),html.gd-rd .btn,html.gd-rd [role=button]{border-radius:999px!important}'+
+      'html.gd-rd input:not([type=checkbox]):not([type=radio]):not([type=range]),html.gd-rd select,html.gd-rd textarea{border-radius:12px!important}'+
+      'html.gd-rd section,html.gd-rd .panel,html.gd-rd .card,html.gd-rd [class*=card],html.gd-rd [class*=panel]:not(#gui-pan),html.gd-rd dialog,html.gd-rd .modal{border-radius:18px!important}}';
+    st.textContent=x;
+    root.classList.toggle('gd-f',!!f); root.classList.toggle('gd-sq',P.shape==='square'); root.classList.toggle('gd-rd',P.shape==='round');
+  }
+  function apply(){ if(PAL[P.pal]&&!orig.length) scan(); paint(); css(); if(PAL[P.pal]||document.querySelector('[data-gd-o]')) inl(); }
+  /* stylesheets added later by other modules: pick them up */
+  var nS=-1; function rescan(){ if(document.styleSheets.length!==nS){ nS=document.styleSheets.length; if(PAL[P.pal]){ scan(); paint(); } } }
+  /* ---- gear panel section ---- */
+  function sw(k,c){ return '<i style="background:'+c+'"></i>'; }
+  function html(){
+    var pals=Object.keys(PAL).map(function(k){ var p=PAL[k]||['#0f2942','#d9531e','#f2b705'];
+      return '<button type="button" data-dz="pal" data-v="'+k+'" aria-pressed="'+(P.pal===k)+'" title="'+t(k)+'"><span style="display:inline-flex;gap:2px">'+sw(0,p[0])+sw(0,p[1])+sw(0,p[2])+'</span>'+t(k)+'</button>'; }).join('');
+    var seg=function(key,opts){ return '<div class="gui-gr"><div class="gui-lb">'+t(key)+'</div><div class="gui-seg" role="group" aria-label="'+t(key)+'">'+opts.map(function(o){ return '<button type="button" data-dz="'+key+'" data-v="'+o[0]+'" aria-pressed="'+(P[key]===o[0])+'"'+(key==='font'&&FONTS[o[0]]?' style="font-family:'+FONTS[o[0]].replace(/"/g,"'")+'"':'')+'>'+o[1]+'</button>'; }).join('')+'</div></div>'; };
+    return '<div id="gd-sec"><h2 style="margin-top:6px;padding-top:12px;border-top:1px solid #d5dde6">'+t('h')+'</h2>'+
+      '<div class="gui-gr"><div class="gui-lb">'+t('pal')+'</div><div class="gui-sw" role="group" aria-label="'+t('pal')+'">'+pals+'</div></div>'+
+      seg('font',[['orig',t('orig')],['system',t('system')],['rounded',t('rounded')],['serif',t('serif')],['condensed',t('condensed')]])+
+      seg('shape',[['orig',t('soft')],['square',t('square')],['round',t('round')]])+
+      '<p class="gui-nt" style="margin:0 0 10px">'+t('note')+'</p></div>';
+  }
+  function inject(p){ if(!p||p.querySelector('#gd-sec')) return; var g=p.querySelectorAll('.gui-gr'), after=g[1]||g[0]; var d=document.createElement('div'); d.innerHTML=html(); var sec=d.firstChild;
+    if(after) after.insertAdjacentElement('afterend',sec); else p.appendChild(sec);
+    if(p.style.display!=='none') { var gs=document.getElementById('gui-css'); if(gs&&!document.getElementById('gd-pcss')){ var s2=document.createElement('style'); s2.id='gd-pcss'; s2.textContent='#gui-pan .gui-seg button{font-size:13px}#gd-sec .gui-sw button{padding:0 9px}'; document.head.appendChild(s2);} } }
+  function set(k,v){ P[k]=v; save(); apply(); var p=document.getElementById('gui-pan'), s=p&&p.querySelector('#gd-sec'); if(s){ s.remove(); inject(p); var b=p.querySelector('#gd-sec button[data-dz="'+k+'"][data-v="'+v+'"]'); if(b) b.focus(); } }
+  function reset(){ for(var k in D) P[k]=D[k]; save(); apply(); }
+  document.addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('#gui-pan button'); if(!b) return;
+    if(b.dataset.dz){ e.stopPropagation(); set(b.dataset.dz,b.dataset.v); } else if(b.classList.contains('gui-r')) reset(); },true);
+  var iT; new MutationObserver(function(){ inject(document.getElementById('gui-pan')); rescan(); if(PAL[P.pal]){ clearTimeout(iT); iT=setTimeout(inl,120); } }).observe(root,{childList:true,subtree:true});
+  window.GDESIGN={get:function(){ return JSON.parse(JSON.stringify(P)); },set:set,reset:reset,html:html};
+  function start(){ apply(); nS=document.styleSheets.length; setTimeout(rescan,800); setTimeout(rescan,2500); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
+})();
 /* Photo markup: when a photo is chosen, offer to point out the hazard with an arrow, circle, box, pen or label
    before the app receives it. Works for every photo file picker; window.GMARK.edit(dataURL) is also available to apps. */
 (function(){
